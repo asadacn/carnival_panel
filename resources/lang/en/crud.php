@@ -7,5 +7,7 @@ return[
 "back"=>"Back",
 "save"=>"Save",
 "cancel"=>"Cancel",
+"edit"=>"Edit ",
+"delete"=>"Delete ",
 "are_you_sure" => "Are you sure ?"
 ];
