@@ -31,6 +31,7 @@ class HomeController extends Controller
         $package = Package::pluck('price','title');
 
         $clients_by_package = DB::table('clients')
+        ->where('status','Registered')
                  ->select('package', DB::raw('count(*) as total'))
                  ->groupBy('package')
                  ->get();

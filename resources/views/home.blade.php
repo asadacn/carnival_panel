@@ -24,7 +24,7 @@
                                 </div>
                                 <div class="col-sm-6"><div class="card">
                                     <div class="card-header">
-                                    <h3>Clients by package</h3>
+                                    <h3>Registered Clients</h3>
                                 </div>
                                     <div class="card-body">
                                         <table class="table table-sm table-striped">
