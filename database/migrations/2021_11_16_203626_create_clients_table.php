@@ -18,12 +18,12 @@ class CreateClientsTable extends Migration
             $table->id('id');
             $table->string('name');
             $table->string('contact');
-            $table->string('address');
-            $table->string('package');
+            $table->string('address')->nullable();
+            $table->string('package')->nullable();
             $table->string('username');
-            $table->string('password');
-            $table->string('Onu_mac');
-            $table->integer('cable');
+            $table->string('password')->nullable();
+            $table->string('Onu_mac')->nullable();
+            $table->integer('cable')->nullable();
             $table->string('status');
             $table->timestamps();
             $table->softDeletes();

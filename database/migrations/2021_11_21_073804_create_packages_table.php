@@ -18,7 +18,7 @@ class CreatePackagesTable extends Migration
             $table->id('id');
             $table->string('title');
             $table->integer('price');
-            $table->text('descriptoin');
+            $table->text('descriptoin')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

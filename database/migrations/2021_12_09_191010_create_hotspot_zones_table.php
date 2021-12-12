@@ -16,15 +16,15 @@ class CreateHotspotZonesTable extends Migration
     {
         Schema::create('hotspot_zones', function (Blueprint $table) {
             $table->id('id');
-            $table->string('zone_id');
+            $table->string('zone_id')->nullable();
             $table->string('zone_title');
-            $table->string('device_brand');
-            $table->string('device_mac');
-            $table->string('device_serial');
-            $table->string('onu_mac');
-            $table->string('onu_brand');
-            $table->string('card_seller');
-            $table->string('status');
+            $table->string('device_brand')->nullable();
+            $table->string('device_mac')->nullable();
+            $table->string('device_serial')->nullable();
+            $table->string('onu_mac')->nullable();
+            $table->string('onu_brand')->nullable();
+            $table->string('card_seller')->nullable();
+            $table->string('status')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

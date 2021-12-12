@@ -17,10 +17,10 @@ class CreateInvestmentsTable extends Migration
         Schema::create('investments', function (Blueprint $table) {
             $table->id('id');
             $table->string('type');
-            $table->string('purpose');
+            $table->string('purpose')->nullable();
             $table->integer('amount');
-            $table->string('invested_by');
-            $table->text('description');
+            $table->string('invested_by')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
