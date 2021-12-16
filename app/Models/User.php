@@ -6,10 +6,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Junges\ACL\Concerns\UsersTrait;
 use \M1guelpf\FastLogin\Models\Concerns\CanFastLogin;
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable , CanFastLogin;
+    use HasFactory, Notifiable , CanFastLogin, UsersTrait;
 
 
     /**

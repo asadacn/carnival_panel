@@ -19,9 +19,9 @@ class CreateHotspotZonesTable extends Migration
             $table->string('zone_id')->nullable();
             $table->string('zone_title');
             $table->string('device_brand')->nullable();
-            $table->string('device_mac')->nullable();
+            $table->macAddress('device_mac')->nullable();
             $table->string('device_serial')->nullable();
-            $table->string('onu_mac')->nullable();
+            $table->macAddress('onu_mac')->nullable();
             $table->string('onu_brand')->nullable();
             $table->string('card_seller')->nullable();
             $table->string('status')->nullable();

@@ -18,7 +18,7 @@ class CreateCardSellersTable extends Migration
             $table->id('id');
             $table->string('name');
             $table->string('contact')->nullable();
-            $table->string('zone')->nullable();
+            $table->string('store_title')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

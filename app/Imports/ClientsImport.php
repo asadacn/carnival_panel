@@ -20,9 +20,11 @@ class ClientsImport implements ToModel, WithHeadingRow, WithProgressBar
         return new Client([
             "name"=>$row['name'],
             "contact"=>$row['mobile'],
+            "email"=>$row['email'],
             "address"=>$row['address'],
             "package"=>$row['package'],
             "username"=>$row['carnival_id'],
+            "expiration"=>$row['expiration'],
             "status"=>$row['status'],
         ]);
     }

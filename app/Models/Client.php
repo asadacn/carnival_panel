@@ -37,12 +37,14 @@ class Client extends Model
     public $fillable = [
         'name',
         'contact',
+        'email',
         'address',
         'package',
         'username',
         'password',
         'Onu_mac',
         'cable',
+        'expiration',
         'status'
     ];
 
@@ -54,12 +56,14 @@ class Client extends Model
     protected $casts = [
         'name' => 'string',
         'contact' => 'string',
+        'email'=>'string',
         'address' => 'string',
         'package' => 'string',
         'username' => 'string',
         'password' => 'string',
         'Onu_mac' => 'string',
         'cable' => 'integer',
+        'expiration'=>'datetime',
         'status' => 'string'
     ];
 
