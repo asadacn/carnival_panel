@@ -15,6 +15,7 @@
         "infyomlabs/laravel-generator": "dev-infyom-dev",
         "infyomlabs/laravel-ui-stisla": "^3.0",
         "infyomlabs/stisla-templates": "^1.0",
+        "laracasts/flash": "^3.2",
         "laravel/framework": "^8.12",
         "laravel/tinker": "^2.5",
         "laravelcollective/html": "^6.2",

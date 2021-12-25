@@ -9,5 +9,6 @@ return[
 "cancel"=>"Cancel",
 "edit"=>"Edit ",
 "delete"=>"Delete ",
-"are_you_sure" => "Are you sure ?"
+"are_you_sure" => "Are you sure ?",
+"erase" => "Erase "
 ];

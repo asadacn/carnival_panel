@@ -39,6 +39,7 @@
         </div>
         <!-- Main Content -->
         <div class="main-content">
+            @include('flash::message')
             @yield('content')
         </div>
         <footer class="main-footer">

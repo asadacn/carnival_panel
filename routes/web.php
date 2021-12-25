@@ -28,6 +28,8 @@ Route::resource('clients', ClientController::class);
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
 Route::post('client/import/', [ClientController::class, 'import'])->name('clients.import');
 
+Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.erase')->middleware('password.confirm');
+
 Route::resource('packages', App\Http\Controllers\PackageController::class);
 Route::resource('investments', App\Http\Controllers\InvestmentController::class);
 

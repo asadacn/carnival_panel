@@ -10,7 +10,7 @@
                 <a href="{{ route('clients.create')}}" class="btn btn-primary form-btn">@lang('crud.add_new')<i class="fas fa-plus"></i></a>
                 <a href="{{ route('clients.export')}}" class="mx-2 btn btn-primary form-btn">@lang('crud.export')<i class="fas fa-file-export"></i></a>
                 <a href="#" data-bs-toggle="modal" data-bs-target="#importClients" class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i class="fas fa-file-import"></i></a>
-                
+                <a href="{{ route('clients.erase')}}" class="btn btn-danger form-btn">@lang('crud.erase')<i class="fas fa-trash"></i></a>
             </div>
         </div>
     <div class="section-body">
@@ -20,11 +20,11 @@
             </div>
        </div>
    </div>
-    
+
     </section>
 
 
-  
+
   <!-- Modal -->
   <div class="modal fade" id="importClients" tabindex="-1" aria-labelledby="importClientsLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -37,9 +37,9 @@
             <form class="row" action="{{route('clients.import')}}" enctype="multipart/form-data" method="POST">
         @csrf
                 <div class="col-8">
-                    <input class="form-control" name="clients_file" type="file" accept=".xls,.xlsx,.csv"  id="formFile">                  
+                    <input class="form-control" name="clients_file" type="file" accept=".xls,.xlsx,.csv"  id="formFile">
                 </div>
-             
+
                 <div class="col-4">
                   <button type="submit" class="btn btn-primary btn-block">Import</button>
                 </div>
@@ -88,7 +88,7 @@
     ],
       ajax:"{{route('clients.index')}}",
       columns:[
-        
+
          { data: 'DT_RowIndex', name: 'DT_RowIndex'},
          {data: 'username', name: 'username',
           "render": function(data, type, row, meta){
@@ -103,8 +103,8 @@
           {data: 'package', name: 'package'},
           {data: 'status', name: 'status'},
           {data: 'action', name: 'action', searchable: false, orderable: false},
-   
-        
+
+
       ],
       columnDefs: [ {
             orderable: false,

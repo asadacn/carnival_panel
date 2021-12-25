@@ -45,10 +45,10 @@ class ClientController extends AppBaseController
 
         if($request->ajax()){
             $data = Client::all();
-            
+
             return DataTables::of($data)->addIndexColumn()
             ->addColumn('action', function($client){
-   
+
                  $btn = '<a href="'. route('clients.show', [$client->id]).'" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
                  $btn = $btn .'<a href="'.route('clients.edit', [$client->id]).'" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
                  $btn = $btn. ' <a href="'.route('clients.destroy', [$client->id]). '" onclick="return confirm(\'Are you sure?\')"   data-id="'.$client->id.'" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
@@ -181,17 +181,26 @@ class ClientController extends AppBaseController
         return redirect(route('clients.index'));
     }
 
-    public function export() 
+    public function export()
     {
 
-       
+
         return Excel::download(new ClientExport, 'clients.xlsx');
     }
 
-    public function import() 
+    public function import()
     {
         Excel::import(new ClientsImport, request()->file('clients_file'));
         Flash::success(__('Import Successfull'));
         return back()->with('success', 'All good!');
+    }
+
+
+    public function erase()
+    {
+      Client::query()->truncate();
+      flash('Truncate Successfull')->success();
+      //Flash::success(__('Truncate Successfull', ['model' => __('models/clients.singular')]));
+      return back();
     }
 }
