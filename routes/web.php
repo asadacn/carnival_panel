@@ -43,3 +43,9 @@ Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class)
 
 
 
+
+
+Route::resource('areas', App\Http\Controllers\AreaController::class);
+
+
+Route::resource('collectors', App\Http\Controllers\CollectorController::class);

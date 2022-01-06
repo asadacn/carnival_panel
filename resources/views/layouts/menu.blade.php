@@ -24,3 +24,11 @@
     <a href="{{ route('cardSellers.index') }}"><i class="fa fa-credit-card"></i><span>@lang('models/cardSellers.plural')</span></a>
 </li>
 
+<li class="{{ Request::is('areas*') ? 'active' : '' }}">
+    <a href="{{ route('areas.index') }}"><i class="fa fa-edit"></i><span>@lang('models/areas.plural')</span></a>
+</li>
+
+<li class="{{ Request::is('collectors*') ? 'active' : '' }}">
+    <a href="{{ route('collectors.index') }}"><i class="fa fa-edit"></i><span>@lang('models/collectors.plural')</span></a>
+</li>
+
