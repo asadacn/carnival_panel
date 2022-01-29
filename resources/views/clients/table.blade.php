@@ -2,6 +2,7 @@
     <table class="table table-bordered" id="clients">
         <thead>
             <tr>
+                <th>✓</th>
                 <th>#</th>
                 <th>@lang('models/clients.fields.username')</th>
                 <th>@lang('models/clients.fields.name')</th>
@@ -10,7 +11,7 @@
                 <th>@lang('models/clients.fields.package')</th>
                 <th>@lang('models/clients.fields.status')</th>
                 <th>action</th>
-     
+
         {{-- <th>@lang('models/clients.fields.password')</th>
         <th>@lang('models/clients.fields.Onu_mac')</th>
         <th>@lang('models/clients.fields.cable')</th> --}}
@@ -44,6 +45,6 @@
                    </tr>
             </tr>
         @endforeach--}}
-        </tbody> 
+        </tbody>
     </table>
 </div>

@@ -7,6 +7,7 @@
         <div class="section-header">
             <h1>@lang('models/clients.plural') </h1>
             <div class="section-header-breadcrumb">
+                <a id="button" href="#" class="btn btn-primary form-btn">SMS<i class="fas fa-plus"></i></a>
                 <a href="{{ route('clients.create')}}" class="btn btn-primary form-btn">@lang('crud.add_new')<i class="fas fa-plus"></i></a>
                 <a href="{{ route('clients.export')}}" class="mx-2 btn btn-primary form-btn">@lang('crud.export')<i class="fas fa-file-export"></i></a>
                 <a href="#" data-bs-toggle="modal" data-bs-target="#importClients" class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i class="fas fa-file-import"></i></a>
@@ -88,7 +89,7 @@
     ],
       ajax:"{{route('clients.index')}}",
       columns:[
-
+        { "data": null, defaultContent: '' },
          { data: 'DT_RowIndex', name: 'DT_RowIndex'},
          {data: 'username', name: 'username',
           "render": function(data, type, row, meta){
@@ -127,5 +128,17 @@
         alert('ok');
       })
    });
+
+
+//SMS SELECTED ROWS ON TABLE
+   $('#button').click(function () {
+    var table = $('#clients').DataTable();
+    var selectedData = table.rows( { selected: true } ).data().toArray();
+
+    console.log(selectedData)
+    });
+
+  //  alert(table.rows('.selected').data().length + ' row(s) selected');
+   // });
     </script>
 @endsection
