@@ -26,7 +26,7 @@
 
 
 
-  <!-- Modal -->
+  <!--Import Modal -->
   <div class="modal fade" id="importClients" tabindex="-1" aria-labelledby="importClientsLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -48,11 +48,40 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--Sms Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">SMS</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <select class="custom-select">
+                <option selected>Open this select menu</option>
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+
+                <form action="">
+                    <textarea name="sms-body" id="sms-body" class="form-control" cols="30" rows="100"></textarea>
+                </form>
+              </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary">Save changes</button>
         </div>
       </div>
     </div>
   </div>
+
   <!-- JavaScript Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 @endsection
@@ -69,6 +98,7 @@
     }
 });
     var table = $('#clients').DataTable({
+        pageLength: 10,
       proccessing: true,
       serverSide:true,
       responsive: true,
@@ -76,17 +106,6 @@
           searching: true,
           select: true,
     dom: 'lBfrtip',
-    buttons: [
-        {
-            extend: 'print',
-            text: 'Print Selected',
-            exportOptions: {
-                modifier: {
-                    selected: true
-                }
-            },
-        },
-    ],
       ajax:"{{route('clients.index')}}",
       columns:[
         { "data": null, defaultContent: '' },
@@ -134,8 +153,20 @@
    $('#button').click(function () {
     var table = $('#clients').DataTable();
     var selectedData = table.rows( { selected: true } ).data().toArray();
+    $.ajax({
+        type: 'GET',
+        url: '{{route("sms")}}',
+        dataType: 'json',
+        data: {clients: selectedData},
+        success: function (data) {
 
-    console.log(selectedData)
+//             data.forEach(function(item) {
+//     console.log(item.contact)
+// });
+           console.log(data)
+        }
+    });
+    //console.log(selectedData)
     });
 
   //  alert(table.rows('.selected').data().length + ' row(s) selected');

@@ -2,7 +2,8 @@
 
 use App\Http\Controllers\ClientController;
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -43,9 +44,19 @@ Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class)
 
 
 
-
-
 Route::resource('areas', App\Http\Controllers\AreaController::class);
 
 
 Route::resource('collectors', App\Http\Controllers\CollectorController::class);
+
+Route::get('sms',function (Request $request)
+{
+    foreach($request->clients as $client){
+
+  //  dd($client['contact']);
+
+    $response = Http::get('http://sms.asolution24.com/api/send?key=f044ca72dbd6b15c942f86c9245d836d22806212&priority=1&phone=88'.$client['contact'].'&message=test message');
+        }
+
+    return $response;
+})->name('sms');

@@ -44,15 +44,18 @@ class ClientController extends AppBaseController
         //     ->with('clients', $clients);
 
         if($request->ajax()){
+
             $data = Client::all();
 
             return DataTables::of($data)->addIndexColumn()
             ->addColumn('action', function($client){
 
-                 $btn = '<a href="'. route('clients.show', [$client->id]).'" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
+                 $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
+                 $btn = $btn.'<a href="#" data-toggle="modal" data-target="#exampleModalCenter" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
+                 $btn = $btn.'<a href="'. route('clients.show', [$client->id]).'" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
                  $btn = $btn .'<a href="'.route('clients.edit', [$client->id]).'" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
                  $btn = $btn. ' <a href="'.route('clients.destroy', [$client->id]). '" onclick="return confirm(\'Are you sure?\')"   data-id="'.$client->id.'" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
-
+                 $btn = $btn.'</div>';
                  return $btn;
          })
          ->rawColumns(['action'])
