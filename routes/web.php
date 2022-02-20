@@ -60,3 +60,6 @@ Route::get('sms',function (Request $request)
 
     return $response;
 })->name('sms');
+
+
+Route::resource('sMSTEMPALTES', App\Http\Controllers\SMS_TEMPALTEController::class);

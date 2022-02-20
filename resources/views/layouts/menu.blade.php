@@ -32,3 +32,7 @@
     <a href="{{ route('collectors.index') }}"><i class="fa fa-edit"></i><span>@lang('models/collectors.plural')</span></a>
 </li>
 
+<li class="{{ Request::is('sMSTEMPALTES*') ? 'active' : '' }}">
+    <a href="{{ route('sMSTEMPALTES.index') }}"><i class="fa fa-edit"></i><span>@lang('models/sMSTEMPALTES.plural')</span></a>
+</li>
+
