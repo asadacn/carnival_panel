@@ -14,7 +14,7 @@ use App\Http\Controllers\Form;
 use App\Exports\UsersExport;
 use App\Imports\ClientsImport;
 use App\Models\Client;
-
+use App\Models\SMS_TEMPALTE;
 use Maatwebsite\Excel\Facades\Excel;
 
 use Yajra\DataTables\DataTables;
@@ -62,7 +62,9 @@ class ClientController extends AppBaseController
          ->make(true);
         }
 
-        return view('clients.index');
+        $templates = SMS_TEMPALTE::all();
+
+        return view('clients.index', compact('templates'));
     }
 
     /**

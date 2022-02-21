@@ -64,17 +64,25 @@
         </div>
         <div class="modal-body">
             <select class="custom-select mb-3">
-                <option selected>Select SMS Template</option>
-                <option value="1">One</option>
-                <option value="2">Two</option>
-                <option value="3">Three</option>
+                <option value="">Select sms template</option>
 
+               @foreach ($templates as $template)
+                    <option value="{{$template->sms_template}}">{{$template->title}}</option>
+               @endforeach
 
               </select>
                 <form action="">
-                    <label for="">Write Message</label>
+                    <label for="">Write Message ( <small id="sms-counter" >
+                        {{-- <li>Encoding: <span class="encoding"></span></li> --}}
+                        {{-- <li>Length: <span class="length"></span></li> --}}
+                        <span>Messages: <span class="messages"></span></span> /
+                        {{-- <li>Per Message: <span class="per_message"></span></li> --}}
+                        <span>Remaining: <span class="remaining"></span></span>
+                    </small> )
+                </label>
                     <textarea name="sms-body" id="sms-body" style="min-height: 140px;" class="form-control "  placeholder="Write your message here .."></textarea>
                 </form>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -91,6 +99,7 @@
 
 
 @section('scripts')
+<script src="{{asset('js/sms_counter.min.js')}}"></script>
 <script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
     <script>
       $(document).ready( function () {
@@ -173,5 +182,16 @@
 
   //  alert(table.rows('.selected').data().length + ' row(s) selected');
    // });
+//SMS MODAL TEMPLATE SELECTION
+   $('select').on('change', function() {
+
+    $('#sms-body').val(this.value)
+    $('#sms-body').countSms('#sms-counter')
+
+  //alert( this.value );
+    });
+
+    $('#sms-body').countSms('#sms-counter')
+
     </script>
 @endsection
