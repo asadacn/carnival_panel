@@ -24,7 +24,7 @@ Auth::routes();
 
 
 
-Route::middleware(['permissions:super'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 Route::resource('clients', ClientController::class);
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
 Route::post('client/import/', [ClientController::class, 'import'])->name('clients.import');

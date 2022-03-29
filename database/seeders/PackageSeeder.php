@@ -23,7 +23,7 @@ class PackageSeeder extends Seeder
         ]);
 
         DB::table('packages')->insert([
-            'title' => '7 Mbps',
+            'title' => '8 Mbps',
             'price' => '699',
 
         ]);
@@ -48,7 +48,7 @@ class PackageSeeder extends Seeder
 
         ]);
         DB::table('packages')->insert([
-            'title' => '7 Mbps_RP',
+            'title' => '8 Mbps_RP',
             'price' => '998',
 
         ]);
