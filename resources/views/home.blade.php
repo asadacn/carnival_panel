@@ -10,15 +10,25 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
-                           
+
                             <div class="row">
                                 <div class="col-sm-2">
                                     <div class="card rounded">
-                                    
+
                                         <div class="card-body">
                                             <h2>Clients</h2>
                                             <h5 class="card-title">{{$clients->count()}}</h5>
-                                          
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="card rounded">
+
+                                        <div class="card-body">
+                                            <h2>SMS</h2>
+                                            <h5 class="card-title">{{sms_balance()}}</h5>
+
                                         </div>
                                     </div>
                                 </div>
@@ -41,7 +51,7 @@
                                               //  dd($package)
                                             @endphp
                                             @foreach ($clients_by_package as $client)
-                                            
+
                                             <tr>
                                                 <td>{{$client->package}}</td>
                                                 <td>{{$client->total}} </td>
@@ -56,7 +66,7 @@
                                     </div>
                                 </div></div>
                                 {{-- <div class="col-sm-3">{{$total}}</div> --}}
-                               
+
                             </div>
 
                         </div>

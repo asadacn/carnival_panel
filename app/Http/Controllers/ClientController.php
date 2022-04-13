@@ -51,7 +51,7 @@ class ClientController extends AppBaseController
             ->addColumn('action', function($client){
 
                  $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
-                 $btn = $btn.'<a href="#" data-toggle="modal" data-target="#exampleModalCenter" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
+                 $btn = $btn.'<a href="#" data-toggle="modal" onclick="setSmsId('.$client->id.')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
                  $btn = $btn.'<a href="'. route('clients.show', [$client->id]).'" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
                  $btn = $btn .'<a href="'.route('clients.edit', [$client->id]).'" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
                  $btn = $btn. ' <a href="'.route('clients.destroy', [$client->id]). '" onclick="return confirm(\'Are you sure?\')"   data-id="'.$client->id.'" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';

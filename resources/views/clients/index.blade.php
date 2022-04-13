@@ -53,7 +53,7 @@
     </div>
   </div>
   <!--Sms Modal -->
-<div class="modal fade" id="exampleModalCenter" tabindex="-2" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+<div class="modal fade" id="smsModal" tabindex="-2" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -64,14 +64,15 @@
         </div>
         <div class="modal-body">
             <select class="custom-select mb-3">
-                <option value="">Select sms template</option>
+                <option value="">Select From Template</option>
 
                @foreach ($templates as $template)
                     <option value="{{$template->sms_template}}">{{$template->title}}</option>
                @endforeach
 
               </select>
-                <form action="">
+                <form id="sms_form" action="">
+                    <input id="client_id" type="hidden" name="client_id">
                     <label for="">Write Message ( <small id="sms-counter" >
                         {{-- <li>Encoding: <span class="encoding"></span></li> --}}
                         {{-- <li>Length: <span class="length"></span></li> --}}
@@ -85,20 +86,23 @@
 
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary">Send</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+          <button type="button" onclick="resetText()" class="btn btn-warning" >Reset</button>
+          <button type="button" onclick="sendSMS()" class="btn btn-success">Send</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- JavaScript Bundle with Popper -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-@endsection
+
+      <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+
+  @endsection
 
 
 
 @section('scripts')
+
 <script src="{{asset('js/sms_counter.min.js')}}"></script>
 <script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
     <script>
@@ -192,6 +196,39 @@
     });
 
     $('#sms-body').countSms('#sms-counter')
+
+function setSmsId(id) {
+    $("#client_id").val(id);
+}
+
+function sendSMS() {
+
+      $.ajax({
+        type: 'GET',
+        url: '{{route("solo_sms")}}',
+        dataType: 'html',
+        data: {
+            client_id: $('#client_id').val(),
+            sms: $('#sms-body').val()
+        },
+        success: function (data) {
+
+           if(data == true){
+               alert("SMS SENT")
+               resetText()
+            $('#smsModal').modal('toggle')
+           }else{
+            alert('SMS SENDING FAILED !')
+
+           }
+        }
+    });
+}
+
+function resetText(){
+    $("#sms-body").val('').countSms('#sms-counter');
+    $('select').val('');
+}
 
     </script>
 @endsection
