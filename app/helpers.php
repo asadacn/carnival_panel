@@ -1,95 +1,5 @@
 <?php
 
-function getColor($url) #GET RANDOM COLOR FORM IMAGE
-{
-    try {
-         $img = Intervention\Image\ImageManagerStatic::make($url);
-
-         return $img->pickColor(rand(0,100), rand(0,100), 'hex');
-
-    } catch (\Throwable $th) {
-
-       return "";
-
-    }
-
-}
-
-function production($size,$piece,$unit){ //production calculation
-
-    $size=filter_var($size, FILTER_SANITIZE_NUMBER_INT);
-    $piece= filter_var($piece, FILTER_SANITIZE_NUMBER_INT);
-
-    $total= (int) $size*(int) $piece * $unit;
-
-    // if ($total>=1000) {
-    //    return $total/1000;
-    // }else return $total;
-    return $total/1000;
-   }
-
-   // GET CUSTOMER DUE REPORT
-   function getDue($id=0)
-   {
-       if (\App\Customer::find($id)) {
-
-
-
-       $total_due =\App\Customer::find($id)->order()->sum('due_amount');
-       $paid = \App\Customer::find($id)->payment()->sum('paid_amount');
-       $bulk_due = \App\BulkSell::where('customer_id',$id)->sum('due_amount');
-
-       $current_due = ($total_due+$bulk_due) - $paid ;
-
-       $dues = [
-           "total_due"  =>$total_due+$bulk_due,
-           "current_due"=>$current_due,
-           "paid_amount"=>$paid,
-           "bulk_due"   =>$bulk_due
-           ];
-
-           return $dues;
-
-       }else{
-
-        $dues = [
-            "total_due"  =>0,
-            "current_due"=>0,
-            "paid_amount"=>0,
-            "bulk_due"   =>0
-            ];
-
-            return $dues;
-
-       }
-
-
-   }
-
-
-// function techno_bulk_sms($ap_key,$sender_id,$mobile_no,$message,$user_email){
-// 	$url = 'https://71bulksms.com/sms_api/bulk_sms_sender_2.php';
-// 	$data = array('api_key' => $ap_key,
-// 	 'sender_id' => $sender_id,
-// 	 'message' => $message,
-// 	 'mobile_no' =>$mobile_no,
-// 	 'user_email'=> $user_email
-// 	 );
-
-// 	// use key 'http' even if you send the request to https://...
-// 	$options = array(
-// 		'http' => array(
-// 			'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
-// 			'method'  => 'POST',
-// 			'content' => http_build_query($data)
-// 		)
-// 	);
-// 	$context  = stream_context_create($options);
-// 	$result = file_get_contents($url, false, $context);
-//     //print_r($result);
-//     return $result;
-// }
-
 function techno_bulk_sms($sender_id,$apiKey,$mobileNo,$message){
     $url = 'https://24smsbd.com/api/bulkSmsApi';
     $data = array('sender_id' => $sender_id,
@@ -119,8 +29,8 @@ function report_header($title)
 //SEND SMS
 function sms($mobile_no=null,$message=null){
 
-$ap_key='QXNhZGE6QXNhc2RhNDQ4';
-$sender_id='345';
+$ap_key=env('SMS_API');
+$sender_id=env('SMS_SENDER_ID');
 
 try {
     if($mobile_no != null && $message != null){
@@ -160,8 +70,8 @@ function techno_sms_current_balance($sender_id,$apiKey){
 
 //CHECK SMS BALANCE
 function sms_balance() {
-$ap_key='QXNhZGE6QXNhc2RhNDQ4';
-$sender_id='345';
+    $ap_key=env('SMS_API');
+    $sender_id=env('SMS_SENDER_ID');
 try {
     return techno_sms_current_balance($sender_id,$ap_key);
 } catch (\Throwable $th) {
@@ -179,6 +89,7 @@ function en2bnNumber($number){
 
     return $en_number;
 }
+
 
 //BDT MONEY FORMATTER
 function takaFormat($input){
