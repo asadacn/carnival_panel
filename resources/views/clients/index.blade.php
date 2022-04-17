@@ -214,11 +214,24 @@ function sendSMS() {
         success: function (data) {
 
            if(data == true){
-               alert("SMS SENT")
+            //    alert("SMS SENT")
+            Swal.fire({
+            icon: 'success',
+            title: 'SMS SENT',
+            showConfirmButton: false,
+            timer: 1500
+            })
+
                resetText()
             $('#smsModal').modal('toggle')
            }else{
-            alert('SMS SENDING FAILED !')
+
+            Swal.fire({
+            icon: 'error',
+            title: 'SMS SENDING FAILED!',
+            showConfirmButton: true,
+            })
+            //alert('SMS SENDING FAILED !')
 
            }
         }

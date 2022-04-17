@@ -73,6 +73,7 @@ Route::get('solo_sms',function (Request $request)
   // return $response;
 return sms($client->contact,$request->sms);
 
+
 })->name('solo_sms');
 
 Route::resource('sMSTEMPALTES', App\Http\Controllers\SMS_TEMPALTEController::class);
