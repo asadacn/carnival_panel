@@ -3,13 +3,14 @@
 return array (
   'singular' => 'Client',
   'plural' => 'Clients',
-  'fields' => 
+  'fields' =>
   array (
     'id' => 'Id',
     'name' => 'Name',
     'contact' => 'Contact',
     'address' => 'Address',
     'package' => 'Package',
+    'expiration' => 'Validity',
     'username' => 'Carnival_ID',
     'password' => 'Password',
     'Onu_mac' => 'Onu Mac',

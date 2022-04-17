@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Eloquent as Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,7 +29,7 @@ class Client extends Model
     use HasFactory;
 
     public $table = 'clients';
-    
+
 
     protected $dates = ['deleted_at'];
 
@@ -59,6 +60,7 @@ class Client extends Model
         'email'=>'string',
         'address' => 'string',
         'package' => 'string',
+        'expiration' => 'date',
         'username' => 'string',
         'password' => 'string',
         'Onu_mac' => 'string',
@@ -83,5 +85,10 @@ class Client extends Model
         'cable' => 'nullable',
         'status' => 'required'
     ];
+
+    public function getExpirationAttribute($value)
+{
+    return Carbon::parse($value)->format('d-m-y').' * '.Carbon::parse($value)->diffForHumans();
+}
 
 }

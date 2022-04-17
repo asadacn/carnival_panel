@@ -136,6 +136,7 @@
           {data: 'contact', name: 'contact'},
           {data: 'address', name: 'address'},
           {data: 'package', name: 'package'},
+          {data: 'expiration', name: 'expiration'},
           {data: 'status', name: 'status'},
           {data: 'action', name: 'action', searchable: false, orderable: false},
 
