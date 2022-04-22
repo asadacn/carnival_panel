@@ -81,3 +81,4 @@ Route::resource('sMSTEMPALTES', App\Http\Controllers\SMS_TEMPALTEController::cla
 
 Route::get('solo_sms',[SmsController::class,"send_sms"])->name('solo_sms');
 
+Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');

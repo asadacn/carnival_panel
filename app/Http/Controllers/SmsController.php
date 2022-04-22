@@ -33,4 +33,11 @@ class SmsController extends Controller
 
 
    }
+
+   public function sms_log()
+   {
+       $SMSLOGS = SMSLOG::latest()->simplePaginate(25);
+
+       return view('s_m_s_l_o_g_s.index',compact('SMSLOGS'));
+   }
 }

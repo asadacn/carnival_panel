@@ -1,8 +1,8 @@
 <?php
 
 return array (
-  'singular' => 'SMS_TEMPALTE',
-  'plural' => 'SMS_TEMPALTES',
+  'singular' => 'Sms Template',
+  'plural' => 'Sms Templates',
   'fields' =>
   array (
     'id' => 'Id',
