@@ -35,14 +35,14 @@ $sender_id=env('SMS_SENDER_ID');
 try {
     if($mobile_no != null && $message != null){
         techno_bulk_sms($sender_id,$ap_key,$mobile_no,$message);
-        toast('SMS Sent to - '.$mobile_no,'success');
+      //  toast('SMS Sent to - '.$mobile_no,'success');
         return true;
 
      }else{
          return false;
      }
 } catch (\Throwable $th) {
-    toast('SMS Sending Failed!','error');
+    //toast('SMS Sending Failed!','error');
     return false;
 }
 

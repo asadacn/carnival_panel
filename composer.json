@@ -22,6 +22,7 @@
         "m1guelpf/laravel-fastlogin": "^2.0",
         "maatwebsite/excel": "^3.1",
         "mateusjunges/laravel-acl": "^3.0",
+        "rappasoft/laravel-livewire-tables": "^2.1",
         "realrashid/sweet-alert": "^5.0",
         "tightenco/ziggy": "^1.4",
         "yajra/laravel-datatables-oracle": "~9.0"

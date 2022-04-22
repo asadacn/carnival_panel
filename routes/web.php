@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\SmsController;
 use App\Models\Client;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -63,17 +64,20 @@ Route::get('sms',function (Request $request)
 })->name('sms');
 
 
-Route::get('solo_sms',function (Request $request)
-{
+// Route::get('solo_sms',function (Request $request)
+// {
 
-    $client = Client::find($request->client_id);
+//     $client = Client::find($request->client_id);
 
-    // $response = Http::get('http://sms.asolution24.com/api/send?key=f044ca72dbd6b15c942f86c9245d836d22806212&priority=1&phone=88'.$client->contact.'&message='.$request->sms);
+//     // $response = Http::get('http://sms.asolution24.com/api/send?key=f044ca72dbd6b15c942f86c9245d836d22806212&priority=1&phone=88'.$client->contact.'&message='.$request->sms);
 
-  // return $response;
-return sms($client->contact,$request->sms);
+//   // return $response;
+// return sms($client->contact,$request->sms);
 
 
-})->name('solo_sms');
+// })->name('solo_sms');
 
 Route::resource('sMSTEMPALTES', App\Http\Controllers\SMS_TEMPALTEController::class);
+
+Route::get('solo_sms',[SmsController::class,"send_sms"])->name('solo_sms');
+
