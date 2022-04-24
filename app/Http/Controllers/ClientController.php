@@ -77,6 +77,13 @@ class ClientController extends AppBaseController
         return view('clients.create');
     }
 
+
+    public function create_import()
+    {
+        return view('clients.import');
+    }
+
+
     /**
      * Store a newly created Client in storage.
      *

@@ -18,5 +18,7 @@ return array (
     'status' => 'Status',
     'created_at' => 'Created At',
     'updated_at' => 'Updated At',
+    'import' => 'Import Clients',
+
   ),
 );

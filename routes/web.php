@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
 Route::resource('clients', ClientController::class);
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
 Route::post('client/import/', [ClientController::class, 'import'])->name('clients.import');
+Route::get('client/import/create', [ClientController::class, 'create_import'])->name('clients.import.create');
 
 Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.erase')->middleware('password.confirm');
 
