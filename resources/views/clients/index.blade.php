@@ -221,7 +221,7 @@
         }
 
         function sendSMS() {
-
+            Swal.showLoading();
             $.ajax({
                 type: 'GET',
                 url: '{{ route('solo_sms') }}',
@@ -231,14 +231,15 @@
                     sms: $('#sms-body').val()
                 },
                 success: function(data) {
-
+                    Swal.hideLoading();
                     if (data == true) {
                         //    alert("SMS SENT")
                         Swal.fire({
                             icon: 'success',
                             title: 'SMS SENT',
                             showConfirmButton: false,
-                            timer: 1500
+                            timer: 1500,
+
                         })
 
                         resetText()
