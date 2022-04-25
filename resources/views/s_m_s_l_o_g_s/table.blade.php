@@ -5,6 +5,7 @@
                 <th>@lang('models/sMSLOGS.fields.client_id')</th>
         <th>@lang('models/sMSLOGS.fields.contact')</th>
         <th>@lang('models/sMSLOGS.fields.sms')</th>
+        <th>@lang('models/sMSLOGS.fields.time')</th>
         <th>@lang('models/sMSLOGS.fields.status')</th>
                 {{-- <th colspan="3">@lang('crud.action')</th> --}}
             </tr>
@@ -12,9 +13,10 @@
         <tbody>
         @foreach($SMSLOGS as $sMSLOG)
             <tr>
-            <td>{{ $sMSLOG->client_id }}</td>
+            <td><a href="https://reportpanel.carnival.com.bd/partnercrm/user_details.php?carnivalid={{ $sMSLOG->client_id }}" target="_blank" rel="noopener noreferrer">{{ $sMSLOG->client_id }}</a></td>
             <td>{{ $sMSLOG->contact }}</td>
             <td>{{ $sMSLOG->sms }}</td>
+            <td>{{ $sMSLOG->created_at }}</td>
             <td>{!! $sMSLOG->status? "<span class='badge badge-success'><i class='fa fa-check'></i></span>" :  "<span class='badge badge-danger'><i class='fa fa-ban'></i></span>" !!}</td>
                        {{-- <td class=" text-center">
                            {!! Form::open(['route' => ['sMSLOGS.destroy', $sMSLOG->id], 'method' => 'delete']) !!}

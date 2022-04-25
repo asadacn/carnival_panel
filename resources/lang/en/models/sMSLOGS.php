@@ -10,6 +10,7 @@ return array (
     'contact' => 'Contact',
     'sms' => 'Sms',
     'status' => 'Status',
+    'time' => 'Time',
     'created_at' => 'Created At',
     'updated_at' => 'Updated At',
   ),
