@@ -25,11 +25,11 @@
 </li>
 
 <li class="{{ Request::is('areas*') ? 'active' : '' }}">
-    <a href="{{ route('areas.index') }}"><i class="fa fa-edit"></i><span>@lang('models/areas.plural')</span></a>
+    <a href="{{ route('areas.index') }}"><i class="fa fa-map"></i><span>@lang('models/areas.plural')</span></a>
 </li>
 
 <li class="{{ Request::is('collectors*') ? 'active' : '' }}">
-    <a href="{{ route('collectors.index') }}"><i class="fa fa-edit"></i><span>@lang('models/collectors.plural')</span></a>
+    <a href="{{ route('collectors.index') }}"><i class="fa fa-users"></i><span>@lang('models/collectors.plural')</span></a>
 </li>
 
 <li class="{{ Request::is('sMSTEMPALTES*') ? 'active' : '' }}">

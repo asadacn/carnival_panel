@@ -1,9 +1,9 @@
 <?php
 
 return array (
-  'singular' => 'HotspotZone',
-  'plural' => 'HotspotZones',
-  'fields' => 
+  'singular' => 'Hotspot Zone',
+  'plural' => 'Hotspot Zones',
+  'fields' =>
   array (
     'id' => 'Id',
     'zone_id' => 'Zone Id',

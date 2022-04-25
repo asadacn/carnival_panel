@@ -1,9 +1,9 @@
 <?php
 
 return array (
-  'singular' => 'Collector',
-  'plural' => 'Collectors',
-  'fields' => 
+  'singular' => 'Bill Collector',
+  'plural' => 'Bill Collectors',
+  'fields' =>
   array (
     'id' => 'Id',
     'name' => 'Name',

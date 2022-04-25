@@ -1,9 +1,9 @@
 <?php
 
 return array (
-  'singular' => 'CardSeller',
-  'plural' => 'CardSellers',
-  'fields' => 
+  'singular' => 'Card Seller',
+  'plural' => 'Card Sellers',
+  'fields' =>
   array (
     'id' => 'Id',
     'name' => 'Name',
