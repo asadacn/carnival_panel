@@ -17,7 +17,8 @@
                    <div class="col-lg-12">
                        <div class="card">
                            <div class="card-body ">
-                                {!! Form::open(['route' => 'sMSTEMPALTES.store']) !!}
+
+                                {!! Form::open(['route' => 'sMSTEMPALTES.store','id'=>'sms_form']) !!}
                                     <div class="row">
                                         @include('s_m_s__t_e_m_p_a_l_t_e_s.fields')
                                     </div>
@@ -29,5 +30,9 @@
             </div>
         </div>
     </section>
+@endsection
+@section('scripts')
+<script src="{{ asset('js/sms_counter.min.js') }}"></script>
+<script> $('#sms-body').countSms('#sms-counter')</script>
 @endsection
 
