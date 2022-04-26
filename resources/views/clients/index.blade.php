@@ -163,6 +163,15 @@
                     style: 'multi',
                     selector: 'td:first-child'
                 },
+                //for conditional column style/format
+                rowCallback: function(row, data, index) {
+                if (data.status == "Registered") {
+                    $("td:eq(8)", row).addClass("text-success");
+                }else{
+                    $("td:eq(8)", row).addClass("text-danger");
+                }
+                },
+
                 order: [
                     [1, 'asc']
                 ]
