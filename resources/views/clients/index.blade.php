@@ -7,7 +7,7 @@
         <div class="section-header">
             <h1>@lang('models/clients.plural') </h1>
             <div class="section-header-breadcrumb">
-                <a id="button" href="#" class="btn btn-primary form-btn">SMS<i class="fas fa-plus"></i></a>
+                {{-- <a id="button" href="#" class="btn btn-primary form-btn">SMS<i class="fas fa-plus"></i></a> --}}
                 <a href="{{ route('clients.create') }}" class="btn btn-primary form-btn">@lang('crud.add_new')<i
                         class="fas fa-plus"></i></a>
                 <a href="{{ route('clients.export') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.export')<i
@@ -43,7 +43,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <select class="custom-select mb-3">
+                    <select class="border border-secondary form-control mb-3">
                         <option value="">Select From Template</option>
 
                         @foreach ($templates as $template)
@@ -61,7 +61,7 @@
                                 <span>Remaining: <span class="remaining"></span></span>
                             </small> )
                         </label>
-                        <textarea name="sms-body" id="sms-body" style="min-height: 140px;" class="form-control "
+                        <textarea name="sms-body" id="sms-body" style="min-height: 140px;" class="form-control border border-success"
                             placeholder="Write your message here .."></textarea>
                     </form>
 
