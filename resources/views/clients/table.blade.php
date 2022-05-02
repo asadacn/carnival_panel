@@ -2,7 +2,7 @@
     <table class="table table-bordered" id="clients">
         <thead>
             <tr>
-                <th>✓</th>
+                <th ><button title="Select all" class="selectAll">✓</button> </th>
                 <th>#</th>
                 <th>@lang('models/clients.fields.username')</th>
                 <th>@lang('models/clients.fields.name')</th>

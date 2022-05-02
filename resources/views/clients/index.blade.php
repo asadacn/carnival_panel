@@ -6,9 +6,10 @@
     <section class="section">
         <div class="section-header">
             <h1>@lang('models/clients.plural') </h1>
+
             <div class="section-header-breadcrumb">
-                {{-- <a id="button" href="#" class="btn btn-primary form-btn">SMS<i class="fas fa-plus"></i></a> --}}
-                <a href="{{ route('clients.create') }}" class="btn btn-primary form-btn">@lang('crud.add_new')<i
+
+                <a href="{{ route('clients.create') }}" class="btn btn-success form-btn">@lang('crud.add_new')<i
                         class="fas fa-plus"></i></a>
                 <a href="{{ route('clients.export') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.export')<i
                         class="fas fa-file-export"></i></a>
@@ -16,6 +17,8 @@
                     class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i class="fas fa-file-import"></i></a>
                 <a href="{{ route('clients.erase') }}" class="btn btn-danger form-btn">@lang('crud.erase')<i
                         class="fas fa-trash"></i></a>
+
+                        <a href="#" data-toggle="modal"  data-target="#smsModal" class="btn btn-warning form-btn mx-2">Bulk SMS <i class="fas fa-envelope"></i></a>
             </div>
         </div>
         <div class="section-body">
@@ -189,28 +192,28 @@
 
 
         //SMS SELECTED ROWS ON TABLE
-        $('#button').click(function() {
-            var table = $('#clients').DataTable();
-            var selectedData = table.rows({
-                selected: true
-            }).data().toArray();
-            $.ajax({
-                type: 'GET',
-                url: '{{ route('sms') }}',
-                dataType: 'json',
-                data: {
-                    clients: selectedData
-                },
-                success: function(data) {
+        // $('#bulk_sms').click(function() {
+        //     var table = $('#clients').DataTable();
+        //     var selectedData = table.rows({
+        //         selected: true
+        //     }).data().toArray();
 
-                    //             data.forEach(function(item) {
-                    //     console.log(item.contact)
-                    // });
-                    console.log(data)
-                }
-            });
-            //console.log(selectedData)
-        });
+        //     console.log(selectedData.length)
+
+        //     $.ajax({
+        //         type: 'GET',
+        //
+        //         dataType: 'json',
+        //         data: {
+        //             clients: selectedData
+        //         },
+        //         success: function(data) {
+
+        //             console.log(data)
+        //         }
+        //     });
+        //     //console.log(selectedData)
+        // });
 
         //  alert(table.rows('.selected').data().length + ' row(s) selected');
         // });
@@ -230,17 +233,77 @@
         }
 
         function sendSMS() {
+
             Swal.showLoading();
+
+//bulk sms
+            var table = $('#clients').DataTable();
+            var selectedData = table.rows({
+                selected: true
+            }).data().toArray();
+
+            var clientsData = $.map(selectedData, function(val, index) {
+                return {
+                    username:val.username,
+                    contact: val.contact
+                };
+            })
+
+            console.log(clientsData)
+            console.log(selectedData)
+
+            if (selectedData.length > 0) {  //Bulk sms
+
+                $.ajax({
+                type: 'GET',
+                url: '{{ route("bulk_sms") }}',
+                dataType: 'html',
+                data: {
+                    clients: clientsData,
+                    sms: $('#sms-body').val()
+                },
+                success: function(data) {
+                Swal.hideLoading();
+
+                    if (data == true) {
+                        //    alert("SMS SENT")
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'SMS SENT',
+                            showConfirmButton: false,
+                            timer: 1500,
+
+                        })
+
+                        resetText()
+                        $('#smsModal').modal('toggle')
+                    } else {
+                Swal.hideLoading();
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'SMS SENDING FAILED!',
+                            showConfirmButton: true,
+                        })
+                        //alert('SMS SENDING FAILED !')
+
+                    }
+                }
+            });
+
+            }else{
+ //single sms
+ Swal.hideLoading();
             $.ajax({
                 type: 'GET',
-                url: '{{ route('solo_sms') }}',
+                url: '{{ route("solo_sms") }}',
                 dataType: 'html',
                 data: {
                     client_id: $('#client_id').val(),
                     sms: $('#sms-body').val()
                 },
                 success: function(data) {
-                    Swal.hideLoading();
+
                     if (data == true) {
                         //    alert("SMS SENT")
                         Swal.fire({
@@ -265,6 +328,9 @@
                     }
                 }
             });
+
+}
+
         }
 
         function resetText() {

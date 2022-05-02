@@ -52,17 +52,19 @@ Route::resource('areas', App\Http\Controllers\AreaController::class);
 
 Route::resource('collectors', App\Http\Controllers\CollectorController::class);
 
-Route::get('sms',function (Request $request)
-{
-    foreach($request->clients as $client){
+// Route::get('sms',function (Request $request)
+// {
 
-  //  dd($client['contact']);
+//     dd($request->clients);
+//     foreach($request->clients as $client){
 
-    $response = Http::get('http://sms.asolution24.com/api/send?key=f044ca72dbd6b15c942f86c9245d836d22806212&priority=1&phone=88'.$client['contact'].'&message=test message');
-        }
+//   //  dd($client['contact']);
 
-    return $response;
-})->name('sms');
+//     $response = Http::get('http://sms.asolution24.com/api/send?key=f044ca72dbd6b15c942f86c9245d836d22806212&priority=1&phone=88'.$client['contact'].'&message=test message');
+//         }
+
+//     return $response;
+//})->name('sms');
 
 
 // Route::get('solo_sms',function (Request $request)
@@ -81,5 +83,5 @@ Route::get('sms',function (Request $request)
 Route::resource('sMSTEMPALTES', App\Http\Controllers\SMS_TEMPALTEController::class);
 
 Route::get('solo_sms',[SmsController::class,"send_sms"])->name('solo_sms');
-
+Route::get('bulk_sms',[SmsController::class,"bulk_sms"])->name('bulk_sms');
 Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');
