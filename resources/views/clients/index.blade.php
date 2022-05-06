@@ -13,12 +13,14 @@
                         class="fas fa-plus"></i></a>
                 <a href="{{ route('clients.export') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.export')<i
                         class="fas fa-file-export"></i></a>
-                <a href="{{route('clients.import.create')}}"
-                    class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i class="fas fa-file-import"></i></a>
+                <a href="{{ route('clients.import.create') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i
+                        class="fas fa-file-import"></i></a>
                 <a href="{{ route('clients.erase') }}" class="btn btn-danger form-btn">@lang('crud.erase')<i
                         class="fas fa-trash"></i></a>
 
-                        <a href="#" data-toggle="modal"  data-target="#smsModal" class="btn btn-warning form-btn mx-2">Bulk SMS <i class="fas fa-envelope"></i></a>
+                <a href="#" id="bulk_btn" style="display: none" data-toggle="modal" data-target="#smsModal"
+                    class="btn btn-warning form-btn mx-2">Bulk SMS <i class="fas fa-envelope"></i> <span id="bulk_count"
+                        class="badge badge-success p-1"></span> </a>
             </div>
         </div>
         <div class="section-body">
@@ -168,11 +170,11 @@
                 },
                 //for conditional column style/format
                 rowCallback: function(row, data, index) {
-                if (data.status == "Registered") {
-                    $("td:eq(8)", row).addClass("text-success");
-                }else{
-                    $("td:eq(8)", row).addClass("text-danger");
-                }
+                    if (data.status == "Registered") {
+                        $("td:eq(8)", row).addClass("text-success");
+                    } else {
+                        $("td:eq(8)", row).addClass("text-danger");
+                    }
                 },
 
                 order: [
@@ -191,32 +193,7 @@
         });
 
 
-        //SMS SELECTED ROWS ON TABLE
-        // $('#bulk_sms').click(function() {
-        //     var table = $('#clients').DataTable();
-        //     var selectedData = table.rows({
-        //         selected: true
-        //     }).data().toArray();
 
-        //     console.log(selectedData.length)
-
-        //     $.ajax({
-        //         type: 'GET',
-        //
-        //         dataType: 'json',
-        //         data: {
-        //             clients: selectedData
-        //         },
-        //         success: function(data) {
-
-        //             console.log(data)
-        //         }
-        //     });
-        //     //console.log(selectedData)
-        // });
-
-        //  alert(table.rows('.selected').data().length + ' row(s) selected');
-        // });
         //SMS MODAL TEMPLATE SELECTION
         $('select').on('change', function() {
 
@@ -232,11 +209,19 @@
             $("#client_id").val(id);
         }
 
+        //bulk sms count
+        $('#clients tbody').on('click', 'tr', function() {
+            var count = $('#clients tbody tr.selected').length;
+            $('#bulk_count').text(count + 1);
+            count ? $('#bulk_btn').show('fast') : $('#bulk_btn').hide('fast')
+        });
+
+        //sending sms
         function sendSMS() {
 
             Swal.showLoading();
 
-//bulk sms
+            //bulk sms
             var table = $('#clients').DataTable();
             var selectedData = table.rows({
                 selected: true
@@ -244,7 +229,7 @@
 
             var clientsData = $.map(selectedData, function(val, index) {
                 return {
-                    username:val.username,
+                    username: val.username,
                     contact: val.contact
                 };
             })
@@ -252,87 +237,96 @@
             console.log(clientsData)
             console.log(selectedData)
 
-            if (selectedData.length > 0) {  //Bulk sms
+            if (selectedData.length > 0 && selectedData.length <= 50) { //Bulk sms
 
                 $.ajax({
-                type: 'GET',
-                url: '{{ route("bulk_sms") }}',
-                dataType: 'html',
-                data: {
-                    clients: clientsData,
-                    sms: $('#sms-body').val()
-                },
-                success: function(data) {
-                Swal.hideLoading();
+                    type: 'GET',
+                    url: '{{ route('bulk_sms') }}',
+                    dataType: 'html',
+                    data: {
+                        clients: clientsData,
+                        sms: $('#sms-body').val()
+                    },
+                    success: function(data) {
+                        Swal.hideLoading();
 
-                    if (data == true) {
-                        //    alert("SMS SENT")
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'SMS SENT',
-                            showConfirmButton: false,
-                            timer: 1500,
+                        if (data == true) {
+                            //    alert("SMS SENT")
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'SMS SENT',
+                                showConfirmButton: false,
+                                timer: 1500,
 
-                        })
+                            })
 
-                        resetText()
-                        $('#smsModal').modal('toggle')
-                    } else {
-                Swal.hideLoading();
+                            resetText()
+                            $('#smsModal').modal('toggle')
+                        } else {
+                            Swal.hideLoading();
 
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'SMS SENDING FAILED!',
-                            showConfirmButton: true,
-                        })
-                        //alert('SMS SENDING FAILED !')
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'SMS SENDING FAILED!',
+                                showConfirmButton: true,
+                            })
+                            //alert('SMS SENDING FAILED !')
 
+                        }
                     }
-                }
-            });
+                });
 
-            }else{
- //single sms
- Swal.hideLoading();
-            $.ajax({
-                type: 'GET',
-                url: '{{ route("solo_sms") }}',
-                dataType: 'html',
-                data: {
-                    client_id: $('#client_id').val(),
-                    sms: $('#sms-body').val()
-                },
-                success: function(data) {
+            } else if (selectedData.length > 51) {
+                Swal.hideLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'SMS SENDING FAILED! SELECTED CLIENTS: ' + selectedData.length,
+                    showConfirmButton: true,
+                })
 
-                    if (data == true) {
-                        //    alert("SMS SENT")
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'SMS SENT',
-                            showConfirmButton: false,
-                            timer: 1500,
+            } else {
+                //single sms
+                Swal.hideLoading();
+                $.ajax({
+                    type: 'GET',
+                    url: '{{ route('solo_sms') }}',
+                    dataType: 'html',
+                    data: {
+                        client_id: $('#client_id').val(),
+                        sms: $('#sms-body').val()
+                    },
+                    success: function(data) {
 
-                        })
+                        if (data == true) {
+                            //    alert("SMS SENT")
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'SMS SENT',
+                                showConfirmButton: false,
+                                timer: 1500,
 
-                        resetText()
-                        $('#smsModal').modal('toggle')
-                    } else {
+                            })
 
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'SMS SENDING FAILED!',
-                            showConfirmButton: true,
-                        })
-                        //alert('SMS SENDING FAILED !')
+                            resetText()
+                            $('#smsModal').modal('toggle')
+                        } else {
 
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'SMS SENDING FAILED!',
+                                showConfirmButton: true,
+                            })
+                            //alert('SMS SENDING FAILED !')
+
+                        }
                     }
-                }
-            });
+                });
 
-}
+            }
 
         }
 
+        //reset sms modal form
         function resetText() {
             $("#sms-body").val('').countSms('#sms-counter');
             $('select').val('');
