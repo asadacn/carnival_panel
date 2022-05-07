@@ -43,23 +43,23 @@ class ClientController extends AppBaseController
         // return view('clients.index')
         //     ->with('clients', $clients);
 
-        if($request->ajax()){
+        if ($request->ajax()) {
 
             $data = Client::all();
 
             return DataTables::of($data)->addIndexColumn()
-            ->addColumn('action', function($client){
+                ->addColumn('action', function ($client) {
 
-                 $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
-                 $btn = $btn.'<a href="#" data-toggle="modal" onclick="setSmsId('.$client->id.')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
-                 $btn = $btn.'<a href="'. route('clients.show', [$client->id]).'" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
-                 $btn = $btn .'<a href="'.route('clients.edit', [$client->id]).'" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
-                 $btn = $btn. ' <a href="'.route('clients.destroy', [$client->id]). '" onclick="return confirm(\'Are you sure?\')"   data-id="'.$client->id.'" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
-                 $btn = $btn.'</div>';
-                 return $btn;
-         })
-         ->rawColumns(['action'])
-         ->make(true);
+                    $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
+                    $btn = $btn . '<a href="#" data-toggle="modal" onclick="setSmsId(' . $client->id . ')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
+                    $btn = $btn . '<a href="' . route('clients.show', [$client->id]) . '" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
+                    $btn = $btn . '<a href="' . route('clients.edit', [$client->id]) . '" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
+                    $btn = $btn . ' <a href="' . route('clients.destroy', [$client->id]) . '" onclick="return confirm(\'Are you sure?\')"   data-id="' . $client->id . '" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
+                    $btn = $btn . '</div>';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
         }
 
         $templates = SMS_TEMPALTE::all();
@@ -202,17 +202,26 @@ class ClientController extends AppBaseController
 
     public function import()
     {
-        Excel::import(new ClientsImport, request()->file('clients_file'));
-        Flash::success(__('Import Successfull'));
-        return back()->with('success', 'All good!');
+        if (request()->file('clients_file')) {
+            if (Excel::import(new ClientsImport, request()->file('clients_file'))) {
+                Flash::success(__('Import Successfull'));
+                return back()->with('success', 'All good!');
+            } else {
+                Flash::error(__('Import Failed'));
+                return back()->with('error', 'Import Failed');
+            }
+        } else {
+            Flash::warning(__('Please select a file first !'));
+            return back()->with('error', 'Please select a file first !');
+        }
     }
 
 
     public function erase()
     {
-      Client::query()->truncate();
-      flash('Truncate Successfull')->success();
-      //Flash::success(__('Truncate Successfull', ['model' => __('models/clients.singular')]));
-      return back();
+        Client::query()->truncate();
+        flash('Truncate Successfull')->success();
+        //Flash::success(__('Truncate Successfull', ['model' => __('models/clients.singular')]));
+        return back();
     }
 }

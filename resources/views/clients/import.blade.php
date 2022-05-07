@@ -26,7 +26,7 @@
                             </div>
 
                             <div class="col-4">
-                                <button type="submit" class="btn btn-primary btn-block">Import</button>
+                                <button id="import" type="submit" class="btn btn-primary btn-block">Import</button>
                             </div>
                         </form>
                            </div>
@@ -38,6 +38,12 @@
     </section>
 @endsection
 
-
+@section('scripts')
+<script>
+$('#import').on('click',function(){
+    Swal.showLoading();
+})
+</script>
+@endsection
 
 
