@@ -29,8 +29,8 @@ function report_header($title)
 //SEND SMS
 function sms($mobile_no=null,$message=null){
 
-$ap_key=env('SMS_API');
-$sender_id=env('SMS_SENDER_ID');
+    $ap_key=env('SMS_API','QXNhZGE6QXNhc2RhNDQ4');
+    $sender_id=env('SMS_SENDER_ID',345);
 
 try {
     if($mobile_no != null && $message != null){
@@ -70,8 +70,8 @@ function techno_sms_current_balance($sender_id,$apiKey){
 
 //CHECK SMS BALANCE
 function sms_balance() {
-    $ap_key=env('SMS_API');
-    $sender_id=env('SMS_SENDER_ID');
+    $ap_key=env('SMS_API','QXNhZGE6QXNhc2RhNDQ4');
+    $sender_id=env('SMS_SENDER_ID',345);
 try {
     return techno_sms_current_balance($sender_id,$ap_key);
 } catch (\Throwable $th) {

@@ -4,7 +4,10 @@
             <tr>
                 <th>@lang('models/cardSellers.fields.name')</th>
         <th>@lang('models/cardSellers.fields.contact')</th>
-        <th>@lang('models/cardSellers.fields.zone')</th>
+        <th>@lang('models/cardSellers.fields.shopName')</th>
+        <th>@lang('models/cardSellers.fields.village')</th>
+        <th>@lang('models/cardSellers.fields.union')</th>
+        <th>@lang('models/cardSellers.fields.address')</th>
                 <th colspan="3">@lang('crud.action')</th>
             </tr>
         </thead>
@@ -13,7 +16,10 @@
             <tr>
                        <td>{{ $cardSeller->name }}</td>
             <td>{{ $cardSeller->contact }}</td>
-            <td>{{ $cardSeller->zone }}</td>
+            <td>{{ $cardSeller->shopName }}</td>
+            <td>{{ $cardSeller->village }}</td>
+            <td>{{ $cardSeller->union }}</td>
+            <td>{{ $cardSeller->address }}</td>
                        <td class=" text-center">
                            {!! Form::open(['route' => ['cardSellers.destroy', $cardSeller->id], 'method' => 'delete']) !!}
                            <div class='btn-group'>

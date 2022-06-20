@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class CardSeller
  * @package App\Models
- * @version December 9, 2021, 7:32 pm UTC
+ * @version June 6, 2022, 7:21 pm UTC
  *
  * @property string $name
  * @property string $contact
- * @property string $zone
+ * @property string $shopName
+ * @property string $village
+ * @property string $union
+ * @property string $address
  */
 class CardSeller extends Model
 {
@@ -22,7 +25,7 @@ class CardSeller extends Model
     use HasFactory;
 
     public $table = 'card_sellers';
-    
+
 
     protected $dates = ['deleted_at'];
 
@@ -31,7 +34,10 @@ class CardSeller extends Model
     public $fillable = [
         'name',
         'contact',
-        'zone'
+        'shopName',
+        'village',
+        'union',
+        'address'
     ];
 
     /**
@@ -42,7 +48,10 @@ class CardSeller extends Model
     protected $casts = [
         'name' => 'string',
         'contact' => 'string',
-        'zone' => 'string'
+        'shopName' => 'string',
+        'village' => 'string',
+        'union' => 'string',
+        'address' => 'string'
     ];
 
     /**
@@ -52,9 +61,12 @@ class CardSeller extends Model
      */
     public static $rules = [
         'name' => 'required',
-        'contact' => 'required',
-        'zone' => 'required'
+        'contact' => 'nullable|numeric',
+        'shopName' => 'nullable',
+        'village' => 'nullable',
+        'union' => 'nullable',
+        'address' => 'nullable'
     ];
 
-    
+
 }

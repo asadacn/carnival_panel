@@ -37,3 +37,7 @@
     <a href="{{ route('sms_log') }}"><i class="fa fa-history"></i><span>@lang('models/sMSLOGS.plural')</span></a>
 </li>
 
+<li class="{{ Request::is('cardSellers*') ? 'active' : '' }}">
+    <a href="{{ route('cardSellers.index') }}"><i class="fa fa-edit"></i><span>@lang('models/cardSellers.plural')</span></a>
+</li>
+

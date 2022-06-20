@@ -10,10 +10,28 @@
     {!! Form::text('contact', null, ['class' => 'form-control']) !!}
 </div>
 
-<!-- Zone Field -->
+<!-- Shopname Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('zone', __('models/cardSellers.fields.zone').':') !!}
-    {!! Form::select('zone', $hotspot_zoneItems, null, ['class' => 'form-control']) !!}
+    {!! Form::label('shopName', __('models/cardSellers.fields.shopName').':') !!}
+    {!! Form::text('shopName', null, ['class' => 'form-control']) !!}
+</div>
+
+<!-- Village Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('village', __('models/cardSellers.fields.village').':') !!}
+    {!! Form::text('village', null, ['class' => 'form-control']) !!}
+</div>
+
+<!-- Union Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('union', __('models/cardSellers.fields.union').':') !!}
+    {!! Form::text('union', null, ['class' => 'form-control']) !!}
+</div>
+
+<!-- Address Field -->
+<div class="form-group col-sm-12 col-lg-12">
+    {!! Form::label('address', __('models/cardSellers.fields.address').':') !!}
+    {!! Form::textarea('address', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Submit Field -->

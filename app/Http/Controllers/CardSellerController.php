@@ -6,9 +6,12 @@ use App\Http\Requests\CreateCardSellerRequest;
 use App\Http\Requests\UpdateCardSellerRequest;
 use App\Repositories\CardSellerRepository;
 use App\Http\Controllers\AppBaseController;
+use App\Models\CardSeller;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
+use App\Imports\CardSellerImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CardSellerController extends AppBaseController
 {
@@ -152,5 +155,37 @@ class CardSellerController extends AppBaseController
         Flash::success(__('messages.deleted', ['model' => __('models/cardSellers.singular')]));
 
         return redirect(route('cardSellers.index'));
+    }
+
+    public function export()
+    {
+
+
+        return Excel::download(new CardSellerExport, 'cardseller.xlsx');
+    }
+
+    public function import()
+    {
+        if (request()->file('cardseller_file')) {
+            if (Excel::import(new CardSellerImport, request()->file('cardseller_file'))) {
+                Flash::success(__('Import Successfull'));
+                return back()->with('success', 'All good!');
+            } else {
+                Flash::error(__('Import Failed'));
+                return back()->with('error', 'Import Failed');
+            }
+        } else {
+            Flash::warning(__('Please select a file first !'));
+            return back()->with('error', 'Please select a file first !');
+        }
+    }
+
+
+    public function erase()
+    {
+        Client::query()->truncate();
+        flash('Truncate Successfull')->success();
+        //Flash::success(__('Truncate Successfull', ['model' => __('models/clients.singular')]));
+        return back();
     }
 }

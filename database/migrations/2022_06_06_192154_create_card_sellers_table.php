@@ -17,8 +17,11 @@ class CreateCardSellersTable extends Migration
         Schema::create('card_sellers', function (Blueprint $table) {
             $table->id('id');
             $table->string('name');
-            $table->string('contact')->nullable();
-            $table->string('store_title')->nullable();
+            $table->string('contact');
+            $table->string('shopName');
+            $table->string('village');
+            $table->string('union');
+            $table->string('address');
             $table->timestamps();
             $table->softDeletes();
         });

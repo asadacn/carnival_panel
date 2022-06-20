@@ -10,10 +10,28 @@
     <p>{{ $cardSeller->contact }}</p>
 </div>
 
-<!-- Zone Field -->
+<!-- Shopname Field -->
 <div class="form-group">
-    {!! Form::label('zone', __('models/cardSellers.fields.zone').':') !!}
-    <p>{{ $cardSeller->zone }}</p>
+    {!! Form::label('shopName', __('models/cardSellers.fields.shopName').':') !!}
+    <p>{{ $cardSeller->shopName }}</p>
+</div>
+
+<!-- Village Field -->
+<div class="form-group">
+    {!! Form::label('village', __('models/cardSellers.fields.village').':') !!}
+    <p>{{ $cardSeller->village }}</p>
+</div>
+
+<!-- Union Field -->
+<div class="form-group">
+    {!! Form::label('union', __('models/cardSellers.fields.union').':') !!}
+    <p>{{ $cardSeller->union }}</p>
+</div>
+
+<!-- Address Field -->
+<div class="form-group">
+    {!! Form::label('address', __('models/cardSellers.fields.address').':') !!}
+    <p>{{ $cardSeller->address }}</p>
 </div>
 
 <!-- Created At Field -->
