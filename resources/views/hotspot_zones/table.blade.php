@@ -2,6 +2,7 @@
     <table class="table" id="hotspotZones-table">
         <thead>
             <tr>
+                <th>SL</th>
                 <th>@lang('models/hotspotZones.fields.zone_id')</th>
         <th>@lang('models/hotspotZones.fields.zone_title')</th>
         <th>@lang('models/hotspotZones.fields.device_brand')</th>
@@ -17,7 +18,8 @@
         <tbody>
         @foreach($hotspotZones as $hotspotZone)
             <tr>
-                       <td>{{ $hotspotZone->zone_id }}</td>
+            <td>{{$loop->iteration}}</td>
+            <td>{{ $hotspotZone->zone_id }}</td>
             <td>{{ $hotspotZone->zone_title }}</td>
             <td>{{ $hotspotZone->device_brand }}</td>
             <td>{{ $hotspotZone->device_mac }}</td>
