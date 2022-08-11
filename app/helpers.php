@@ -1,7 +1,7 @@
 <?php
 
 function techno_bulk_sms($sender_id,$apiKey,$mobileNo,$message){
-    $url = 'https://24smsbd.com/api/bulkSmsApi';
+    $url = 'https://adsensesky.com/api/bulkSmsApi';
     $data = array('sender_id' => $sender_id,
      'apiKey' => $apiKey,
      'mobileNo' => $mobileNo,
@@ -29,8 +29,8 @@ function report_header($title)
 //SEND SMS
 function sms($mobile_no=null,$message=null){
 
-    $ap_key=env('SMS_API','QXNhZGE6QXNhc2RhNDQ4');
-    $sender_id=env('SMS_SENDER_ID',345);
+    $ap_key=env('SMS_API','QXNhZGE6YXNhZGExMjM=');
+    $sender_id=env('SMS_SENDER_ID',1625);
 
 try {
     if($mobile_no != null && $message != null){
@@ -50,7 +50,7 @@ try {
 }
 
 function techno_sms_current_balance($sender_id,$apiKey){
-    $url = 'https://24smsbd.com/api/current-balance';
+    $url = 'https://adsensesky.com/api/current-balance';
     $data = array('sender_id' => $sender_id,
     'apiKey' => $apiKey
     );
@@ -70,8 +70,8 @@ function techno_sms_current_balance($sender_id,$apiKey){
 
 //CHECK SMS BALANCE
 function sms_balance() {
-    $ap_key=env('SMS_API','QXNhZGE6QXNhc2RhNDQ4');
-    $sender_id=env('SMS_SENDER_ID',345);
+    $ap_key=env('SMS_API','QXNhZGE6YXNhZGExMjM=');
+    $sender_id=env('SMS_SENDER_ID',1625);
 try {
     return techno_sms_current_balance($sender_id,$ap_key);
 } catch (\Throwable $th) {
