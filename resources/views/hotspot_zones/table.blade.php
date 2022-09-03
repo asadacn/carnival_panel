@@ -10,6 +10,8 @@
         <th>@lang('models/hotspotZones.fields.device_serial')</th>
         <th>@lang('models/hotspotZones.fields.onu_mac')</th>
         <th>@lang('models/hotspotZones.fields.onu_brand')</th>
+        <th>@lang('models/hotspotZones.fields.has_ups')</th>
+        <th>@lang('models/hotspotZones.fields.ups_adapter')</th>
         <th>@lang('models/hotspotZones.fields.card_seller')</th>
         <th>@lang('models/hotspotZones.fields.status')</th>
                 <th colspan="3">@lang('crud.action')</th>
@@ -26,6 +28,8 @@
             <td>{{ $hotspotZone->device_serial }}</td>
             <td>{{ $hotspotZone->onu_mac }}</td>
             <td>{{ $hotspotZone->onu_brand }}</td>
+            <td>{!! $hotspotZone->has_ups == "Enable" ? "<span class='badge badge-success'>YES</span>" : "<span class='badge badge-danger'>N/A</span>"!!}</td>
+            <td>{{ $hotspotZone->usp_adapter }}</td>
             <td>{{ $hotspotZone->card_seller }}</td>
             <td>{{ $hotspotZone->status }}</td>
                        <td class=" text-center">

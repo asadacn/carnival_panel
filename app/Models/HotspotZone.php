@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string $onu_brand
  * @property string $card_seller
  * @property string $status
+ * @property string $has_ups
+ * @property string $usp_adapter
  */
 class HotspotZone extends Model
 {
@@ -28,7 +30,7 @@ class HotspotZone extends Model
     use HasFactory;
 
     public $table = 'hotspot_zones';
-    
+
 
     protected $dates = ['deleted_at'];
 
@@ -43,7 +45,9 @@ class HotspotZone extends Model
         'onu_mac',
         'onu_brand',
         'card_seller',
-        'status'
+        'status',
+        'usp_adapter',
+        'has_ups'
     ];
 
     /**
@@ -60,7 +64,9 @@ class HotspotZone extends Model
         'onu_mac' => 'string',
         'onu_brand' => 'string',
         'card_seller' => 'string',
-        'status' => 'string'
+        'status' => 'string',
+        'usp_adapter' => 'string',
+        'has_ups' => 'string'
     ];
 
     /**
@@ -77,8 +83,10 @@ class HotspotZone extends Model
         'onu_mac' => 'nullable',
         'onu_brand' => 'nullable',
         'card_seller' => 'nullable',
-        'status' => 'required'
+        'status' => 'required',
+        'usp_adapter' =>'nullable',
+        'has_ups' => 'nullable'
     ];
 
-    
+
 }

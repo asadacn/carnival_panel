@@ -25,7 +25,9 @@ class HotspotZoneRepository extends BaseRepository
         'onu_mac',
         'onu_brand',
         'card_seller',
-        'status'
+        'status',
+        'usp_adapter',
+        'card_seller'
     ];
 
     /**
