@@ -19,18 +19,19 @@
    </div>
 
     </section>
-
     <script>
 
         function copyText(obj)
         {
             var tmpInput = $("<input>");
             $("body").append(tmpInput);
-            var tdVal = $(obj).parent().text();
+            var tdVal = $(obj).parent().prev().text();
             tmpInput.val(tdVal).select();
             document.execCommand("copy");
             tmpInput.remove();
+
             alert(tdVal + "ONU mac copied to clipboard");
+
         }
 
         </script>
