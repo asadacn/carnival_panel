@@ -74,3 +74,4 @@
     {!! Form::submit(__('crud.save'), ['class' => 'btn btn-primary']) !!}
     <a href="{{ route('hotspotZones.index') }}" class="btn btn-light">@lang('crud.cancel')</a>
 </div>
+

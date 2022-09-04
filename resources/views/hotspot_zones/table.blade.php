@@ -26,9 +26,9 @@
             <td>{{ $hotspotZone->device_brand }}</td>
             <td>{{ $hotspotZone->device_mac }}</td>
             <td>{{ $hotspotZone->device_serial }}</td>
-            <td>{{ $hotspotZone->onu_mac }}</td>
+            <td style="min-width: 160px">{{ $hotspotZone->onu_mac }}   <a class="btn btn-sm btn-light ml-1" onclick="copyText(this)" title="Copy"><i class="fa fa-copy"></i></a> </td>
             <td>{{ $hotspotZone->onu_brand }}</td>
-            <td>{!! $hotspotZone->has_ups == "Enable" ? "<span class='badge badge-success'>YES</span>" : "<span class='badge badge-danger'>N/A</span>"!!}</td>
+            <td>{!! $hotspotZone->has_ups == "Enable" ? "<span class='badge badge-success'>YES</span>" : "<span class='badge badge-pill badge-danger'>N/A</span>"!!}</td>
             <td>{{ $hotspotZone->usp_adapter }}</td>
             <td>{{ $hotspotZone->card_seller }}</td>
             <td>{{ $hotspotZone->status }}</td>
