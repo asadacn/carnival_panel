@@ -53,16 +53,20 @@
     {!! Form::select('status', ['Enable' => 'Enable', 'Disable' => 'Disable'], null, ['class' => 'form-control']) !!}
 </div>
 <!-- UPS Field -->
-<div class="form-group col-sm-1">
+<div class="form-group col-sm-2">
+    {!! Form::label('has_ups', __('models/hotspotZones.fields.has_ups').':') !!}
+    {!! Form::select('has_ups', ['Disable' => 'NO','Enable' => 'YES' ], null, ['class' => 'form-control']) !!}
+</div>
+{{-- <div class="form-group col-sm-1">
     {!! Form::checkbox('has_ups', null, false) !!}
     {!! Form::label('has_ups', __('models/hotspotZones.fields.has_ups').':') !!}
 
-</div>
+</div> --}}
 
 <!-- UPS adapter -->
 <div class="form-group col-sm-2">
-    {!! Form::label('ups_adapter', __('models/hotspotZones.fields.ups_adapter').':') !!}
-    {!! Form::text('ups_adapter', null, ['class' => 'form-control']) !!}
+    {!! Form::label('usp_adapter', __('models/hotspotZones.fields.ups_adapter').':') !!}
+    {!! Form::text('usp_adapter', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Submit Field -->
@@ -70,3 +74,4 @@
     {!! Form::submit(__('crud.save'), ['class' => 'btn btn-primary']) !!}
     <a href="{{ route('hotspotZones.index') }}" class="btn btn-light">@lang('crud.cancel')</a>
 </div>
+
