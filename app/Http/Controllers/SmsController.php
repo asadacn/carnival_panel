@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\SMSLOG;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SmsController extends Controller
 {
@@ -69,6 +70,42 @@ class SmsController extends Controller
     return true;
 
    }
+
+   public function reg_bulk_sms(Request $request)
+   {
+
+    $registered_clients = DB::table('clients')
+    ->where('status','Registered')->get();
+
+
+    try {
+        foreach($registered_clients as $client){
+            $smslog = new SMSLOG();
+            $smslog->client_id = $client->username;
+            $smslog->contact = $client->contact;
+            $smslog->sms = $request->sms;
+
+                if (sms( $client->contact, $request->sms)) {
+                    $smslog->status = true;
+                    $smslog->save();
+                }else{
+                    $smslog->status = false;
+                    $smslog->save();
+
+                } ;
+
+
+            }
+    } catch (\Throwable $th) {
+        return false;
+
+    }
+    //end bulksms
+
+    return true;
+
+   }
+
 
    public function sms_log()
    {
