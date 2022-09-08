@@ -35,8 +35,9 @@ class HomeController extends Controller
                  ->select('package', DB::raw('count(*) as total'))
                  ->groupBy('package')
                  ->get();
-
-               //  dd($clients_by_package);
-        return view('home', compact('clients','clients_by_package','package'));
+        $registered_clients = DB::table('clients')
+                                    ->where('status','Registered')->count();
+              //   dd($registered_clients);
+        return view('home', compact('clients','clients_by_package','package','registered_clients'));
     }
 }

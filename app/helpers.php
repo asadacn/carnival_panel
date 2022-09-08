@@ -112,3 +112,5 @@ function takaFormat($input){
             }
             return $num . $dec;
         }
+
+        
