@@ -19,23 +19,31 @@
    </div>
 
     </section>
-    <script>
 
-        function copyText(obj)
-        {
-            var tmpInput = $("<input>");
-            $("body").append(tmpInput);
-            var tdVal = $(obj).parent().prev().text();
-            tmpInput.val(tdVal).select();
-            document.execCommand("copy");
-            tmpInput.remove();
 
-            alert(tdVal + "ONU mac copied to clipboard");
-
-        }
-
-        </script>
 @endsection
 
+@section('page_js')
 
+<script>
+            function copyText(obj)
+            {
+                var tmpInput = $("<input>");
+                $("body").append(tmpInput);
+                var tdVal = $(obj).parent().prev().text();
+                tmpInput.val(tdVal).select();
+                document.execCommand("copy");
+                tmpInput.remove();
+                Swal.fire({
+                position: 'center',
+                icon: 'success',
+                title: tdVal +' Copied',
+                showConfirmButton: false,
+                timer: 1500
+                })
+
+            }
+
+</script>
+@endsection
 
