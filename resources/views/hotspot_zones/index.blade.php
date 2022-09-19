@@ -47,3 +47,100 @@
 </script>
 @endsection
 
+
+@section('scripts')
+    {{-- <script src="{{ asset('js/sms_counter.min.js') }}"></script> --}}
+    <script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            var table = $('#hotspotZones').DataTable({
+                pageLength: 25,
+                proccessing: true,
+                serverSide: true,
+                responsive: true,
+                autoWidth: true,
+                searching: true,
+                select: true,
+                dom: 'lBfrtip',
+                ajax: "{{ route('hotspotZones.index') }}",
+                columns: [
+                    {
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex'
+                    },
+
+                    {
+                        data: 'zone_id',
+                        name: 'zone_id'
+                    },
+                    {
+                        data: 'zone_title',
+                        name: 'zone_title'
+                    },
+                    {
+                        data: 'device_brand',
+                        name: 'device_brand'
+                    },
+                    {
+                        data: 'onu_brand',
+                        name: 'onu_brand'
+                    },
+                    {
+                        data: 'onu_mac',
+                        name: 'onu_mac'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        searchable: false,
+                        orderable: false
+                    },
+
+
+                ],
+                // columnDefs: [{
+                //     orderable: false,
+                //     className: 'select-checkbox',
+                //     targets: 0
+                // }],
+                // select: {
+                //     style: 'multi',
+                //     selector: 'td:first-child'
+                // },
+                //for conditional column style/format
+                // rowCallback: function(row, data, index) {
+                //     if (data.status == "Registered") {
+                //         $("td:eq(8)", row).addClass("text-success");
+                //     } else {
+                //         $("td:eq(8)", row).addClass("text-danger");
+                //     }
+                // },
+
+                order: [
+                    [1, 'asc']
+                ]
+            });
+        });
+
+        $('body').on('click', '.editClient', function() {
+            var client_id = $(this).data('id');
+            var url = "{{ route('hotspotZones.index') }}" + client_id + '/edit';
+            location.replace(url);
+            $.get("{{ route('hotspotZones.index') }}" + client_id + '/edit', function(data) {
+                alert('ok');
+            })
+        });
+
+
+</script>
+
+@endsection

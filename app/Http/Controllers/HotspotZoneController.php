@@ -6,9 +6,11 @@ use App\Http\Requests\CreateHotspotZoneRequest;
 use App\Http\Requests\UpdateHotspotZoneRequest;
 use App\Repositories\HotspotZoneRepository;
 use App\Http\Controllers\AppBaseController;
+use App\Models\HotspotZone;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
+use Yajra\DataTables\DataTables;
 
 class HotspotZoneController extends AppBaseController
 {
@@ -20,19 +22,40 @@ class HotspotZoneController extends AppBaseController
         $this->hotspotZoneRepository = $hotspotZoneRepo;
     }
 
-    /**
-     * Display a listing of the HotspotZone.
-     *
-     * @param Request $request
-     *
-     * @return Response
-     */
+
+    // public function index(Request $request)
+    // {
+    //     $hotspotZones = $this->hotspotZoneRepository->all();
+
+    //     return view('hotspot_zones.index')
+    //         ->with('hotspotZones', $hotspotZones);
+    // }
+
     public function index(Request $request)
     {
-        $hotspotZones = $this->hotspotZoneRepository->all();
 
-        return view('hotspot_zones.index')
-            ->with('hotspotZones', $hotspotZones);
+        if ($request->ajax()) {
+
+            $data = HotspotZone::all();
+
+            return DataTables::of($data)->addIndexColumn()
+                ->addColumn('action', function ($zone) {
+
+                    $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
+                    // $btn = $btn . '<a href="#" data-toggle="modal" onclick="setSmsId(' . $zone->id . ')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
+                    $btn = $btn . '<a href="' . route('hotspotZones.show', [$zone->id]) . '" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
+                    $btn = $btn . '<a href="' . route('hotspotZones.edit', [$zone->id]) . '" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
+                    $btn = $btn . ' <a href="' . route('hotspotZones.destroy', [$zone->id]) . '" onclick="return confirm(\'Are you sure?\')"   data-id="' . $zone->id . '" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
+                    $btn = $btn . '</div>';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+
+
+        return view('hotspot_zones.index');
     }
 
     /**

@@ -7,7 +7,7 @@ return array (
   array (
     'id' => 'Id',
     'zone_id' => 'Zone Id',
-    'zone_title' => 'Zone Title',
+    'zone_title' => 'Zone',
     'device_brand' => 'Device Brand',
     'device_mac' => 'Device Mac',
     'device_serial' => 'Device Serial',
