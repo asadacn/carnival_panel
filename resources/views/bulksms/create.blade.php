@@ -25,7 +25,7 @@
                                     <option value="registered">Registered</option>
 
                                 </select>
-                                <select class="border border-secondary form-control mb-3">
+                                <select id="temp" class="border border-secondary form-control mb-3">
                                     <option value="">Select From Template</option>
 
                                     @foreach ($templates as $template)
@@ -69,7 +69,7 @@
 <script>
 
             //SMS MODAL TEMPLATE SELECTION
-            $('select').on('change', function() {
+            $('#temp').on('change', function() {
 
             $('#sms-body').val(this.value)
             $('#sms-body').countSms('#sms-counter')
