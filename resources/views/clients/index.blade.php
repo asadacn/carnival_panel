@@ -258,10 +258,10 @@
                                 showConfirmButton: false,
                                 timer: 1500,
 
-                            })
+                            });
 
-                            resetText()
-                            $('#smsModal').modal('toggle')
+                            resetText();
+                            $('#smsModal').modal('toggle');
                         } else {
                             Swal.hideLoading();
 

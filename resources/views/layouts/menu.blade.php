@@ -33,7 +33,7 @@
 </li>
 
 <li class="{{ Request::is('sMSTEMPALTES*') ? 'active' : '' }}">
-    <a href="{{ route('sMSTEMPALTES.index') }}"><i class="fa fa-sms"></i><span>Bulk SMS</span></a>
+    <a href="{{ route('create_bulk_sms') }}"><i class="fa fa-sms"></i><span>Bulk SMS</span></a>
     <a href="{{ route('sMSTEMPALTES.index') }}"><i class="fa fa-sms"></i><span>@lang('models/sMSTEMPALTES.plural')</span></a>
     <a href="{{ route('sms_log') }}"><i class="fa fa-history"></i><span>@lang('models/sMSLOGS.plural')</span></a>
 </li>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\SMS_TEMPALTE;
 use App\Models\SMSLOG;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -112,5 +113,12 @@ class SmsController extends Controller
        $SMSLOGS = SMSLOG::latest()->simplePaginate(25);
 
        return view('s_m_s_l_o_g_s.index',compact('SMSLOGS'));
+   }
+
+   public function create_bulk_sms(){
+
+    $templates = SMS_TEMPALTE::all();
+
+    return view('bulksms.create', compact('templates'));
    }
 }
