@@ -6,7 +6,7 @@ return array (
   'fields' =>
   array (
     'id' => 'Id',
-    'zone_id' => 'Zone Id',
+    'zone_id' => 'Zone#',
     'zone_title' => 'Zone',
     'device_brand' => 'Device Brand',
     'device_mac' => 'Device Mac',

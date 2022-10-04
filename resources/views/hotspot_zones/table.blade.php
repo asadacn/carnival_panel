@@ -1,9 +1,9 @@
 <div class="table-responsive">
-    <table class="table" id="hotspotZones">
+    <table class="table table-lg table-hover" id="hotspotZones">
         <thead>
             <tr>
                 <th>SL</th>
-                <th>@lang('models/hotspotZones.fields.zone_id')</th>
+                <th style="max-width: 100px">@lang('models/hotspotZones.fields.zone_id')</th>
         <th>@lang('models/hotspotZones.fields.zone_title')</th>
         <th>@lang('models/hotspotZones.fields.device_brand')</th>
         {{-- <th>@lang('models/hotspotZones.fields.device_mac')</th>
