@@ -3,10 +3,12 @@
 return array (
   'singular' => 'CardSeller',
   'plural' => 'CardSellers',
-  'fields' => 
+  'fields' =>
   array (
     'id' => 'Id',
     'name' => 'Name',
+    'seller' => 'Seller Name',
+    'store_title' => 'Store Title',
     'contact' => 'Contact',
     'shopName' => 'Shopname',
     'village' => 'Village',

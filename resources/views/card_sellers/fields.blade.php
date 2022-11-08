@@ -1,7 +1,7 @@
-<!-- Name Field -->
+<!-- Seller Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('name', __('models/cardSellers.fields.name').':') !!}
-    {!! Form::text('name', null, ['class' => 'form-control']) !!}
+    {!! Form::label('seller', __('models/cardSellers.fields.seller').':') !!}
+    {!! Form::text('seller', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Contact Field -->
@@ -10,28 +10,16 @@
     {!! Form::text('contact', null, ['class' => 'form-control']) !!}
 </div>
 
-<!-- Shopname Field -->
+<!-- Store Title Field -->
 <div class="form-group col-sm-6">
-    {!! Form::label('shopName', __('models/cardSellers.fields.shopName').':') !!}
-    {!! Form::text('shopName', null, ['class' => 'form-control']) !!}
-</div>
-
-<!-- Village Field -->
-<div class="form-group col-sm-6">
-    {!! Form::label('village', __('models/cardSellers.fields.village').':') !!}
-    {!! Form::text('village', null, ['class' => 'form-control']) !!}
-</div>
-
-<!-- Union Field -->
-<div class="form-group col-sm-6">
-    {!! Form::label('union', __('models/cardSellers.fields.union').':') !!}
-    {!! Form::text('union', null, ['class' => 'form-control']) !!}
+    {!! Form::label('store_title', __('models/cardSellers.fields.store_title').':') !!}
+    {!! Form::text('store_title', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Address Field -->
-<div class="form-group col-sm-12 col-lg-12">
+<div class="form-group col-sm-6">
     {!! Form::label('address', __('models/cardSellers.fields.address').':') !!}
-    {!! Form::textarea('address', null, ['class' => 'form-control']) !!}
+    {!! Form::text('address', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Submit Field -->

@@ -8,7 +8,7 @@ use App\Repositories\BaseRepository;
 /**
  * Class CardSellerRepository
  * @package App\Repositories
- * @version June 6, 2022, 7:21 pm UTC
+ * @version September 27, 2022, 8:35 pm UTC
 */
 
 class CardSellerRepository extends BaseRepository
@@ -17,11 +17,9 @@ class CardSellerRepository extends BaseRepository
      * @var array
      */
     protected $fieldSearchable = [
-        'name',
+        'seller',
         'contact',
-        'shopName',
-        'village',
-        'union',
+        'store_title',
         'address'
     ];
 

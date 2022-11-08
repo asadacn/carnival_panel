@@ -22,11 +22,9 @@ class CardSellerFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->word,
+            'seller' => $this->faker->word,
         'contact' => $this->faker->word,
-        'shopName' => $this->faker->word,
-        'village' => $this->faker->word,
-        'union' => $this->faker->word,
+        'store_title' => $this->faker->word,
         'address' => $this->faker->word,
         'created_at' => $this->faker->date('Y-m-d H:i:s'),
         'updated_at' => $this->faker->date('Y-m-d H:i:s')

@@ -19,10 +19,10 @@
 <li class="{{ Request::is('hotspotZones*') ? 'active' : '' }}">
     <a href="{{ route('hotspotZones.index') }}"><i class="fa fa-wifi"></i><span>@lang('models/hotspotZones.plural')</span></a>
 </li>
-
+{{-- 
 <li class="{{ Request::is('cardSellers*') ? 'active' : '' }}">
     <a href="{{ route('cardSellers.index') }}"><i class="fa fa-credit-card"></i><span>@lang('models/cardSellers.plural')</span></a>
-</li>
+</li> --}}
 
 <li class="{{ Request::is('areas*') ? 'active' : '' }}">
     <a href="{{ route('areas.index') }}"><i class="fa fa-map"></i><span>@lang('models/areas.plural')</span></a>
@@ -37,6 +37,7 @@
     <a href="{{ route('sMSTEMPALTES.index') }}"><i class="fa fa-sms"></i><span>@lang('models/sMSTEMPALTES.plural')</span></a>
     <a href="{{ route('sms_log') }}"><i class="fa fa-history"></i><span>@lang('models/sMSLOGS.plural')</span></a>
 </li>
+
 
 <li class="{{ Request::is('cardSellers*') ? 'active' : '' }}">
     <a href="{{ route('cardSellers.index') }}"><i class="fa fa-edit"></i><span>@lang('models/cardSellers.plural')</span></a>

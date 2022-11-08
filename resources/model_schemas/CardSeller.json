@@ -12,7 +12,7 @@
         "inView": false
     },
     {
-        "name": "name",
+        "name": "seller",
         "dbType": "string",
         "htmlType": "text",
         "validations": "required",
@@ -25,9 +25,9 @@
     },
     {
         "name": "contact",
-        "dbType": "string",
+        "dbType": "string,12",
         "htmlType": "text",
-        "validations": "nullable|numeric|max:11",
+        "validations": "required",
         "searchable": true,
         "fillable": true,
         "primary": false,
@@ -36,31 +36,7 @@
         "inView": true
     },
     {
-        "name": "shopName",
-        "dbType": "string",
-        "htmlType": "text",
-        "validations": "nullable",
-        "searchable": true,
-        "fillable": true,
-        "primary": false,
-        "inForm": true,
-        "inIndex": true,
-        "inView": true
-    },
-    {
-        "name": "village",
-        "dbType": "string",
-        "htmlType": "text",
-        "validations": "nullable",
-        "searchable": true,
-        "fillable": true,
-        "primary": false,
-        "inForm": true,
-        "inIndex": true,
-        "inView": true
-    },
-    {
-        "name": "union",
+        "name": "store_title",
         "dbType": "string",
         "htmlType": "text",
         "validations": "nullable",
@@ -74,7 +50,7 @@
     {
         "name": "address",
         "dbType": "string",
-        "htmlType": "textarea",
+        "htmlType": "text",
         "validations": "nullable",
         "searchable": true,
         "fillable": true,

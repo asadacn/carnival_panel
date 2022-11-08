@@ -45,7 +45,6 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::resource('hotspotZones', App\Http\Controllers\HotspotZoneController::class);
 
 
-Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class);
 });
 Route::get('cardSellers/export/', [App\Http\Controllers\CardSellerController::class, 'export'])->name('cardseller.export');
 Route::post('cardSellers/import/', [App\Http\Controllers\CardSellerController::class, 'import'])->name('cardseller.import');
@@ -67,3 +66,6 @@ Route::get('create_bulk_sms',[SmsController::class,"create_bulk_sms"])->name('cr
 Route::get('reg_bulk_sms',[SmsController::class,"reg_bulk_sms"])->name('reg_bulk_sms');
 Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');
 
+
+
+Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class);

@@ -2,11 +2,9 @@
     <table class="table" id="cardSellers-table">
         <thead>
             <tr>
-                <th>@lang('models/cardSellers.fields.name')</th>
+                <th>@lang('models/cardSellers.fields.seller')</th>
         <th>@lang('models/cardSellers.fields.contact')</th>
-        <th>@lang('models/cardSellers.fields.shopName')</th>
-        <th>@lang('models/cardSellers.fields.village')</th>
-        <th>@lang('models/cardSellers.fields.union')</th>
+        <th>@lang('models/cardSellers.fields.store_title')</th>
         <th>@lang('models/cardSellers.fields.address')</th>
                 <th colspan="3">@lang('crud.action')</th>
             </tr>
@@ -14,11 +12,9 @@
         <tbody>
         @foreach($cardSellers as $cardSeller)
             <tr>
-                       <td>{{ $cardSeller->name }}</td>
+                       <td>{{ $cardSeller->seller }}</td>
             <td>{{ $cardSeller->contact }}</td>
-            <td>{{ $cardSeller->shopName }}</td>
-            <td>{{ $cardSeller->village }}</td>
-            <td>{{ $cardSeller->union }}</td>
+            <td>{{ $cardSeller->store_title }}</td>
             <td>{{ $cardSeller->address }}</td>
                        <td class=" text-center">
                            {!! Form::open(['route' => ['cardSellers.destroy', $cardSeller->id], 'method' => 'delete']) !!}

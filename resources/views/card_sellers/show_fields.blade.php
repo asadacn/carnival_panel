@@ -1,7 +1,7 @@
-<!-- Name Field -->
+<!-- Seller Field -->
 <div class="form-group">
-    {!! Form::label('name', __('models/cardSellers.fields.name').':') !!}
-    <p>{{ $cardSeller->name }}</p>
+    {!! Form::label('seller', __('models/cardSellers.fields.seller').':') !!}
+    <p>{{ $cardSeller->seller }}</p>
 </div>
 
 <!-- Contact Field -->
@@ -10,22 +10,10 @@
     <p>{{ $cardSeller->contact }}</p>
 </div>
 
-<!-- Shopname Field -->
+<!-- Store Title Field -->
 <div class="form-group">
-    {!! Form::label('shopName', __('models/cardSellers.fields.shopName').':') !!}
-    <p>{{ $cardSeller->shopName }}</p>
-</div>
-
-<!-- Village Field -->
-<div class="form-group">
-    {!! Form::label('village', __('models/cardSellers.fields.village').':') !!}
-    <p>{{ $cardSeller->village }}</p>
-</div>
-
-<!-- Union Field -->
-<div class="form-group">
-    {!! Form::label('union', __('models/cardSellers.fields.union').':') !!}
-    <p>{{ $cardSeller->union }}</p>
+    {!! Form::label('store_title', __('models/cardSellers.fields.store_title').':') !!}
+    <p>{{ $cardSeller->store_title }}</p>
 </div>
 
 <!-- Address Field -->
