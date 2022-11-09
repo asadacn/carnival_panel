@@ -18,7 +18,9 @@
                        <div class="card">
                            <div class="card-body ">
                             <div class="modal-body">
-                                <select class="border border-secondary form-control mb-3">
+                              <form id="sms_form" action="{{route('bulk_sms')}}" method="POST">
+                                @csrf
+                                <select name="client_status" class="border border-secondary form-control mb-3">
                                     <option value="">Select Clients Group</option>
 
                                     <option value="expired">Expired</option>
@@ -33,8 +35,8 @@
                                     @endforeach
 
                                 </select>
-                                <form id="sms_form" action="">
-                                    <input id="client_id" type="hidden" name="client_id">
+
+                                    {{-- <input id="client_id" type="hidden" name="client_id"> --}}
                                     <label for="">Write Message ( <small id="sms-counter">
                                             {{-- <li>Encoding: <span class="encoding"></span></li> --}}
                                             {{-- <li>Length: <span class="length"></span></li> --}}
@@ -43,16 +45,17 @@
                                             <span>Remaining: <span class="remaining"></span></span>
                                         </small> )
                                     </label>
-                                    <textarea name="sms-body" id="sms-body" style="min-height: 140px;" class="form-control border border-success"
+                                    <textarea name="sms_body" id="sms-body" style="min-height: 140px;" class="form-control border border-success"
                                         placeholder="Write your message here .."></textarea>
-                                </form>
+
 
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-danger m-1" data-dismiss="modal">Cancel</button>
                                 <button type="button" onclick="resetText()" class="btn btn-warning m-1">Reset</button>
-                                <button type="button" onclick="sendSMS()" class="btn btn-success m-1">Send</button>
+                                <button type="submit" onclick="sendSMS()" class="btn btn-success m-1">Send</button>
                             </div>
+                        </form>
                            </div>
                        </div>
                    </div>

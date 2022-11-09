@@ -7,6 +7,7 @@ use App\Models\SMS_TEMPALTE;
 use App\Models\SMSLOG;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Laracasts\Flash\Flash;
 
 class SmsController extends Controller
 {
@@ -39,54 +40,16 @@ class SmsController extends Controller
    public function bulk_sms(Request $request)
    {
 
-    //$client = Client::findOrFail($request->client_id);
-
-    // $response = Http::get('http://sms.asolution24.com/api/send?key=f044ca72dbd6b15c942f86c9245d836d22806212&priority=1&phone=88'.$client->contact.'&message='.$request->sms);
-
-    $i=0;
-    try {
-        foreach($request->clients as $client){
-            $smslog = new SMSLOG();
-            $smslog->client_id = $request->clients[$i]['username'];
-            $smslog->contact = $request->clients[$i]['contact'];
-            $smslog->sms = $request->sms;
-
-                if (sms( $request->clients[$i]['contact'], $request->sms)) {
-                    $smslog->status = true;
-                    $smslog->save();
-                }else{
-                    $smslog->status = false;
-                    $smslog->save();
-
-                } ;
-
-        $i++;
-            }
-    } catch (\Throwable $th) {
-        return false;
-
-    }
-    //end bulksms
-
-    return true;
-
-   }
-
-   public function reg_bulk_sms(Request $request)
-   {
-
-    $registered_clients = DB::table('clients')
-    ->where('status','Registered')->get();
-
+    $clients = Client::where('status',$request->client_status)->get();
 
     try {
-        foreach($registered_clients as $client){
+        foreach($clients as $client){
             $smslog = new SMSLOG();
             $smslog->client_id = $client->username;
             $smslog->contact = $client->contact;
-            $smslog->sms = $request->sms;
+            $smslog->sms = $request->sms_body;
 
-                if (sms( $client->contact, $request->sms)) {
+                if (sms(  $client->contact, $request->sms_body )) {
                     $smslog->status = true;
                     $smslog->save();
                 }else{
@@ -94,18 +57,18 @@ class SmsController extends Controller
                     $smslog->save();
 
                 } ;
-
-
             }
     } catch (\Throwable $th) {
-        return false;
+        Flash::error("SMS Sending Failed!");
+        return redirect()->back();
 
     }
     //end bulksms
-
-    return true;
+    Flash::success("SMS Successfully Delivered!");
+    return redirect()->back();
 
    }
+
 
 
    public function sms_log()
