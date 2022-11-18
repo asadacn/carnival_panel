@@ -24,7 +24,7 @@ class Investment extends Model
     use HasFactory;
 
     public $table = 'investments';
-    
+
 
     protected $dates = ['deleted_at'];
 
@@ -35,6 +35,7 @@ class Investment extends Model
         'purpose',
         'amount',
         'invested_by',
+        'created_at',
         'description'
     ];
 
@@ -48,6 +49,7 @@ class Investment extends Model
         'purpose' => 'string',
         'amount' => 'integer',
         'invested_by' => 'string',
+        'created_at'=>'date',
         'description' => 'string'
     ];
 
@@ -61,8 +63,9 @@ class Investment extends Model
         'purpose' => 'nullable',
         'amount' => 'required',
         'invested_by' => 'nullable',
+        'created_at'=>'required',
         'description' => 'nullable'
     ];
 
-    
+
 }

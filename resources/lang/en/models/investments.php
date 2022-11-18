@@ -3,7 +3,7 @@
 return array (
   'singular' => 'Investment',
   'plural' => 'Investments',
-  'fields' => 
+  'fields' =>
   array (
     'id' => 'Id',
     'type' => 'Type',
@@ -11,7 +11,7 @@ return array (
     'amount' => 'Amount',
     'invested_by' => 'Invested By',
     'description' => 'Description',
-    'created_at' => 'Created At',
+    'created_at' => 'Date',
     'updated_at' => 'Updated At',
   ),
 );

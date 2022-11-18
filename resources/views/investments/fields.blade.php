@@ -1,19 +1,24 @@
 <!-- Type Field -->
-<div class="form-group col-sm-6">
+<div class="form-group col-sm-3">
     {!! Form::label('type', __('models/investments.fields.type').':') !!}
     {!! Form::text('type', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Amount Field -->
-<div class="form-group col-sm-6">
+<div class="form-group col-sm-3">
     {!! Form::label('amount', __('models/investments.fields.amount').':') !!}
     {!! Form::number('amount', null, ['class' => 'form-control']) !!}
 </div>
 
 <!-- Invested By Field -->
-<div class="form-group col-sm-6">
+<div class="form-group col-sm-3">
     {!! Form::label('invested_by', __('models/investments.fields.invested_by').':') !!}
     {!! Form::text('invested_by', null, ['class' => 'form-control']) !!}
+</div>
+<!-- Invested By Field -->
+<div class="form-group col-sm-3">
+    {!! Form::label('Date', __('models/investments.fields.created_at').':') !!}
+    {!! Form::date('created_at', empty($investment)? \Carbon\Carbon::now() : $investment->created_at , ['class' => 'form-control']) !!}
 </div>
 
 <!-- Description Field -->

@@ -61,7 +61,7 @@ Route::resource('collectors', App\Http\Controllers\CollectorController::class);
 Route::resource('sMSTEMPALTES', App\Http\Controllers\SMS_TEMPALTEController::class);
 
 Route::get('solo_sms',[SmsController::class,"send_sms"])->name('solo_sms');
-Route::post('bulk_sms',[SmsController::class,"bulk_sms"])->name('bulk_sms');
+Route::get('bulk_sms',[SmsController::class,"bulk_sms"])->name('bulk_sms');
 Route::get('create_bulk_sms',[SmsController::class,"create_bulk_sms"])->name('create_bulk_sms');
 Route::get('reg_bulk_sms',[SmsController::class,"reg_bulk_sms"])->name('reg_bulk_sms');
 Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');
