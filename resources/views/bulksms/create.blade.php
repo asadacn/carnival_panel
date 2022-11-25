@@ -18,13 +18,15 @@
                        <div class="card">
                            <div class="card-body ">
                             <div class="modal-body">
-                              <form id="sms_form" action="{{route('bulk_sms')}}" method="POST">
+                              <form id="sms_form" action="{{route('bulk_sms')}}" method="GET">
                                 @csrf
                                 <select name="client_status" class="border border-secondary form-control mb-3">
                                     <option value="">Select Clients Group</option>
 
                                     <option value="expired">Expired</option>
                                     <option value="registered">Registered</option>
+                                    <option value="expired_today">Expired Today - {{$expired_today}} Clients</option>
+                                    <option value="expiring">Expiring Tommorrow - {{$expiring_soon}} Clients</option>
 
                                 </select>
                                 <select id="temp" class="border border-secondary form-control mb-3">

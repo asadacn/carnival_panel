@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\SMS_TEMPALTE;
 use App\Models\SMSLOG;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laracasts\Flash\Flash;
@@ -40,25 +41,57 @@ class SmsController extends Controller
    public function bulk_sms(Request $request)
    {
 
-    $clients = Client::where('status',$request->client_status)->get();
+  //  $request->client_status == "expiring" ?  $clients = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->get() : $clients = Client::where('status',$request->client_status)->get();
+    //dd( $clients);
+
+
+switch ($request->client_status) {
+    case "expiring":
+        $clients = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->get();
+      break;
+    case "registered":
+        $clients = Client::where('status','registered')->get();
+      break;
+    case "expired":
+        $clients = Client::where('status','expired')->get();
+    case "expired_today":
+        $clients = Client::where('expiration',Carbon::today('Asia/Dhaka'))->get();
+      break;
+    default:
+    Flash::error("Select a clients group please!");
+    return redirect()->back();
+  }
+
+
 
     try {
-        foreach($clients as $client){
-            $smslog = new SMSLOG();
-            $smslog->client_id = $client->username;
-            $smslog->contact = $client->contact;
-            $smslog->sms = $request->sms_body;
+        if(!empty($request->sms_body)){
 
-                if (sms(  $client->contact, $request->sms_body )) {
-                    $smslog->status = true;
-                    $smslog->save();
-                }else{
-                    $smslog->status = false;
-                    $smslog->save();
+            foreach($clients as $client){
+                $smslog = new SMSLOG();
+                $smslog->client_id = $client->username;
+                $smslog->contact = $client->contact;
+                $smslog->sms = $request->sms_body;
 
-                } ;
-            }
+                    if (sms(  $client->contact, $request->sms_body )) {
+                        $smslog->status = true;
+                        $smslog->save();
+                    }else{
+                        $smslog->status = false;
+                        $smslog->save();
+
+                    } ;
+                }
+
+        }else{
+
+        Flash::error("SMS Body Empty!");
+        return redirect()->back();
+
+        }
+
     } catch (\Throwable $th) {
+
         Flash::error("SMS Sending Failed!");
         return redirect()->back();
 
@@ -82,6 +115,9 @@ class SmsController extends Controller
 
     $templates = SMS_TEMPALTE::all();
 
-    return view('bulksms.create', compact('templates'));
+    $expiring_soon = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->count();
+    $expired_today = Client::where('expiration',Carbon::today('Asia/Dhaka'))->count();
+
+    return view('bulksms.create', compact(['templates','expiring_soon','expired_today']));
    }
 }
