@@ -16,7 +16,7 @@
                                     <div class="card rounded">
 
                                         <div class="card-body">
-                                            <h2>Clients</h2>
+                                            <h2 class="h4">Total Clients</h2>
                                             <h5 class="card-title">{{$clients->count()}}</h5>
 
                                         </div>
@@ -26,7 +26,37 @@
                                     <div class="card rounded">
 
                                         <div class="card-body">
-                                            <h2>SMS</h2>
+                                            <h2 class="h4">Expiring Soon</h2>
+                                            <h5 class="card-title">{{$expiring_soon}}</h5>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="card rounded">
+
+                                        <div class="card-body">
+                                            <h2 class="h4">Expired Today</h2>
+                                            <h5 class="card-title">{{$expired_today}}</h5>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="card rounded">
+
+                                        <div class="card-body">
+                                            <h2 class="h4">Monthly Expired </h2>
+                                            <h5 class="card-title">{{$expired_this_month}}</h5>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="card rounded">
+
+                                        <div class="card-body">
+                                            <h2 class="h4">SMS Avilable</h2>
                                             <h5 class="card-title">{{sms_balance()}}</h5>
 
                                         </div>
@@ -70,7 +100,20 @@
                             </div>
 
                         </div>
-                        <div class="card-footer"><h4>Estimated Total Value : {{$total}} Tk. / Commission: {{$total*.4}} Tk.</h4></div>
+                        <div class="card-footer">
+                            <p>
+                                <a class="btn btn-primary text-uppercase" onclick="toggle()">
+                                  Calculate Commission
+                                </a>
+
+                              </p>
+                              <div style="display: none" id="collapseCommission">
+                                <div class="card card-body">
+                                    <h4>Estimated Total Value : {{$total}} Tk. / Commission: {{$total*.4}} Tk.</h4></div>
+                                </div>
+                              </div>
+
+
                     </div>
                 </div>
             </div>
@@ -78,3 +121,10 @@
     </section>
 @endsection
 
+@section('scripts')
+<script>
+    function toggle(){
+    $('#collapseCommission').toggle('fast');
+    }
+</script>
+@endsection

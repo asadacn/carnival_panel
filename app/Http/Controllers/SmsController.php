@@ -46,7 +46,7 @@ class SmsController extends Controller
 
 
 switch ($request->client_status) {
-    
+
     case "expiring":
         $clients = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->get();
       break;
@@ -123,7 +123,6 @@ switch ($request->client_status) {
 
     $expiring_soon = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->count();
     $expired_today = Client::where('expiration',Carbon::today('Asia/Dhaka'))->count();
-    $today= Carbon::now('Asia/Dhaka');
     $expired_this_month = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->count();
    // dd($expired_this_month);
     return view('bulksms.create', compact(['templates','expiring_soon','expired_today','expired_this_month']));
