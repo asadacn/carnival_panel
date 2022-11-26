@@ -25,6 +25,7 @@
 
                                     <option value="expired">Expired</option>
                                     <option value="registered">Registered</option>
+                                    <option value="expired_this_month">Expired This Month - {{$expired_this_month}} Clients</option>
                                     <option value="expired_today">Expired Today - {{$expired_today}} Clients</option>
                                     <option value="expiring">Expiring Tommorrow - {{$expiring_soon}} Clients</option>
 
@@ -55,7 +56,7 @@
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-danger m-1" data-dismiss="modal">Cancel</button>
                                 <button type="button" onclick="resetText()" class="btn btn-warning m-1">Reset</button>
-                                <button type="submit" onclick="sendSMS()" class="btn btn-success m-1">Send</button>
+                                <button type="submit" onclick="Swal.showLoading();" class="btn btn-success m-1">Send</button>
                             </div>
                         </form>
                            </div>
@@ -81,6 +82,13 @@
 
             //alert( this.value );
             });
+
+
+        //reset sms modal form
+        function resetText() {
+            $("#sms-body").val('').countSms('#sms-counter');
+            $('select').val('');
+        }
 
 </script>
 @endsection
