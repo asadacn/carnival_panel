@@ -85,7 +85,7 @@
                                             <tr>
                                                 <td>{{$client->package}}</td>
                                                 <td>{{$client->total}} </td>
-                                                <td>{{$client->total* $package[$client->package]}} Tk.</td>
+                                                <td>{{takaFormat($client->total* $package[$client->package])}} Tk.</td>
                                             </tr>
                                                 @php
                                                     $total += $client->total* $package[$client->package];
@@ -109,7 +109,7 @@
                               </p>
                               <div style="display: none" id="collapseCommission">
                                 <div class="card card-body">
-                                    <h4>Estimated Total Value : {{$total}} Tk. / Commission: {{$total*.4}} Tk.</h4></div>
+                                    <h4>Estimated Total Value : {{$total}} Tk. / Commission: {{takaFormat($total*.4)}} Tk.</h4></div>
                                 </div>
                               </div>
 

@@ -7,6 +7,7 @@
         <th>@lang('models/investments.fields.amount')</th>
         <th>@lang('models/investments.fields.invested_by')</th>
         <th>@lang('models/investments.fields.description')</th>
+        <th>@lang('models/investments.fields.created_at')</th>
                 <th colspan="3">@lang('crud.action')</th>
             </tr>
         </thead>
@@ -15,9 +16,10 @@
             <tr>
                        <td>{{ $investment->type }}</td>
             <td>{{ $investment->purpose }}</td>
-            <td>{{ $investment->amount }}</td>
+            <td>{{ takaFormat($investment->amount) }}</td>
             <td>{{ $investment->invested_by }}</td>
             <td>{{ $investment->description }}</td>
+            <td>{{ $investment->created_at->format('d/M\'y') }}</td>
                        <td class=" text-center">
                            {!! Form::open(['route' => ['investments.destroy', $investment->id], 'method' => 'delete']) !!}
                            <div class='btn-group'>
