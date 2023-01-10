@@ -29,12 +29,13 @@ function report_header($title)
 //SEND SMS
 function sms($mobile_no=null,$message=null){
 
-    $ap_key=env('SMS_API','QXNhZGE6YXNhZGExMjM=');
-    $sender_id=env('SMS_SENDER_ID',1625);
+    $ap_key=env('SMS_API','175392409647823620230102091243pmF5lrciDk');
+    $sender_id=env('SMS_SENDER_ID',297);
+    $email = env('SMS_SENDER_EMAIL','asadacn@gmail.com');
 
 try {
     if($mobile_no != null && $message != null){
-        techno_bulk_sms($sender_id,$ap_key,$mobile_no,$message);
+        techno_bulk_sms($ap_key,$sender_id,$mobile_no,$message,$email);
       //  toast('SMS Sent to - '.$mobile_no,'success');
         return true;
 
@@ -49,35 +50,27 @@ try {
 
 }
 
-function techno_sms_current_balance($sender_id,$apiKey){
-    $url = 'https://adsensesky.com/api/current-balance';
-    $data = array('sender_id' => $sender_id,
-    'apiKey' => $apiKey
-    );
-
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-    $output = curl_exec($curl);
-    curl_close($curl);
-
-    $result = json_decode($output);
-    return $result->data->sms_limit;
-    }
-
 //CHECK SMS BALANCE
 function sms_balance() {
-    $ap_key=env('SMS_API','QXNhZGE6YXNhZGExMjM=');
-    $sender_id=env('SMS_SENDER_ID',1625);
-try {
-    return techno_sms_current_balance($sender_id,$ap_key);
-} catch (\Throwable $th) {
-    return 0;
-}
 
+$url = 'https://24bulksms.com/24bulksms/api/user-info-chack';
+$ap_key='175392409647823620230102091243pmF5lrciDk';
+$email='asadacn@gmail.com';
+$data = array('api_key' => $ap_key,
+ 'user_email'=>$email
+ );
+
+// use key 'http' even if you send the request to https://...
+ $curl = curl_init($url);
+curl_setopt($curl, CURLOPT_POST, true);
+curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+$output = curl_exec($curl);
+curl_close($curl);
+$result = json_decode($output);
+return $result->data->balance;
 }
 
 
@@ -113,4 +106,4 @@ function takaFormat($input){
             return $num . $dec;
         }
 
-        
+
