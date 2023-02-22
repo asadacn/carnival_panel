@@ -48,18 +48,18 @@ class SmsController extends Controller
 switch ($request->client_status) {
 
     case "expiring":
-        $clients = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->get();
+        $clients = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
       break;
     case "registered":
-        $clients = Client::where('status','registered')->get();
+        $clients = Client::where('status','registered')->pluck('contact');
       break;
     case "expired":
-        $clients = Client::where('status','expired')->get();
+        $clients = Client::where('status','expired')->pluck('contact');
     case "expired_today":
-        $clients = Client::where('expiration',Carbon::today('Asia/Dhaka'))->get();
+        $clients = Client::where('expiration',Carbon::today('Asia/Dhaka'))->pluck('contact');
       break;
     case "expired_this_month":
-        $clients = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->get();
+        $clients = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
       break;
 
     default:
@@ -73,21 +73,23 @@ switch ($request->client_status) {
     try {
         if(!empty($request->sms_body)){
 
-            foreach($clients as $client){
-                $smslog = new SMSLOG();
-                $smslog->client_id = $client->username;
-                $smslog->contact = $client->contact;
-                $smslog->sms = $request->sms_body;
+            // foreach($clients as $client){
+            //     $smslog = new SMSLOG();
+            //     $smslog->client_id = $client->username;
+            //     $smslog->contact = $client->contact;
+            //     $smslog->sms = $request->sms_body;
 
-                    if (sms(  $client->contact, $request->sms_body )) {
-                        $smslog->status = true;
-                        $smslog->save();
-                    }else{
-                        $smslog->status = false;
-                        $smslog->save();
+            //         if (sms(  $client->contact, $request->sms_body )) {
+            //             $smslog->status = true;
+            //             $smslog->save();
+            //         }else{
+            //             $smslog->status = false;
+            //             $smslog->save();
 
-                    } ;
-                }
+            //         } ;
+            //     }
+
+            sms(  $clients, $request->sms_body );
 
         }else{
 
