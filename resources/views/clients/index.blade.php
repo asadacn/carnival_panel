@@ -120,7 +120,7 @@
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
                                 data =
-                                    '<a href="https://reportpanel.carnival.com.bd/partnercrm/user_details.php?carnivalid=' +
+                                    '<a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid=' +
                                     row.username + '" target="_blank">' + data + '</a>';
                             }
                             return data;
