@@ -17,24 +17,24 @@ class PackageSeeder extends Seeder
     public function run()
     {
         DB::table('packages')->insert([
-            'title' => '5 Mbps',
+            'title' => '7 Mbps',
             'price' => '525',
 
         ]);
 
         DB::table('packages')->insert([
-            'title' => '8 Mbps',
+            'title' => '10 Mbps',
             'price' => '699',
 
         ]);
         DB::table('packages')->insert([
-            'title' => '10 Mbps',
-            'price' => '840',
+            'title' => '12 Mbps',
+            'price' => '699',
 
         ]);
         DB::table('packages')->insert([
             'title' => '15 Mbps',
-            'price' => '1099',
+            'price' => '1049',
 
         ]);
         DB::table('packages')->insert([
@@ -43,12 +43,17 @@ class PackageSeeder extends Seeder
 
         ]);
         DB::table('packages')->insert([
+            'title' => '20 Mbps_RP',
+            'price' => '1558',
+
+        ]);
+        DB::table('packages')->insert([
             'title' => '15 Mbps_RP',
             'price' => '1400',
 
         ]);
         DB::table('packages')->insert([
-            'title' => '8 Mbps_RP',
+            'title' => '10 Mbps_RP',
             'price' => '998',
 
         ]);
