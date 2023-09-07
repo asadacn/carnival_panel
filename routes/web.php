@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CardSellerController;
+use App\Http\Controllers\HotspotZoneController;
 use App\Http\Controllers\SmsController;
 use App\Models\CardSeller;
 use App\Models\Client;
@@ -31,11 +32,17 @@ Auth::routes();
 
 Route::middleware(['auth'])->group(function () {
 Route::resource('clients', ClientController::class);
+//Clients Import Export
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
 Route::post('client/import/', [ClientController::class, 'import'])->name('clients.import');
 Route::get('client/import/create', [ClientController::class, 'create_import'])->name('clients.import.create');
-
 Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.erase')->middleware('password.confirm');
+
+//Hotspot Import Export
+Route::get('hotspot/export/', [HotspotZoneController::class, 'export'])->name('hotspots.export');
+Route::post('hotspot/import/', [HotspotZoneController::class, 'import'])->name('hotspots.import');
+Route::get('hotspot/import/create', [HotspotZoneController::class, 'create_import'])->name('hotspots.import.create');
+Route::get('hotspot/erase/', [HotspotZoneController::class, 'erase'])->name('hotspots.erase')->middleware('password.confirm');
 
 Route::resource('packages', App\Http\Controllers\PackageController::class);
 Route::resource('investments', App\Http\Controllers\InvestmentController::class);

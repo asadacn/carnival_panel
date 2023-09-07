@@ -8,6 +8,13 @@
             <h1>@lang('models/hotspotZones.plural')</h1>
             <div class="section-header-breadcrumb">
                 <a href="{{ route('hotspotZones.create')}}" class="btn btn-primary form-btn">@lang('crud.add_new')<i class="fas fa-plus"></i></a>
+
+                <a href="{{ route('hotspots.export') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.export')<i
+                    class="fas fa-file-export"></i></a>
+            <a href="{{ route('hotspots.import.create') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i
+                    class="fas fa-file-import"></i></a>
+            <a href="{{ route('hotspots.erase') }}" class="btn btn-danger form-btn">@lang('crud.erase')<i
+                    class="fas fa-trash"></i></a>
             </div>
         </div>
     <div class="section-body">
@@ -131,11 +138,11 @@
             });
         });
 
-        $('body').on('click', '.editClient', function() {
-            var client_id = $(this).data('id');
-            var url = "{{ route('hotspotZones.index') }}" + client_id + '/edit';
+        $('body').on('click', '.edithotspot', function() {
+            var hotspot_id = $(this).data('id');
+            var url = "{{ route('hotspotZones.index') }}" + hotspot_id + '/edit';
             location.replace(url);
-            $.get("{{ route('hotspotZones.index') }}" + client_id + '/edit', function(data) {
+            $.get("{{ route('hotspotZones.index') }}" + hotspot_id + '/edit', function(data) {
                 alert('ok');
             })
         });
