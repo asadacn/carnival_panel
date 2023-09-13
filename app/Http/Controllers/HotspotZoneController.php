@@ -6,12 +6,13 @@ use App\Http\Requests\CreateHotspotZoneRequest;
 use App\Http\Requests\UpdateHotspotZoneRequest;
 use App\Repositories\HotspotZoneRepository;
 use App\Http\Controllers\AppBaseController;
+use App\Imports\HotspotZoneImport;
 use App\Models\HotspotZone;
 use Illuminate\Http\Request;
 use Flash;
+use Maatwebsite\Excel\Facades\Excel;
 use Response;
 use Yajra\DataTables\DataTables;
-
 class HotspotZoneController extends AppBaseController
 {
     /** @var  HotspotZoneRepository */
@@ -67,6 +68,12 @@ class HotspotZoneController extends AppBaseController
     {
         return view('hotspot_zones.create');
     }
+
+    public function create_import()
+    {
+        return view('hotspot_zones.import');
+    }
+
 
     /**
      * Store a newly created HotspotZone in storage.
@@ -176,4 +183,38 @@ class HotspotZoneController extends AppBaseController
 
         return redirect(route('hotspotZones.index'));
     }
+
+    public function export()
+    {
+
+
+        return Excel::download(new HotspotZoneImport, 'clients.xlsx');
+    }
+
+    public function import()
+    {
+        if (request()->file('hotspots_file')) {
+            if (Excel::import(new HotspotZoneImport, request()->file('hotspots_file'))) {
+                Flash::success(__('Import Successfull'));
+                return back()->with('success', 'All good!');
+            } else {
+                Flash::error(__('Import Failed'));
+                return back()->with('error', 'Import Failed');
+            }
+        } else {
+            Flash::warning(__('Please select a file first !'));
+            return back()->with('error', 'Please select a file first !');
+        }
+    }
+
+
+    public function erase()
+    {
+        HotspotZone::query()->truncate();
+        flash('Truncate Successfull')->success();
+        //Flash::success(__('Truncate Successfull', ['model' => __('models/clients.singular')]));
+        return back();
+    }
+
+
 }

@@ -7,7 +7,7 @@
         <div class="section-header">
             <h3 class="page__heading m-0">@lang('hotspots.import') @lang('models/hotspots.singular')</h3>
             <div class="filter-container section-header-breadcrumb row justify-content-md-end">
-                <a href="{{ route('hotspots.index') }}" class="btn btn-primary">@lang('crud.back')</a>
+                <a href="{{ route('hotspotZones.index') }}" class="btn btn-primary">@lang('crud.back')</a>
             </div>
         </div>
         <div class="content">
