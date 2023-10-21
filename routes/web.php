@@ -76,3 +76,6 @@ Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');
 
 
 Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class);
+
+
+Route::resource('hotspotClients', App\Http\Controllers\HotspotClientController::class);

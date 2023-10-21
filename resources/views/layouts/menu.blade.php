@@ -43,3 +43,7 @@
     <a href="{{ route('cardSellers.index') }}"><i class="fa fa-edit"></i><span>@lang('models/cardSellers.plural')</span></a>
 </li>
 
+<li class="{{ Request::is('hotspotClients*') ? 'active' : '' }}">
+    <a href="{{ route('hotspotClients.index') }}"><i class="fa fa-edit"></i><span>@lang('models/hotspotClients.plural')</span></a>
+</li>
+
