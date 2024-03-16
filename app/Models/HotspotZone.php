@@ -47,7 +47,9 @@ class HotspotZone extends Model
         'card_seller',
         'status',
         'usp_adapter',
-        'has_ups'
+        'has_ups',
+        'gps_location',
+        'gps_updated_at',
     ];
 
     /**
