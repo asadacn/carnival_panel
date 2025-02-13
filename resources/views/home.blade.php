@@ -9,6 +9,13 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="card">
+                        <div class="card-header">
+                        @if($lastUpdated)
+                            <p>Last updated: {{ \Carbon\Carbon::parse($lastUpdated)->diffForHumans() }}</p>
+                        @else
+                            <p>No updates yet.</p>
+                        @endif
+                        </div>
                         <div class="card-body">
 
                             <div class="row">
@@ -27,7 +34,7 @@
 
                                         <div class="card-body">
                                             <h2 class="h4">Expiring Soon</h2>
-                                            <h5 class="card-title">{{$expiring_soon}}</h5>
+                                            <h5 class="card-title">{{$expiring_soon->count()}}</h5>
 
                                         </div>
                                     </div>
@@ -37,8 +44,7 @@
 
                                         <div class="card-body">
                                             <h2 class="h4">Expired Today</h2>
-                                            <h5 class="card-title">{{$expired_today}}</h5>
-
+                                            <h5 class="card-title"><a href="#">{{$expired_today->count()}}</a></h5>
                                         </div>
                                     </div>
                                 </div>
@@ -47,7 +53,7 @@
 
                                         <div class="card-body">
                                             <h2 class="h4">Monthly Expired </h2>
-                                            <h5 class="card-title">{{$expired_this_month}}</h5>
+                                            <h5 class="card-title"><a href="#">{{$expired_this_month->count()}}</a></h5>
 
                                         </div>
                                     </div>
@@ -100,6 +106,14 @@
                             </div>
 
                         </div>
+                        <div class="card m-1">
+                            <div class="card-body">
+                                <h5 class="card-title">Today's Expired Clients</h5>
+                                @include('layouts.expireddashboardtable', $clients=$expired_today->get())
+                            </div>
+                          </div>
+
+
                         <div class="card-footer">
                             <p>
                                 <a class="btn btn-primary text-uppercase" onclick="toggle()">
@@ -119,6 +133,9 @@
             </div>
         </div>
     </section>
+
+
+
 @endsection
 
 @section('scripts')
