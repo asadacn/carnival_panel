@@ -29,5 +29,5 @@ class ClientsImport implements ToModel, WithHeadingRow, WithProgressBar
         ]);
     }
 
-    
+
 }

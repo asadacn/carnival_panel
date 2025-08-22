@@ -21,11 +21,15 @@
                 <a href="#" id="bulk_btn" style="display: none" data-toggle="modal" data-target="#smsModal"
                     class="btn btn-warning form-btn mx-2">Bulk SMS <i class="fas fa-envelope"></i> <span id="bulk_count"
                         class="badge badge-success p-1"></span> </a>
+
             </div>
         </div>
         <div class="section-body">
+
             <div class="card">
+
                 <div class="card-body">
+
                     @include('clients.table')
                 </div>
             </div>

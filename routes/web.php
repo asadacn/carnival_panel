@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CardSellerController;
 use App\Http\Controllers\HotspotZoneController;
 use App\Http\Controllers\SmsController;
+use App\Http\Controllers\HotspotClientController;
 use App\Models\CardSeller;
 use App\Models\Client;
 use Illuminate\Support\Facades\Route;
@@ -79,3 +80,5 @@ Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class)
 
 
 Route::resource('hotspotClients', App\Http\Controllers\HotspotClientController::class);
+Route::get('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sendSmsReminder'])->name('hotspotClients.sendSms');
+Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');

@@ -9,10 +9,10 @@ use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
+use Illuminate\Support\Facades\Http;
 
 class HotspotClientController extends AppBaseController
 {
-    /** @var  HotspotClientRepository */
     private $hotspotClientRepository;
 
     public function __construct(HotspotClientRepository $hotspotClientRepo)
@@ -20,137 +20,149 @@ class HotspotClientController extends AppBaseController
         $this->hotspotClientRepository = $hotspotClientRepo;
     }
 
-    /**
-     * Display a listing of the HotspotClient.
-     *
-     * @param Request $request
-     *
-     * @return Response
-     */
+    // List + Search
     public function index(Request $request)
     {
-        $hotspotClients = $this->hotspotClientRepository->all();
+        $query = $this->hotspotClientRepository->model()::query();
 
-        return view('hotspot_clients.index')
-            ->with('hotspotClients', $hotspotClients);
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('contact', 'like', "%{$search}%")
+                  ->orWhere('cable', 'like', "%{$search}%")
+                  ->orWhere('cable_owner', 'like', "%{$search}%")
+                  ->orWhere('onu_mac', 'like', "%{$search}%")
+                  ->orWhere('onu_owner', 'like', "%{$search}%")
+                  ->orWhere('adrress', 'like', "%{$search}%");
+            });
+        }
+
+        $hotspotClients = $query->orderBy('id','desc')->paginate(10);
+
+        return view('hotspot_clients.index', compact('hotspotClients'))
+               ->with('search', $request->search ?? '');
     }
 
-    /**
-     * Show the form for creating a new HotspotClient.
-     *
-     * @return Response
-     */
-    public function create()
-    {
-        return view('hotspot_clients.create');
-    }
-
-    /**
-     * Store a newly created HotspotClient in storage.
-     *
-     * @param CreateHotspotClientRequest $request
-     *
-     * @return Response
-     */
-    public function store(CreateHotspotClientRequest $request)
-    {
-        $input = $request->all();
-
-        $hotspotClient = $this->hotspotClientRepository->create($input);
-
-        Flash::success(__('messages.saved', ['model' => __('models/hotspotClients.singular')]));
-
-        return redirect(route('hotspotClients.index'));
-    }
-
-    /**
-     * Display the specified HotspotClient.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
+    // Show single client
     public function show($id)
     {
         $hotspotClient = $this->hotspotClientRepository->find($id);
 
         if (empty($hotspotClient)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/hotspotClients.singular')]));
-
+            Flash::error('Client not found');
             return redirect(route('hotspotClients.index'));
         }
 
         return view('hotspot_clients.show')->with('hotspotClient', $hotspotClient);
     }
 
-    /**
-     * Show the form for editing the specified HotspotClient.
-     *
-     * @param int $id
-     *
-     * @return Response
-     */
+    // Create form
+    public function create()
+    {
+        return view('hotspot_clients.create');
+    }
+
+    // Store new client
+    public function store(CreateHotspotClientRequest $request)
+    {
+        $input = $request->all();
+
+        // Default package fields
+        $input['package_days'] = null;
+        $input['activated_at'] = null;
+        $input['expires_at'] = null;
+        $input['status'] = 'inactive';
+
+        $hotspotClient = $this->hotspotClientRepository->create($input);
+
+        Flash::success('Hotspot Client saved successfully.');
+
+        return redirect(route('hotspotClients.index'));
+    }
+
+    // Edit form
     public function edit($id)
     {
         $hotspotClient = $this->hotspotClientRepository->find($id);
 
         if (empty($hotspotClient)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/hotspotClients.singular')]));
-
+            Flash::error('Client not found');
             return redirect(route('hotspotClients.index'));
         }
 
         return view('hotspot_clients.edit')->with('hotspotClient', $hotspotClient);
     }
 
-    /**
-     * Update the specified HotspotClient in storage.
-     *
-     * @param int $id
-     * @param UpdateHotspotClientRequest $request
-     *
-     * @return Response
-     */
+    // Update client
     public function update($id, UpdateHotspotClientRequest $request)
     {
         $hotspotClient = $this->hotspotClientRepository->find($id);
 
         if (empty($hotspotClient)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/hotspotClients.singular')]));
-
+            Flash::error('Client not found');
             return redirect(route('hotspotClients.index'));
         }
 
         $hotspotClient = $this->hotspotClientRepository->update($request->all(), $id);
 
-        Flash::success(__('messages.updated', ['model' => __('models/hotspotClients.singular')]));
+        Flash::success('Hotspot Client updated successfully.');
 
         return redirect(route('hotspotClients.index'));
     }
 
-    /**
-     * Remove the specified HotspotClient from storage.
-     *
-     * @param int $id
-     *
-     * @throws \Exception
-     *
-     * @return Response
-     */
+    // Delete client
     public function destroy($id)
     {
         $hotspotClient = $this->hotspotClientRepository->find($id);
 
         if (empty($hotspotClient)) {
-            Flash::error(__('messages.not_found', ['model' => __('models/hotspotClients.singular')]));
-
+            Flash::error('Client not found');
             return redirect(route('hotspotClients.index'));
         }
 
         $this->hotspotClientRepository->delete($id);
 
-        Flash::success(__('messages.deleted', ['model' => __('models/hotspotClients.singular')]));
+        Flash::success('Hotspot Client deleted successfully.');
 
         return redirect(route('hotspotClients.index'));
+    }
+
+    // Activate package
+    public function activatePackage(Request $request, $id)
+    {
+        $client = $this->hotspotClientRepository->find($id);
+        if (!$client) {
+            Flash::error('Client not found');
+            return redirect()->back();
+        }
+
+        $days = (int) $request->days;
+        $client->package_days = $days;
+        $client->activated_at = now();
+        $client->expires_at = now()->addDays($days);
+        $client->status = 'active';
+        $client->save();
+
+        Flash::success("Package activated for {$days} days.");
+        return redirect()->back();
+    }
+
+    // Send manual SMS
+    public function sendSmsReminder($id)
+    {
+        $client = $this->hotspotClientRepository->find($id);
+        if (!$client) {
+            Flash::error('Client not found');
+            return redirect()->back();
+        }
+
+        $message = "আপনার Hotspot প্যাকেজ " . ($client->expires_at ? $client->expires_at->format('d M, y') : 'N/A') . " তারিখে শেষ হবে। দয়া করে রিচার্জ করুন।";
+
+        // MRAM SMS API Call
+        sms($client->contact, $message);
+
+        Flash::success("SMS sent to {$client->name} ({$client->contact})");
+        return redirect()->back();
     }
 }

@@ -41,9 +41,19 @@ class SmsController extends Controller
    public function bulk_sms(Request $request)
    {
 
-  //  $request->client_status == "expiring" ?  $clients = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'))->get() : $clients = Client::where('status',$request->client_status)->get();
-    //dd( $clients);
 
+    if(!isset($request->client_status)){
+        Flash::error("Select a clients group please!");
+        return redirect()->back();
+    }
+
+    // Validate the request
+    $request->validate([
+        'sms_body' => 'required|string|max:160',
+        'client_status' => 'required|string',
+    ]);
+
+    // Get clients based on the selected status
 
 switch ($request->client_status) {
 
@@ -88,8 +98,8 @@ switch ($request->client_status) {
 
             //         } ;
             //     }
-
-            sms(  $clients, $request->sms_body );
+            
+            sms(  $clients, $request->sms_body,'unicode' );
 
         }else{
 

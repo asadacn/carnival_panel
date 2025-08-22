@@ -20,11 +20,8 @@ class ClientRepository extends BaseRepository
         'name',
         'contact',
         'address',
-        'package',
         'username',
-        'password',
-        'Onu_mac',
-        'cable',
+        'expiration',
         'status'
     ];
 
