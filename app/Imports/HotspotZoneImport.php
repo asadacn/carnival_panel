@@ -57,32 +57,25 @@ class HotspotZoneImport implements ToModel, WithHeadingRow
         return null;
     }
 
-    public function model(array $row)
+public function model(array $row)
     {
-        // সব ভ্যালু সেফলি পড়ি
-        $zoneId     = $this->get($row, 'zone_id');
-        $zoneTitle  = $this->get($row, 'zone_title');
-        $onuMac     = $this->get($row, 'onu_mac');
-        $onuBrand   = $this->get($row, 'onu_brand');
-        $uspAdapter = $this->get($row, 'usp_adapter');
-
-        // প্রয়োজন হলে সংখ্যা কনভার্সন (ঐচ্ছিক)
-        if (is_string($zoneId)) {
-            $zoneId = trim($zoneId);
-            // pure number না হলে null
-            if ($zoneId === '' || !ctype_digit($zoneId)) {
-                $zoneId = null;
-            } else {
-                $zoneId = (int)$zoneId;
-            }
+        // খালি row হলে skip করবে
+        if (
+            empty($row['zone_id']) &&
+            empty($row['zone_title']) &&
+            empty($row['onu_mac']) &&
+            empty($row['onu_brand']) &&
+            empty($row['usp_adapter'])
+        ) {
+            return null;
         }
 
         return new HotspotZone([
-            'zone_id'     => $zoneId,
-            'zone_title'  => $zoneTitle,
-            'onu_mac'     => $onuMac,
-            'onu_brand'   => $onuBrand,
-            'usp_adapter' => $uspAdapter,
+            "zone_id"     => $row['zone_id']     ?? null,
+            "zone_title"  => $row['zone_title']  ?? null,
+            "onu_mac"     => $row['onu_mac']     ?? null,
+            "onu_brand"   => $row['onu_brand']   ?? null,
+            "usp_adapter" => $row['usp_adapter'] ?? null,
         ]);
     }
 }
