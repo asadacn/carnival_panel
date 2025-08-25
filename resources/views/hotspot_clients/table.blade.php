@@ -26,8 +26,9 @@
                     <th>Contact</th>
                     {{-- <th>Cable</th>
                     <th>Cable Owner</th>
-                    <th>ONU MAC</th>
+
                     <th>ONU Owner</th> --}}
+                    <th>ONU MAC</th>
                     <th>Address</th>
                     <th>Package</th>
                     <th>Activated</th>
@@ -44,8 +45,8 @@
                     <td>{{ $client->contact }}</td>
                     {{-- <td>{{ $client->cable }}</td>
                     <td>{{ $client->cable_owner }}</td>
-                    <td>{{ $client->onu_mac }}</td>
                     <td>{{ $client->onu_owner }}</td> --}}
+                    <td>{{ $client->onu_mac }}</td>
                     <td>{{ $client->adrress }}</td>
                     <td>{{ $client->package_days ?? '-' }}</td>
                     <td>{{ $client->activated_at ? $client->activated_at->format('d M, y') : '-' }}</td>
@@ -80,7 +81,10 @@
                                 ]) !!}
                             {!! Form::close() !!}
 
-                            {{-- Renew Dropdown --}}
+
+                    </td>
+                    <td>
+                         {{-- Renew Dropdown --}}
                             @php
                                 $showRenew = false;
                                 if(!$client->activated_at || $client->isExpired() || ($client->expires_at && $client->expires_at->subDay()->isPast())) {
