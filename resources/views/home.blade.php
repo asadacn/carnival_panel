@@ -1,147 +1,107 @@
 @extends('layouts.app')
 
 @section('content')
-    <section class="section">
-        <div class="section-header">
-            <h3 class="page__heading">Dashboard</h3>
+<section class="section">
+    <div class="section-header">
+        <h3 class="page__heading">Dashboard</h3>
+    </div>
+
+    <div class="section-body">
+        {{-- Last Updated --}}
+        <div class="mb-3">
+            @if($lastUpdated)
+                <p class="text-muted">Last updated: {{ \Carbon\Carbon::parse($lastUpdated)->diffForHumans() }}</p>
+            @else
+                <p class="text-muted">No updates yet.</p>
+            @endif
         </div>
-        <div class="section-body">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        <div class="card-header">
-                        @if($lastUpdated)
-                            <p>Last updated: {{ \Carbon\Carbon::parse($lastUpdated)->diffForHumans() }}</p>
-                        @else
-                            <p>No updates yet.</p>
-                        @endif
-                        </div>
-                        <div class="card-body">
 
-                            <div class="row">
-                                <div class="col-sm-2">
-                                    <div class="card rounded">
+        {{-- Top Metrics --}}
+        <div class="row mb-4">
+            @php
+                $metrics = [
+                    ['title'=>'Total Clients','count'=>$clients->count(),'bg'=>'primary'],
+                    ['title'=>'Expiring Soon','count'=>$expiring_soon->count(),'bg'=>'warning'],
+                    ['title'=>'Expired Today','count'=>$expired_today->count(),'bg'=>'danger'],
+                    ['title'=>'Monthly Expired','count'=>$expired_this_month->count(),'bg'=>'dark'],
+                    ['title'=>'SMS Available','count'=>sms_balance(),'bg'=>'success']
+                ];
+            @endphp
+            @foreach($metrics as $metric)
+            <div class="col-sm-2 mb-3">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted">{{ $metric['title'] }}</h6>
+                        <h3 class="text-{{ $metric['bg'] }}">{{ $metric['count'] }}</h3>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
 
-                                        <div class="card-body">
-                                            <h2 class="h4">Total Clients</h2>
-                                            <h5 class="card-title">{{$clients->count()}}</h5>
+        {{-- Registered Clients by Package --}}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Registered Clients - {{ $registered_clients }}</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Package</th>
+                            <th>Total Clients</th>
+                            <th>Total Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php $total = 0; @endphp
+                        @foreach ($clients_by_package as $client)
+                            @php $package_price = $package[$client->package] ?? 0; @endphp
+                            <tr>
+                                <td>{{ $client->package }}</td>
+                                <td>{{ $client->total }}</td>
+                                <td>{{ takaFormat($client->total * $package_price) }} Tk.</td>
+                            </tr>
+                            @php $total += $client->total * $package_price; @endphp
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="card rounded">
+        {{-- Today's Expired Clients --}}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Today's Expired Clients</h5>
+            </div>
+            <div class="card-body">
+                @include('layouts.expireddashboardtable', $clients = $expired_today->get())
+            </div>
+        </div>
 
-                                        <div class="card-body">
-                                            <h2 class="h4">Expiring Soon</h2>
-                                            <h5 class="card-title">{{$expiring_soon->count()}}</h5>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="card rounded">
-
-                                        <div class="card-body">
-                                            <h2 class="h4">Expired Today</h2>
-                                            <h5 class="card-title"><a href="#">{{$expired_today->count()}}</a></h5>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="card rounded">
-
-                                        <div class="card-body">
-                                            <h2 class="h4">Monthly Expired </h2>
-                                            <h5 class="card-title"><a href="#">{{$expired_this_month->count()}}</a></h5>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-2">
-                                    <div class="card rounded">
-
-                                        <div class="card-body">
-                                            <h2 class="h4">SMS Avilable</h2>
-                                            <h5 class="card-title">{{sms_balance()}}</h5>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-6"><div class="card">
-                                    <div class="card-header text-success">
-                                    <h3>Registered Clients - {{$registered_clients}}</h3>
-                                </div>
-                                    <div class="card-body">
-                                        <table class="table table-sm table-striped">
-                                            <thead>
-                                            <tr>
-                                                <th>Package</th>
-                                                <th>Total Clients</th>
-                                                <th>Total Value</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                                $total = 0;
-                                              //  dd($package)
-                                            @endphp
-                                            @foreach ($clients_by_package as $client)
-
-                                            <tr>
-                                                <td>{{$client->package}}</td>
-                                                <td>{{$client->total}} </td>
-                                                <td>{{takaFormat($client->total* $package[$client->package])}} Tk.</td>
-                                            </tr>
-                                                @php
-                                                    $total += $client->total* $package[$client->package];
-                                                @endphp
-                                            @endforeach
-                                        </tbody>
-                                        </table>
-                                    </div>
-                                </div></div>
-                                {{-- <div class="col-sm-3">{{$total}}</div> --}}
-
-                            </div>
-
-                        </div>
-                        <div class="card m-1">
-                            <div class="card-body">
-                                <h5 class="card-title">Today's Expired Clients</h5>
-                                @include('layouts.expireddashboardtable', $clients=$expired_today->get())
-                            </div>
-                          </div>
-
-
-                        <div class="card-footer">
-                            <p>
-                                <a class="btn btn-primary text-uppercase" onclick="toggle()">
-                                  Calculate Commission
-                                </a>
-
-                              </p>
-                              <div style="display: none" id="collapseCommission">
-                                <div class="card card-body">
-                                    <h4>Estimated Total Value : {{$total}} Tk. / Commission: {{takaFormat($total*.4)}} Tk.</h4></div>
-                                </div>
-                              </div>
-
-
+        {{-- Commission Calculator --}}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Commission Calculator</h5>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-primary mb-3" onclick="toggleCommission()">Calculate Commission</button>
+                <div id="collapseCommission" style="display: none;">
+                    <div class="alert alert-info">
+                        <h6>Estimated Total Value: {{ $total }} Tk.</h6>
+                        <h6>Commission (40%): {{ takaFormat($total * 0.4) }} Tk.</h6>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
-
-
-
+    </div>
+</section>
 @endsection
 
 @section('scripts')
 <script>
-    function toggle(){
-    $('#collapseCommission').toggle('fast');
+    function toggleCommission(){
+        $('#collapseCommission').slideToggle('fast');
     }
 </script>
 @endsection
