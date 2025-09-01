@@ -8,7 +8,6 @@ use App\Repositories\BaseRepository;
 /**
  * Class ClientRepository
  * @package App\Repositories
- * @version November 16, 2021, 8:36 pm UTC
 */
 
 class ClientRepository extends BaseRepository
@@ -19,10 +18,24 @@ class ClientRepository extends BaseRepository
     protected $fieldSearchable = [
         'name',
         'contact',
+        'secondary_contact',
         'address',
+        'package',
         'username',
         'expiration',
-        'status'
+        'status',
+        'Onu_mac',
+        'onu_serial',
+        'onu_brand',
+        'onu_free',
+        'onu_returned',
+        'onu_owner',
+        'cable',
+        'cable_returned',
+        'cable_owner',
+        'billing_type',
+        'gps_location',
+        'comment',
     ];
 
     /**

@@ -10,85 +10,118 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 /**
  * Class Client
  * @package App\Models
- * @version November 16, 2021, 8:36 pm UTC
  *
  * @property string $name
  * @property string $contact
+ * @property string $secondary_contact
+ * @property string $email
  * @property string $address
  * @property string $package
  * @property string $username
  * @property string $password
- * @property string $Onu_mac
+ * @property string $onu_mac
+ * @property string $onu_serial
+ * @property string $onu_brand
+ * @property boolean $onu_free
+ * @property boolean $onu_returned
+ * @property string $onu_owner
  * @property integer $cable
- * @property boolean $status
+ * @property boolean $cable_returned
+ * @property string $cable_owner
+ * @property string $billing_type
+ * @property string $gps_location
+ * @property \Carbon\Carbon $expiration
+ * @property string $status
+ * @property string $comment
  */
 class Client extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFactory;
 
-    use HasFactory;
+    protected $table = 'clients';
 
-    public $table = 'clients';
+    protected $dates = ['deleted_at', 'expiration'];
 
-
-    protected $dates = ['deleted_at'];
-
-
-
-    public $fillable = [
+    protected $fillable = [
         'name',
         'contact',
+        'secondary_contact',
         'email',
         'address',
         'package',
         'username',
         'password',
         'Onu_mac',
+        'onu_serial',
+        'onu_brand',
+        'onu_free',
+        'onu_returned',
+        'onu_owner',
         'cable',
+        'cable_returned',
+        'cable_owner',
+        'billing_type',
+        'gps_location',
         'expiration',
-        'status'
+        'status',
+        'comment',
     ];
 
-    /**
-     * The attributes that should be casted to native types.
-     *
-     * @var array
-     */
     protected $casts = [
-        'name' => 'string',
-        'contact' => 'string',
-        'email'=>'string',
-        'address' => 'string',
-        'package' => 'string',
-        'expiration' => 'date',
-        'username' => 'string',
-        'password' => 'string',
-        'Onu_mac' => 'string',
-        'cable' => 'integer',
-        'expiration'=>'datetime',
-        'status' => 'string'
+        'name'             => 'string',
+        'contact'          => 'string',
+        'secondary_contact'=> 'string',
+        'email'            => 'string',
+        'address'          => 'string',
+        'package'          => 'string',
+        'username'         => 'string',
+        'password'         => 'string',
+        'Onu_mac'          => 'string',
+        'onu_serial'       => 'string',
+        'onu_brand'        => 'string',
+        'onu_free'         => 'boolean',
+        'onu_returned'     => 'boolean',
+        'onu_owner'        => 'string',
+        'cable'            => 'integer',
+        'cable_returned'   => 'boolean',
+        'cable_owner'      => 'string',
+        'billing_type'     => 'string',
+        'gps_location'     => 'string',
+        'expiration'       => 'datetime',
+        'status'           => 'string', // registered | expired
+        'comment'          => 'string',
     ];
 
-    /**
-     * Validation rules
-     *
-     * @var array
-     */
     public static $rules = [
-        'name' => 'required',
-        'contact' => 'nullable',
-        'address' => 'nullable',
-        'package' => 'required',
-        'username' => 'nullable',
-        'password' => 'nullable',
-        'Onu_mac' => 'nullable',
-        'cable' => 'nullable',
-        'status' => 'required'
+        'name'             => 'required|string|max:255',
+        'contact'          => 'nullable|string|max:255',
+        'secondary_contact'=> 'nullable|string|max:255',
+        'email'            => 'nullable|email|max:255',
+        'address'          => 'nullable|string|max:255',
+        'package'          => 'required|string|max:255',
+        'username'         => 'nullable|string|max:255',
+        'password'         => 'nullable|string|max:255',
+        'Onu_mac'          => 'nullable|string|max:255',
+        'onu_serial'       => 'nullable|string|max:255',
+        'onu_brand'        => 'nullable|string|max:255',
+        'onu_free'         => 'nullable|boolean',
+        'onu_returned'     => 'nullable|boolean',
+        'onu_owner'        => 'nullable|string|max:255',
+        'cable'            => 'nullable|integer',
+        'cable_returned'   => 'nullable|boolean',
+        'cable_owner'      => 'nullable|string|max:255',
+        'billing_type'     => 'nullable|string|max:255',
+        'gps_location'     => 'nullable|string|max:255',
+        'expiration'       => 'nullable|date',
+        'status'           => 'required|in:registered,expired',
+        'comment'          => 'nullable|string|max:500',
     ];
 
     public function getExpirationAttribute($value)
-{
-    return Carbon::parse($value)->format('d-m-y').' * '.Carbon::parse($value)->diffForHumans();
-}
-
+    {
+        if ($value) {
+            return Carbon::parse($value)->format('d-m-y') . ' * ' . Carbon::parse($value)->diffForHumans();
+        }
+        return null;
+    }
 }

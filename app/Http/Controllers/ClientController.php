@@ -13,6 +13,7 @@ use Response;
 
 use App\Imports\ClientsImport;
 use App\Models\Client;
+use App\Models\Package;
 use App\Models\SMS_TEMPALTE;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -73,7 +74,8 @@ class ClientController extends AppBaseController
      */
     public function create()
     {
-        return view('clients.create');
+        $packages = Package::all(); // Package dropdown
+        return view('clients.create', compact('packages'));
     }
 
 
@@ -131,14 +133,14 @@ class ClientController extends AppBaseController
     public function edit($id)
     {
         $client = $this->clientRepository->find($id);
-
+        $packages = Package::all(); // Package dropdown
         if (empty($client)) {
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
 
             return redirect(route('clients.index'));
         }
 
-        return view('clients.edit')->with('client', $client);
+        return view('clients.edit', compact('client', 'packages'));
     }
 
     /**
