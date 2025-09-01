@@ -31,7 +31,7 @@
                     <th>ONU MAC</th>
                     <th>Address</th>
                     <th>Package</th>
-                    <th>Activated</th>
+                    {{-- <th>Activated</th> --}}
                     <th>Expired</th>
                     <th>Remaining</th>
                     <th>Status</th>
@@ -48,9 +48,9 @@
                     <td>{{ $client->onu_owner }}</td> --}}
                     <td>{{ $client->onu_mac }}</td>
                     <td>{{ $client->adrress }}</td>
-                    <td>{{ $client->package_days ?? '-' }}</td>
-                    <td>{{ $client->activated_at ? $client->activated_at->format('d M, y') : '-' }}</td>
-                    <td>{{ $client->expires_at ? $client->expires_at->format('d M, y') : '-' }}</td>
+                    <td>{{ $client->package_days ? $client->package_days . ' days': '-' }}</td>
+                    {{-- <td>{{ $client->activated_at ? $client->activated_at->format('d M, y') : '-' }}</td> --}}
+                    <td>{{ $client->expires_at ? $client->expires_at->format('d/m/y') : '-' }}</td>
                     <td>
                         @if($client->expires_at && !$client->isExpired())
                             {{ $client->expires_at->diffInDays(now()) }} days
