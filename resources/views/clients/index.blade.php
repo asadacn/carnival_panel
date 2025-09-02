@@ -151,6 +151,29 @@
                         name: 'expiration'
                     },
                     {
+                        data: 'cable_returned',
+                        name: 'cable_returned',
+                        render: function(data, type, row) {
+                            if (data == 1) {
+                                return '<i class="fa fa-check-circle text-success"></i>'; // Green check
+                            } else {
+                                return '-'; // Red cross
+                            }
+                        }
+                    },
+                                        {
+                        data: 'onu_free',
+                        name: 'onu_free',
+                        render: function(data, type, row) {
+                            if (data == 1) {
+                                return '<span class="badge bg-success">Free</span>'; // Green Free Badge
+                            } else {
+                                return '-'; // Grey No Badge
+                            }
+                        }
+                    },
+
+                    {
                         data: 'status',
                         name: 'status'
                     },
@@ -174,10 +197,16 @@
                 },
                 //for conditional column style/format
                 rowCallback: function(row, data, index) {
+                    //  if (data.status == 0) {
+                    //     $("td:eq(8)", row).addClass("text-danger");
+                    // } else {
+                    //     $("td:eq(8)", row).addClass("text-success");
+                    // }
+
                     if (data.status == "Registered") {
-                        $("td:eq(8)", row).addClass("text-success");
+                        $("td:eq(10)", row).addClass("text-success");
                     } else {
-                        $("td:eq(8)", row).addClass("text-danger");
+                        $("td:eq(10)", row).addClass("text-danger");
                     }
                 },
 

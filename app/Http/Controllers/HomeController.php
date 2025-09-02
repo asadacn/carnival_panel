@@ -27,10 +27,12 @@ class HomeController extends Controller
      */
     public function index()
     {
+        $today = Carbon::today('Asia/Dhaka');
+        $tomorrow = Carbon::tomorrow('Asia/Dhaka');
         $clients = Client::all();
         $lastUpdated = Client::latest('updated_at')->value('updated_at');
-        $expiring_soon = Client::where('expiration',Carbon::tomorrow('Asia/Dhaka'));
-        $expired_today = Client::where('expiration',Carbon::today('Asia/Dhaka'));
+        $expiring_soon = Client::where('expiration',$tomorrow);
+        $expired_today = Client::where('expiration',$today);
         $expired_this_month = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'));
 
         $package = Package::pluck('price','title');
@@ -42,7 +44,13 @@ class HomeController extends Controller
                  ->get();
         $registered_clients = DB::table('clients')
                                     ->where('status','Registered')->count();
-              //   dd($registered_clients);
-        return view('home', compact('clients','clients_by_package','package','registered_clients','expiring_soon','expired_today','expired_this_month','lastUpdated'));
+
+        $expiredPostpaidClients = Client::where('billing_type', 'postpaid')
+        ->whereDate('expiration', '>=', $today)
+        ->whereDate('expiration', '<=', $tomorrow)
+        ->get();
+        //dd($expiredPostpaidClients);
+
+        return view('home', compact('clients','clients_by_package','package','registered_clients','expiring_soon','expired_today','expired_this_month','lastUpdated','expiredPostpaidClients'));
     }
 }

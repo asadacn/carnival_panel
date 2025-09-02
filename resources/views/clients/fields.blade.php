@@ -48,7 +48,7 @@
                 <!-- Package Dropdown -->
                 <div class="col-md-4">
                     {!! Form::label('package', __('models/clients.fields.package').':', ['class' => 'form-label']) !!}
-                    {!! Form::select('package', $packages->pluck('title', 'id'), null, ['class' => 'form-select', 'placeholder' => 'Select package']) !!}
+                    {!! Form::select('package', $packages->pluck('title', 'title'), null, ['class' => 'form-select', 'placeholder' => 'Select package']) !!}
                 </div>
             </div>
         </div>
@@ -114,7 +114,7 @@
                 </div>
                 <div class="col-md-6">
                     {!! Form::label('status', __('models/clients.fields.status').':', ['class' => 'form-label']) !!}
-                    {!! Form::select('status', ['registered' => 'Registered', 'expired' => 'Expired'], null, ['class' => 'form-select']) !!}
+                    {!! Form::select('status', ['Registered' => 'Registered', 'Expired' => 'Expired'], null, ['class' => 'form-select']) !!}
                 </div>
                 <div class="col-12 mt-3">
                     {!! Form::label('comment', __('models/clients.fields.comment').':', ['class' => 'form-label']) !!}

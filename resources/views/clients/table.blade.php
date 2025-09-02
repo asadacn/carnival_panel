@@ -10,8 +10,10 @@
                 <th>@lang('models/clients.fields.address')</th>
                 <th>@lang('models/clients.fields.package')</th>
                 <th>@lang('models/clients.fields.expiration')</th>
+                <th>Cable</th>
+                <th>ONU</th>
                 <th>@lang('models/clients.fields.status')</th>
-                <th>action</th>
+                <th>Action</th>
 
         {{-- <th>@lang('models/clients.fields.password')</th>
         <th>@lang('models/clients.fields.Onu_mac')</th>

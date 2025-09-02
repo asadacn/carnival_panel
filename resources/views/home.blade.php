@@ -24,7 +24,7 @@
                     ['title'=>'Expiring Soon','count'=>$expiring_soon->count(),'bg'=>'warning'],
                     ['title'=>'Expired Today','count'=>$expired_today->count(),'bg'=>'danger'],
                     ['title'=>'Monthly Expired','count'=>$expired_this_month->count(),'bg'=>'dark'],
-                    ['title'=>'SMS Available','count'=>sms_balance(),'bg'=>'success']
+                    ['title'=>'SMS Available','count'=>sms_balance(),'bg'=>'success h5']
                 ];
             @endphp
             @foreach($metrics as $metric)
@@ -38,6 +38,48 @@
             </div>
             @endforeach
         </div>
+        {{-- Today's Expired Clients --}}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Today's Expired Clients</h5>
+            </div>
+            <div class="card-body">
+                @include('layouts.expireddashboardtable', $clients = $expired_today->get())
+            </div>
+        </div>
+        <div class="card mt-4">
+    <div class="card-header">
+        <h5>Postpaid Clients Being Expired </h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Client Name</th>
+                    <th>Carnival ID</th>
+                    <th>Package</th>
+                    <th>Expired Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($expiredPostpaidClients as $key => $client)
+                    <tr>
+                        <td>{{ $key+1 }}</td>
+                        <td>{{ $client->name }}</td>
+                        <td>{{ $client->username }}</td>
+                        <td>{{ $client->package ?? '-' }}</td>
+                        <td>{{ $client->expiration }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No expired postpaid clients found.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
         {{-- Registered Clients by Package --}}
         <div class="card mb-4 shadow-sm">
@@ -69,15 +111,7 @@
             </div>
         </div>
 
-        {{-- Today's Expired Clients --}}
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-danger text-white">
-                <h5 class="mb-0">Today's Expired Clients</h5>
-            </div>
-            <div class="card-body">
-                @include('layouts.expireddashboardtable', $clients = $expired_today->get())
-            </div>
-        </div>
+
 
         {{-- Commission Calculator --}}
         <div class="card mb-4 shadow-sm">

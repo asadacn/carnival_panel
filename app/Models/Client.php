@@ -113,7 +113,7 @@ class Client extends Model
         'billing_type'     => 'nullable|string|max:255',
         'gps_location'     => 'nullable|string|max:255',
         'expiration'       => 'nullable|date',
-        'status'           => 'required|in:registered,expired',
+        'status'           => 'required|in:Registered,Expired',
         'comment'          => 'nullable|string|max:500',
     ];
 

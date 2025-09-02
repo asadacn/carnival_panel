@@ -9,8 +9,8 @@
                 <th>@lang('models/clients.fields.contact')</th>
                 <th>@lang('models/clients.fields.address')</th>
                 <th>@lang('models/clients.fields.package')</th>
-                <th>@lang('models/clients.fields.expiration')</th>
-                {{-- <th>@lang('models/clients.fields.status')</th> --}}
+                <th>@lang('models/clients.fields.billing_type')</th>
+                <th>@lang('models/clients.fields.comment')</th>
                 {{-- <th>action</th> --}}
 
         {{-- <th>@lang('models/clients.fields.password')</th>
@@ -30,8 +30,8 @@
             <td><a href="tel:{{ $client->contact }}">{{ $client->contact }}</a></td>
             <td>{{ $client->address }}</td>
             <td>{{ $client->package }}</td>
-            <td>{{ $client->expiration }}</td>
-
+            <td class="text-capitalize">{{ $client->billing_type }}</td>
+            <td class="text-capitalize">{{ $client->comment ?? '-' }}</td>
             {{-- <td>{{ $client->password }}</td>
             <td>{{ $client->Onu_mac }}</td>
             <td>{{ $client->cable }}</td> --}}
