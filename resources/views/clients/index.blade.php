@@ -15,8 +15,8 @@
                         class="fas fa-file-export"></i></a>
                 <a href="{{ route('clients.import.create') }}" class="mx-2 btn btn-primary form-btn">@lang('crud.import')<i
                         class="fas fa-file-import"></i></a>
-                <a href="{{ route('clients.erase') }}" class="btn btn-danger form-btn">@lang('crud.erase')<i
-                        class="fas fa-trash"></i></a>
+                {{-- <a href="{{ route('clients.erase') }}" class="btn btn-danger form-btn">@lang('crud.erase')<i
+                        class="fas fa-trash"></i></a> --}}
 
                 <a href="#" id="bulk_btn" style="display: none" data-toggle="modal" data-target="#smsModal"
                     class="btn btn-warning form-btn mx-2">Bulk SMS <i class="fas fa-envelope"></i> <span id="bulk_count"
@@ -172,6 +172,10 @@
                             }
                         }
                     },
+                    {
+                        data: 'comment',
+                        name: 'comment'
+                    },
 
                     {
                         data: 'status',
@@ -204,9 +208,9 @@
                     // }
 
                     if (data.status == "Registered") {
-                        $("td:eq(10)", row).addClass("text-success");
+                        $("td:eq(11)", row).addClass("text-success");
                     } else {
-                        $("td:eq(10)", row).addClass("text-danger");
+                        $("td:eq(11)", row).addClass("text-danger");
                     }
                 },
 

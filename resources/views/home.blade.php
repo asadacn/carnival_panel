@@ -48,9 +48,9 @@
             </div>
         </div>
         <div class="card mt-4">
-    <div class="card-header">
-        <h5>Postpaid Clients Being Expired </h5>
-    </div>
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">Postpaid Clients Being Expired </h5>
+            </div>
     <div class="card-body">
         <table class="table table-bordered table-striped">
             <thead>
@@ -67,7 +67,7 @@
                     <tr>
                         <td>{{ $key+1 }}</td>
                         <td>{{ $client->name }}</td>
-                        <td>{{ $client->username }}</td>
+                        <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" rel="noopener noreferrer">{{ $client->username }}</a></td>
                         <td>{{ $client->package ?? '-' }}</td>
                         <td>{{ $client->expiration }}</td>
                     </tr>
@@ -81,13 +81,64 @@
     </div>
 </div>
 
-        {{-- Registered Clients by Package --}}
+<div class="card mt-4 shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Expired Clients with Free ONU (Not Returned)</h5>
+            </div>
+    <div class="card-body">
+        @if($freeOnuExpiredClients->count() > 0)
+            <table class="table table-striped table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Carnival ID</th>
+                        <th>Client Name</th>
+                        <th>Mobile</th>
+                        <th>Address</th>
+                        <th>Expiration</th>
+                        <th>ONU Serial</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($freeOnuExpiredClients as $key => $client)
+                        <tr>
+                            <td>{{ $key+1 }}</td>
+                            <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" rel="noopener noreferrer">{{ $client->username }}</a></td>
+                            <td>{{ $client->name }}</td>
+                            <td>{{ $client->contact }}</td>
+                            <td>{{ $client->address }}</td>
+                            <td>
+                               {{ $client->expiration }}
+                            </td>
+
+
+                            <td>{{ $client->onu_serial ?? 'N/A' }}</td>
+                            <td>
+                                <a href="tel:{{ $client->contact }}" class="btn btn-sm btn-primary">
+                                    📞 Call
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
+            <p class="text-success">✅ কোনো Expired Free ONU client ফেরতবিহীন নেই।</p>
+        @endif
+    </div>
+</div>
+
+
+<div class="row">
+    {{-- Table --}}
+    <div class="col-md-6">
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">Registered Clients - {{ $registered_clients }}</h5>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-striped mb-0">
+            <div class="card-body p-4">
+                <table class="table table-striped table-sm mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Package</th>
@@ -101,15 +152,31 @@
                             @php $package_price = $package[$client->package] ?? 0; @endphp
                             <tr>
                                 <td>{{ $client->package }}</td>
-                                <td>{{ $client->total }}</td>
-                                <td>{{ takaFormat($client->total * $package_price) }} Tk.</td>
+                                <td>{{ $client->total_clients }}</td>
+                                <td>{{ takaFormat($client->total_amount) }} Tk.</td>
                             </tr>
-                            @php $total += $client->total * $package_price; @endphp
+                            @php $total += $client->total_amount; @endphp
                         @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
+
+    {{-- Chart --}}
+    <div class="col-md-6">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Clients Chart</h5>
+            </div>
+            <div class="card-body p-4">
+                <canvas id="clientsChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 
 
@@ -137,5 +204,56 @@
     function toggleCommission(){
         $('#collapseCommission').slideToggle('fast');
     }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('clientsChart').getContext('2d');
+    const clientsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: @json($clients_by_package->pluck('package')),
+            datasets: [
+                {
+                    label: 'Clients',
+                    data: @json($clients_by_package->pluck('total_clients')),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Total Amount',
+                    data: @json($clients_by_package->pluck('total_amount')),
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1,
+                    type: 'line', // amount কে line chart বানিয়ে দিলাম
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Clients'
+                    }
+                },
+                y1: {
+                    beginAtZero: true,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Total Amount'
+                    }
+                }
+            }
+        }
+    });
 </script>
 @endsection

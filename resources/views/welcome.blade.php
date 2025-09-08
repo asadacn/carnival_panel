@@ -25,7 +25,7 @@
             @if (Route::has('login'))
                 <div class=" fixed top-0 right-0 px-6 py-4 sm:block">
                     @auth
-                        <a href="{{ url('/home') }}" class="text-sm text-gray-700 underline">Home</a>
+                        <a href="{{ route('dashboard') }}" class="text-sm text-gray-700 underline">Dashboard</a>
                     @else
                         <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">Login</a>
 
@@ -37,7 +37,7 @@
             @endif
 
             <div class=" mx-auto text-center">
-                
+
 
                 <div class="card mb-3">
                     <img src="{{asset('img/logo.png')}}" class="card-img-top" alt="carnival" width="80%">

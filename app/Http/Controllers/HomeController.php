@@ -38,10 +38,21 @@ class HomeController extends Controller
         $package = Package::pluck('price','title');
 
         $clients_by_package = DB::table('clients')
-        ->where('status','Registered')
-                 ->select('package', DB::raw('count(*) as total'))
-                 ->groupBy('package')
-                 ->get();
+            ->join('packages', 'clients.package', '=', 'packages.title') // assuming 'name' field in packages
+            ->where('clients.status', 'Registered')
+            ->select(
+                'clients.package',
+                DB::raw('count(*) as total_clients'),
+                DB::raw('sum(packages.price) as total_amount')
+            )
+            ->groupBy('clients.package')
+            ->get();
+
+        $registered_clients = DB::table('clients')
+            ->where('status', 'Registered')
+            ->count();
+
+
         $registered_clients = DB::table('clients')
                                     ->where('status','Registered')->count();
 
@@ -49,8 +60,12 @@ class HomeController extends Controller
         ->whereDate('expiration', '>=', $today)
         ->whereDate('expiration', '<=', $tomorrow)
         ->get();
-        //dd($expiredPostpaidClients);
 
-        return view('home', compact('clients','clients_by_package','package','registered_clients','expiring_soon','expired_today','expired_this_month','lastUpdated','expiredPostpaidClients'));
+        $freeOnuExpiredClients = Client::where('onu_free', 1)
+        ->where('onu_returned', 0)
+        ->whereDate('expiration', '<', Carbon::today()) // শুধু expired clients
+        ->get();
+
+        return view('home', compact('clients','clients_by_package','package','registered_clients','expiring_soon','expired_today','expired_this_month','lastUpdated','expiredPostpaidClients','freeOnuExpiredClients'));
     }
 }

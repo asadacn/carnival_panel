@@ -12,6 +12,7 @@
                 <th>@lang('models/clients.fields.expiration')</th>
                 <th>Cable</th>
                 <th>ONU</th>
+                <th>Comment</th>
                 <th>@lang('models/clients.fields.status')</th>
                 <th>Action</th>
 

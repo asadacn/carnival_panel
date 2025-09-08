@@ -48,7 +48,7 @@ Route::get('hotspot/erase/', [HotspotZoneController::class, 'erase'])->name('hot
 Route::resource('packages', App\Http\Controllers\PackageController::class);
 Route::resource('investments', App\Http\Controllers\InvestmentController::class);
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
 
 Route::resource('hotspotZones', App\Http\Controllers\HotspotZoneController::class);
 
