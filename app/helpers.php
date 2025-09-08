@@ -150,6 +150,7 @@ function sms($contacts, $message, $type = 'unicode')
 //  );
 
 
+
 function sms_balance()
 {
     $api_key = env('MRAM_API_KEY');
@@ -157,7 +158,14 @@ function sms_balance()
 
     try {
         $response = Http::get($url);
-        return $response->body();
+        $body = $response->body();
+
+        // শুধু BDT এবং সংখ্যাটি বের করা
+        if (preg_match('/BDT\s*([\d,.]+)/', $body, $matches)) {
+            return  $matches[1]; // BDT 473.32 এর মতো রিটার্ন
+        }
+
+        return $body; // যদি match না হয়, পুরো response ফেরত
     } catch (\Exception $e) {
         return $e->getMessage();
     }
