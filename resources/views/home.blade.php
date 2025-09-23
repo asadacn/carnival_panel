@@ -53,6 +53,55 @@
                 @include('layouts.expireddashboardtable', $clients = $expired_today->get())
             </div>
         </div>
+{{-- Hotspot Expired Clients --}}
+<div class="card mb-4 shadow-sm border-0 rounded-3">
+    <div class="card-header text-white" style="background: linear-gradient(135deg,#ff416c,#ff4b2b)">
+        <h5 class="mb-0"><i class="fas fa-wifi text-white me-1"></i> Expired Hotspot Clients</h5>
+    </div>
+    <div class="card-body table-responsive">
+        @if($expiredHotspotClients->count() > 0)
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Client Name</th>
+                    <th>Contact</th>
+                    <th>Package</th>
+                    <th>Activated At</th>
+                    <th>Expired At</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($expiredHotspotClients as $key => $client)
+                <tr>
+                    <td>{{ $key + 1 }}</td>
+                    <td>{{ $client->name }}</td>
+                    <td>{{ $client->contact }}</td>
+                    <td>{{ $client->package ?? '-' }}</td>
+                    <td>{{ $client->activated_at ? $client->activated_at->format('d M, Y') : '-' }}</td>
+                    <td>{{ $client->expires_at ? $client->expires_at->format('d M, Y') : '-' }}</td>
+                    <td>
+                        <span class="badge bg-danger">{{ ucfirst($client->status) }}</span>
+                    </td>
+                    <td>
+                        <a href="{{ route('hotspotClients.edit', $client->id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="tel:{{ $client->contact }}" class="btn btn-sm btn-success">
+                            <i class="fas fa-phone"></i> Call
+                        </a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @else
+            <p class="text-success mb-0">✅ কোনো expired Hotspot client নেই।</p>
+        @endif
+    </div>
+</div>
 
         {{-- Postpaid Expired --}}
         <div class="card mb-4 shadow-sm border-0 rounded-3">

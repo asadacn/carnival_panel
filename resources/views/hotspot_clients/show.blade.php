@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title')
-    @lang('models/hotspotClients.singular')  @lang('crud.details') 
+    @lang('models/hotspotClients.singular')  @lang('crud.details')
 @endsection
 @section('content')
     <section class="section">
