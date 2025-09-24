@@ -205,4 +205,20 @@ function takaFormat($input){
             return $num . $dec;
         }
 
+//SEND TELEGRAM MESSAGE
+if(!function_exists('sendTelegram')){
+    function sendTelegram($message, $chat_id = null){
+        $chat_id = $chat_id ?? env('TELEGRAM_CHAT_ID');
+        $token = env('TELEGRAM_BOT_TOKEN');
+        $url = "https://api.telegram.org/bot$token/sendMessage";
+
+        $response = Http::post($url, [
+            'chat_id' => $chat_id,
+            'text' => $message,
+            'parse_mode' => 'HTML'
+        ]);
+
+        return $response->successful();
+    }
+}
 

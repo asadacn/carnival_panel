@@ -13,29 +13,23 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        \App\Console\Commands\ExpiringHotspotClientsCommand::class, // 👈 এখানে যোগ করুন
     ];
 
     /**
      * Define the application's command schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // প্রতিদিন সকাল ৯টায় রান করাতে চাইলে
+        $schedule->command('clients:notify-expired')->dailyAt('09:00');
     }
 
     /**
      * Register the commands for the application.
-     *
-     * @return void
      */
-    protected function commands()
+    protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
-
-        require base_path('routes/console.php');
     }
 }
