@@ -22,7 +22,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // প্রতিদিন সকাল ৯টায় রান করাতে চাইলে
-        $schedule->command('clients:notify-expired')->dailyAt('09:00');
+        $schedule->command('clients:notify-expired')->dailyAt('11:00');
     }
 
     /**
