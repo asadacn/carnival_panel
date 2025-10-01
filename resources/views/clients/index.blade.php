@@ -39,50 +39,50 @@
 
 
 
+<!-- Sms Modal -->
+<div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
 
-    <!--Sms Modal -->
-    <div class="modal fade" id="smsModal" tabindex="-2" role="dialog" aria-labelledby="exampleModalCenterTitle"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Client SMS</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <select class="border border-secondary form-control mb-3">
-                        <option value="">Select From Template</option>
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h5 class="modal-title" id="smsModalLabel">Client SMS</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
-                        @foreach ($templates as $template)
-                            <option value="{{ $template->sms_template }}">{{ $template->title }}</option>
-                        @endforeach
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <select class="form-select mb-3 border border-secondary">
+                    <option value="">Select From Template</option>
+                    @foreach ($templates as $template)
+                        <option value="{{ $template->sms_template }}">{{ $template->title }}</option>
+                    @endforeach
+                </select>
 
-                    </select>
-                    <form id="sms_form" action="">
-                        <input id="client_id" type="hidden" name="client_id">
-                        <label for="">Write Message ( <small id="sms-counter">
-                                {{-- <li>Encoding: <span class="encoding"></span></li> --}}
-                                {{-- <li>Length: <span class="length"></span></li> --}}
-                                <span>Messages: <span class="messages"></span></span> /
-                                {{-- <li>Per Message: <span class="per_message"></span></li> --}}
-                                <span>Remaining: <span class="remaining"></span></span>
-                            </small> )
-                        </label>
-                        <textarea name="sms-body" id="sms-body" style="min-height: 140px;" class="form-control border border-success"
-                            placeholder="Write your message here .."></textarea>
-                    </form>
+                <form id="sms_form" action="">
+                    <input id="client_id" type="hidden" name="client_id">
+                    <label for="sms-body">Write Message
+                        (<small id="sms-counter">
+                            <span>Messages: <span class="messages"></span></span> /
+                            <span>Remaining: <span class="remaining"></span></span>
+                        </small>)
+                    </label>
+                    <textarea name="sms-body" id="sms-body" style="min-height: 140px;"
+                        class="form-control border border-success"
+                        placeholder="Write your message here .."></textarea>
+                </form>
+            </div>
 
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
-                    <button type="button" onclick="resetText()" class="btn btn-warning">Reset</button>
-                    <button type="button" onclick="sendSMS()" class="btn btn-success">Send</button>
-                </div>
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" onclick="resetText()" class="btn btn-warning">Reset</button>
+                <button type="button" onclick="sendSMS()" class="btn btn-success">Send</button>
             </div>
         </div>
     </div>
+</div>
+
 
 
     <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->

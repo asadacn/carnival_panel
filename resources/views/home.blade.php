@@ -50,60 +50,61 @@
                 <h5 class="mb-0"><i data-lucide="calendar-x" class="me-1"></i> Today's Expired Clients</h5>
             </div>
             <div class="card-body">
-                @include('layouts.expireddashboardtable', $clients = $expired_today->get())
+                @include('layouts.expireddashboardtable', ['clients' => $expired_today])
             </div>
         </div>
-{{-- Hotspot Expired Clients --}}
-<div class="card mb-4 shadow-sm border-0 rounded-3">
-    <div class="card-header text-white" style="background: linear-gradient(135deg,#ff416c,#ff4b2b)">
-        <h5 class="mb-0"><i class="fas fa-wifi text-white me-1"></i> Expired Hotspot Clients</h5>
-    </div>
-    <div class="card-body table-responsive">
-        @if($expiredHotspotClients->count() > 0)
-        <table class="table table-striped table-bordered align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>#</th>
-                    <th>Client Name</th>
-                    <th>Contact</th>
-                    <th>Package</th>
-                    <th>Activated At</th>
-                    <th>Expired At</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($expiredHotspotClients as $key => $client)
-                <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ $client->name }}</td>
-                    <td>{{ $client->contact }}</td>
-                    <td>{{ $client->package ?? '-' }}</td>
-                    <td>{{ $client->activated_at ? $client->activated_at->format('d M, Y') : '-' }}</td>
-                    <td>{{ $client->expires_at ? $client->expires_at->format('d M, Y') : '-' }}</td>
-                    <td>
-                        <span class="badge bg-danger">{{ ucfirst($client->status) }}</span>
-                    </td>
-                    <td>
-                        <a href="{{ route('hotspotClients.edit', $client->id) }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <a href="tel:{{ $client->contact }}" class="btn btn-sm btn-success">
-                            <i class="fas fa-phone"></i> Call
-                        </a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        @else
-            <p class="text-success mb-0">✅ কোনো expired Hotspot client নেই।</p>
-        @endif
-    </div>
-</div>
 
-        {{-- Postpaid Expired --}}
+        {{-- Hotspot Expired Clients --}}
+        <div class="card mb-4 shadow-sm border-0 rounded-3">
+            <div class="card-header text-white" style="background: linear-gradient(135deg,#ff416c,#ff4b2b)">
+                <h5 class="mb-0"><i class="fas fa-wifi text-white me-1"></i> Expired Hotspot Clients</h5>
+            </div>
+            <div class="card-body table-responsive">
+                @if($expiredHotspotClients->count() > 0)
+                <table class="table table-striped table-bordered align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Client Name</th>
+                            <th>Contact</th>
+                            <th>Package</th>
+                            <th>Activated At</th>
+                            <th>Expired At</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($expiredHotspotClients as $key => $client)
+                        <tr>
+                            <td>{{ $key + 1 }}</td>
+                            <td>{{ $client->name }}</td>
+                            <td>{{ $client->contact }}</td>
+                            <td>{{ $client->package ?? '-' }}</td>
+                            <td>{{ $client->activated_at ? \Carbon\Carbon::parse($client->activated_at)->format('d M, Y') : '-' }}</td>
+                            <td>{{ $client->expires_at ? \Carbon\Carbon::parse($client->expires_at)->format('d M, Y') : '-' }}</td>
+                            <td>
+                                <span class="badge bg-danger">{{ ucfirst($client->status) }}</span>
+                            </td>
+                            <td>
+                                <a href="{{ route('hotspotClients.edit', $client->id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="tel:{{ $client->contact }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-phone"></i> Call
+                                </a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @else
+                    <p class="text-success mb-0">✅ কোনো expired Hotspot client নেই।</p>
+                @endif
+            </div>
+        </div>
+
+        {{-- Postpaid Expired Clients --}}
         <div class="card mb-4 shadow-sm border-0 rounded-3">
             <div class="card-header text-white" style="background: linear-gradient(135deg,#f7971e,#ffd200)">
                 <h5 class="mb-0"><i data-lucide="credit-card" class="me-1"></i> Postpaid Clients Being Expired</h5>
@@ -124,13 +125,17 @@
                             <tr>
                                 <td>{{ $key+1 }}</td>
                                 <td>{{ $client->name }}</td>
-                                <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank">{{ $client->username }}</a></td>
+                                <td>
+                                    <a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank">
+                                        {{ $client->username }}
+                                    </a>
+                                </td>
                                 <td>{{ $client->package ?? '-' }}</td>
-                                <td>{{ $client->expiration }}</td>
+                                <td>{{ \Carbon\Carbon::parse($client->expiration)->format('d M, Y') }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">No expired postpaid clients found.</td>
+                                <td colspan="5" class="text-center text-muted">No expired postpaid clients found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -138,7 +143,7 @@
             </div>
         </div>
 
-        {{-- Free ONU Expired --}}
+        {{-- Free ONU Expired Clients --}}
         <div class="card mb-4 shadow-sm border-0 rounded-3">
             <div class="card-header text-white" style="background: linear-gradient(135deg,#ff416c,#ff4b2b)">
                 <h5 class="mb-0"><i data-lucide="wifi-off" class="me-1"></i> Expired Clients with Free ONU</h5>
@@ -162,11 +167,16 @@
                             @foreach($freeOnuExpiredClients as $key => $client)
                                 <tr>
                                     <td>{{ $key+1 }}</td>
-                                    <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank">{{ $client->username }}</a></td>
+                                    <td>
+                                        <a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank">
+                                            {{ $client->username }}
+                                        </a>
+                                    </td>
                                     <td>{{ $client->name }}</td>
                                     <td>{{ $client->contact }}</td>
                                     <td>{{ $client->address }}</td>
-                                    <td>{{ $client->expiration }}</td>
+                                    <td>{{ $client->expiration_formatted }}</td>
+
                                     <td>{{ $client->onu_serial ?? 'N/A' }}</td>
                                     <td>
                                         <a href="tel:{{ $client->contact }}" class="btn btn-sm btn-outline-primary">
@@ -183,8 +193,8 @@
             </div>
         </div>
 
+        {{-- Registered Clients Table --}}
         <div class="row">
-            {{-- Table --}}
             <div class="col-md-6">
                 <div class="card mb-4 shadow-sm border-0 rounded-3">
                     <div class="card-header text-white" style="background: linear-gradient(135deg,#56ab2f,#a8e063)">
@@ -215,7 +225,7 @@
                 </div>
             </div>
 
-            {{-- Chart --}}
+            {{-- Clients Chart --}}
             <div class="col-md-6">
                 <div class="card mb-4 shadow-sm border-0 rounded-3">
                     <div class="card-header text-white" style="background: linear-gradient(135deg,#36d1dc,#5b86e5)">
@@ -228,7 +238,18 @@
             </div>
         </div>
 
-        {{-- Commission Calculator --}}
+        {{-- Monthly Expired Clients Chart --}}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5>Monthly Expired Clients (Yearly Comparison)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="expiredClientsChart" height="100"></canvas>
+            </div>
+        </div>
+
+
+                {{-- Commission Calculator --}}
         <div class="card mb-4 shadow-sm border-0 rounded-3">
             <div class="card-header text-white" style="background: linear-gradient(135deg,#4facfe,#00f2fe)">
                 <h5 class="mb-0"><i data-lucide="percent" class="me-1"></i> Commission Calculator</h5>
@@ -249,55 +270,90 @@
 @endsection
 
 @section('scripts')
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script><script>
-    function toggleCommission(){
-        $('#collapseCommission').slideToggle('fast');
-    }
-    lucide.createIcons();
-</script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    const ctx = document.getElementById('clientsChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: @json($clients_by_package->pluck('package')),
-            datasets: [
-                {
-                    label: 'Clients',
-                    data: @json($clients_by_package->pluck('total_clients')),
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Total Amount',
-                    data: @json($clients_by_package->pluck('total_amount')),
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1,
-                    type: 'line',
-                    yAxisID: 'y1'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Clients' }
-                },
-                y1: {
-                    beginAtZero: true,
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'Total Amount' }
-                }
+function toggleCommission(){
+    $('#collapseCommission').slideToggle('fast');
+}
+lucide.createIcons();
+</script>
+
+<script>
+const ctx = document.getElementById('clientsChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: @json($clients_by_package->pluck('package')),
+        datasets: [
+            {
+                label: 'Clients',
+                data: @json($clients_by_package->pluck('total_clients')),
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Total Amount',
+                data: @json($clients_by_package->pluck('total_amount')),
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                type: 'line',
+                yAxisID: 'y1'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Clients' }
+            },
+            y1: {
+                beginAtZero: true,
+                position: 'right',
+                grid: { drawOnChartArea: false },
+                title: { display: true, text: 'Total Amount' }
             }
         }
-    });
-</script>
+    }
+});
 
+const ctxExpired = document.getElementById('expiredClientsChart').getContext('2d');
+new Chart(ctxExpired, {
+    type: 'bar',
+    data: {
+        labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        datasets: [
+            {
+                label: 'Current Year',
+                data: @json($monthlyExpiresChartData['current']),
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Previous Year',
+                data: @json($monthlyExpiresChartData['previous']),
+                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Monthly Expired Clients Comparison' }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Number of Expired Clients' } },
+            x: { title: { display: true, text: 'Months' } }
+        }
+    }
+});
+</script>
 @endsection
