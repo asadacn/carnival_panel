@@ -51,6 +51,14 @@ class ClientController extends AppBaseController
                 ->addColumn('action', function ($client) {
 
                     $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
+                     $btn = $btn .= '<a href="#" onclick="showQr('
+                                    . $client->id . ', '
+                                    . '\'' . addslashes($client->name) . '\', '
+                                    . '\'' . addslashes($client->contact) . '\')"
+                                    class="btn btn-outline-primary action-btn">
+                                    <i class="fas fa-qrcode"></i>
+                                </a>';
+
                     $btn = $btn . '<a href="#" data-toggle="modal" onclick="setSmsId(' . $client->id . ')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
                     $btn = $btn . '<a href="' . route('clients.show', [$client->id]) . '" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
                     $btn = $btn . '<a href="' . route('clients.edit', [$client->id]) . '" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
@@ -59,7 +67,12 @@ class ClientController extends AppBaseController
                     return $btn;
                 })
                 ->rawColumns(['action'])
-                ->make(true);
+                ->editColumn('expiration', function($row) {
+                if (! $row->expiration) return '-';
+                $dt = $row->expiration->copy()->setTimezone('Asia/Dhaka');
+                return $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans();
+            })
+            ->make(true);
         }
 
         $templates = SMS_TEMPALTE::all();

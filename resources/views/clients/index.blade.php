@@ -39,50 +39,68 @@
 
 
 
-<!-- Sms Modal -->
-<div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+    <!-- Sms Modal -->
+    <div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
 
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h5 class="modal-title" id="smsModalLabel">Client SMS</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="smsModalLabel">Client SMS</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <select class="form-select mb-3 border border-secondary">
-                    <option value="">Select From Template</option>
-                    @foreach ($templates as $template)
-                        <option value="{{ $template->sms_template }}">{{ $template->title }}</option>
-                    @endforeach
-                </select>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <select class="form-select mb-3 border border-secondary">
+                        <option value="">Select From Template</option>
+                        @foreach ($templates as $template)
+                            <option value="{{ $template->sms_template }}">{{ $template->title }}</option>
+                        @endforeach
+                    </select>
 
-                <form id="sms_form" action="">
-                    <input id="client_id" type="hidden" name="client_id">
-                    <label for="sms-body">Write Message
-                        (<small id="sms-counter">
-                            <span>Messages: <span class="messages"></span></span> /
-                            <span>Remaining: <span class="remaining"></span></span>
-                        </small>)
-                    </label>
-                    <textarea name="sms-body" id="sms-body" style="min-height: 140px;"
-                        class="form-control border border-success"
-                        placeholder="Write your message here .."></textarea>
-                </form>
-            </div>
+                    <form id="sms_form" action="">
+                        <input id="client_id" type="hidden" name="client_id">
+                        <label for="sms-body">Write Message
+                            (<small id="sms-counter">
+                                <span>Messages: <span class="messages"></span></span> /
+                                <span>Remaining: <span class="remaining"></span></span>
+                            </small>)
+                        </label>
+                        <textarea name="sms-body" id="sms-body" style="min-height: 140px;" class="form-control border border-success"
+                            placeholder="Write your message here .."></textarea>
+                    </form>
+                </div>
 
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" onclick="resetText()" class="btn btn-warning">Reset</button>
-                <button type="button" onclick="sendSMS()" class="btn btn-success">Send</button>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" onclick="resetText()" class="btn btn-warning">Reset</button>
+                    <button type="button" onclick="sendSMS()" class="btn btn-success">Send</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+<!-- QR Code Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4">
+      <h5 id="qrModalLabel" class="mb-3">Client QR</h5>
+
+      <!-- QR code container -->
+      <div id="qrcode" class="mx-auto mb-3"></div>
+
+      <!-- Client name -->
+      <p id="clientName" class="fw-bold mb-3"></p>
+
+      <!-- WhatsApp button -->
+      <a href="#" id="whatsappBtn" class="btn btn-success w-100">
+        <i class="fab fa-whatsapp"></i> Send WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
 
 
     <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
@@ -161,7 +179,7 @@
                             }
                         }
                     },
-                                        {
+                    {
                         data: 'onu_free',
                         name: 'onu_free',
                         render: function(data, type, row) {
@@ -369,4 +387,56 @@
             $('select').val('');
         }
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+function showQr(id, name, contact) {
+    // QR code data (vCard)
+    const vCard =
+`BEGIN:VCARD
+VERSION:3.0
+FN:${name}
+TEL;TYPE=CELL:${contact}
+END:VCARD`;
+
+    // WhatsApp message
+
+    const message = `কার্নিভাল রিচার্জ\n` +
+                    `হ্যালো ${name}\n` +
+                    `আপনার ইন্টারনেট সংযোগের মেয়াদ শেষ। অনুগ্রহ করে রিচার্জ করুন।\n` +
+                    `01770033448 (নগদ/বিকাশ)\n` +
+                    `Hotline: +8809642363693`;
+
+    // WhatsApp URL (mobile vs web fallback)
+    const waAppLink = `whatsapp://send?phone=+88${contact}&text=${encodeURIComponent(message)}`;
+  //  const waWebLink = `https://web.whatsapp.com/send?phone=+88${phone}&text=${encodeURIComponent(message)}`;
+
+    // Clear old QR code and create new
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = "";
+    new QRCode(qrContainer, {
+        text: vCard,
+        width: 200,
+        height: 200,
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    // Set client name
+    document.getElementById("clientName").innerText = name;
+
+    // WhatsApp button click
+    const waBtn = document.getElementById("whatsappBtn");
+    waBtn.onclick = function(e) {
+        e.preventDefault();
+        // Detect if mobile
+        //const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        window.location.href = waAppLink ;
+    };
+
+    // Show modal
+    var qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+    qrModal.show();
+}
+</script>
+
 @endsection
