@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('technician_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('complain_type_id')->nullable()->constrained('complain_types')->onDelete('set null');
             $table->text('description');
-            $table->enum('status',['open','in_progress','resolved','closed'])->default('open');
+            $table->enum('status',['open','pending','in_progress','resolved','closed'])->default('open');
             $table->enum('priority',['low','medium','high'])->default('medium');
             $table->timestamp('opened_at')->useCurrent();
             $table->timestamp('closed_at')->nullable();

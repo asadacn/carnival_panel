@@ -84,5 +84,8 @@ Route::get('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sen
 Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');
 
 
-Route::resource('tickets', App\Http\Controllers\TicketController::class);
+//Route::resource('tickets', App\Http\Controllers\TicketController::class);
 
+use App\Http\Livewire\TicketManager;
+
+Route::get('/ticket', TicketManager::class)->name('tickets.live');

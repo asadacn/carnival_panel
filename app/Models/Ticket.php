@@ -10,11 +10,13 @@ class Ticket extends Model
     use HasFactory;
 
     protected $fillable = [
-        'client_id', 'technician_id', 'complain_type_id',
-        'description', 'status', 'priority', 'opened_at', 'closed_at'
+        'client_id',
+        'technician_id',
+        'complain_type_id',
+        'description',
+        'priority',
+        'status',
     ];
-
-    protected $dates = ['opened_at','closed_at'];
 
     public function client()
     {
@@ -29,5 +31,10 @@ class Ticket extends Model
     public function complainType()
     {
         return $this->belongsTo(ComplainType::class);
+    }
+
+    public function timeline()
+    {
+        return $this->hasMany(TicketTimeline::class);
     }
 }
