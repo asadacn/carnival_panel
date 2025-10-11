@@ -28,6 +28,9 @@
 
 
     @yield('css')
+
+    @livewireStyles
+
 </head>
 <body>
 
@@ -45,6 +48,13 @@
         <div class="main-content">
             @include('flash::message')
             @yield('content')
+            <head>
+    @livewireStyles
+</head>
+
+    {{ $slot ?? '' }}
+    @livewireScripts
+
         </div>
         <footer class="main-footer">
             @include('layouts.footer')

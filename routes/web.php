@@ -82,5 +82,3 @@ Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class)
 Route::resource('hotspotClients', App\Http\Controllers\HotspotClientController::class);
 Route::get('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sendSmsReminder'])->name('hotspotClients.sendSms');
 Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');
-
-});
