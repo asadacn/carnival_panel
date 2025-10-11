@@ -10,7 +10,7 @@ use App\Models\Client;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-
+use App\Http\Livewire\TicketManager;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -82,3 +82,7 @@ Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class)
 Route::resource('hotspotClients', App\Http\Controllers\HotspotClientController::class);
 Route::get('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sendSmsReminder'])->name('hotspotClients.sendSms');
 Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');
+
+
+Route::get('/ticket', TicketManager::class)->name('tickets.live');
+});

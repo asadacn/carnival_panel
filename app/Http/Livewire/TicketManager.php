@@ -15,6 +15,7 @@ class TicketManager extends Component
     public $clients = [];
     public $technicians = [];
     public $complainTypes = [];
+    public $selectedClient;
 
     public $client_id, $technician_id, $complain_type_id, $description, $priority = 'medium';
     public $searchClient = '';
@@ -32,15 +33,24 @@ class TicketManager extends Component
         $this->loadData();
     }
 
-    public function updatedSearchClient()
+public function updatedSearchClient()
+{
+    if ($this->searchClient) {
+        $this->clients = Client::where('username', 'like', "%{$this->searchClient}%")
+            ->orWhere('contact', 'like', "%{$this->searchClient}%")
+            ->take(5) // maximum 10 results
+            ->get();
+    } else {
+        $this->clients = Client::all()->take(5); // optional: limit when showing all
+    }
+}
+
+
+    public function selectClient($id)
     {
-        if ($this->searchClient) {
-            $this->clients = Client::where('username', 'like', "%{$this->searchClient}%")
-                ->orWhere('contact', 'like', "%{$this->searchClient}%")
-                ->get();
-        } else {
-            $this->clients = Client::all();
-        }
+        $this->client_id = $id;
+        $this->selectedClient = Client::find($id);
+        $this->clients = [];
     }
 
     public function loadData()
@@ -70,6 +80,7 @@ class TicketManager extends Component
         session()->flash('success', 'Ticket created successfully!');
     }
 
+    // ✅ Public method for JS call
     public function assignTechnician($ticketId)
     {
         $ticket = Ticket::findOrFail($ticketId);
@@ -80,22 +91,20 @@ class TicketManager extends Component
 
         $ticket->update([
             'technician_id' => $this->technician_id,
-            'status' => 'in_progress'
+            'status' => 'in_progress',
         ]);
 
         $this->addTimeline($ticket->id, 'technician_assigned', auth()->user()->name, "Assigned to technician");
-
         $this->loadData();
         session()->flash('success', 'Technician assigned successfully!');
     }
 
+    // ✅ Public method for JS call
     public function updateStatus($ticketId, $newStatus)
     {
         $ticket = Ticket::findOrFail($ticketId);
         $ticket->update(['status' => $newStatus]);
-
         $this->addTimeline($ticket->id, 'status_updated', auth()->user()->name, "Status changed to $newStatus");
-
         $this->loadData();
         session()->flash('success', "Ticket #$ticketId status updated to $newStatus.");
     }
@@ -115,6 +124,7 @@ class TicketManager extends Component
         $this->client_id = $this->complain_type_id = $this->description = $this->technician_id = null;
         $this->priority = 'medium';
         $this->searchClient = '';
+        $this->selectedClient = null;
     }
 
     public function render()
