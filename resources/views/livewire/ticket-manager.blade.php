@@ -1,82 +1,43 @@
-<div class="container py-5">
-
-    {{-- 🔥 Glass + Fade Animations CSS --}}
-    <style>
-        .glass-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            transition: all 0.3s ease-in-out;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            color: #111;
-        }
-        .glass-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .blur-bg {
-            background: linear-gradient(135deg, rgba(248,248,248,0.3), rgba(240,248,255,0.2));
-            backdrop-filter: blur(15px);
-            min-height: 100vh;
-            padding-bottom: 50px;
-        }
-        .list-group-item:hover {
-            background-color: rgba(203, 251, 108, 0.15);
-            cursor: pointer;
-        }
-        .badge-modern {
-            padding: 0.35em 0.75em;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #fff;
-            display: inline-block;
-        }
-    </style>
+<div class="container-fluid py-4">
 
     {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div class="blur-bg rounded-4 p-4 shadow-lg">
+    <div class="bg-light rounded-4 shadow-sm p-4">
 
-        <h2 class="text-center mb-4 fw-bold">🎫 Ticket Manager (Glass UI)</h2>
+        <h2 class="text-center fw-bold mb-4">🎫 Ticket Manager</h2>
 
         {{-- Alerts --}}
         @if(session()->has('success'))
-            <div class="alert alert-success alert-dismissible fade show glass-card">
+            <div class="alert alert-success alert-dismissible fade show">
                 {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
         @if(session()->has('error'))
-            <div class="alert alert-danger alert-dismissible fade show glass-card">
+            <div class="alert alert-danger alert-dismissible fade show">
                 {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
         {{-- Create Ticket --}}
-        <div class="card glass-card mb-5 p-3 fade-in">
-            <div class="card-header bg-transparent border-0 fw-bold fs-5">🧾 Create New Ticket</div>
+        <div class="card mb-5 border-0 shadow-sm">
+            <div class="card-header bg-primary text-white fw-semibold">
+                🧾 Create New Ticket
+            </div>
             <div class="card-body">
                 <div class="row g-3">
-
                     {{-- Client Search --}}
                     <div class="col-md-6 position-relative">
-                        <input type="text" class="form-control" placeholder="Search client by username/contact..." wire:model.debounce.300ms="searchClient">
-
+                        <input type="text" class="form-control" placeholder="Search client..." wire:model.debounce.300ms="searchClient">
                         @if(!empty($clients))
-                            <ul class="list-group position-absolute w-100 mt-1 shadow glass-card z-index-20">
+                            <ul class="list-group position-absolute w-100 mt-1 shadow-sm">
                                 @foreach($clients as $client)
-                                    <li class="list-group-item list-group-item-action" wire:click="selectClient({{ $client->id }})">
-                                        <strong>{{ $client->username }}</strong> — {{ $client->contact }}<br>
-                                        <small class="text-muted">{{ $client->name ?? 'N/A' }}</small> | <small class="text-muted">{{ $client->package ?? 'N/A' }}</small>
+                                    <li class="list-group-item list-group-item-action"
+                                        wire:click="selectClient({{ $client->id }})">
+                                        <strong>{{ $client->username }}</strong> — {{ $client->contact }}
+                                        <br><small class="text-muted">{{ $client->name ?? 'N/A' }} | {{ $client->package ?? 'N/A' }}</small>
                                     </li>
                                 @endforeach
                             </ul>
@@ -106,123 +67,140 @@
 
                     {{-- Selected Client Card --}}
                     @if($selectedClient)
-                        <div class="col-12 fade-in">
-                            <div class="card glass-card border-info">
-                                <div class="card-header bg-transparent border-info fw-bold">👤 Selected Client</div>
-                                <div class="card-body">
-                                    <h5>{{ $selectedClient->username }} | {{ $selectedClient->name }}</h5>
-                                    <p class="mb-1"><strong>📞 Contact:</strong> {{ $selectedClient->contact }}</p>
-                                    <p class="mb-1"><strong>📦 Package:</strong> {{ $selectedClient->package ?? 'N/A' }}</p>
-                                    <p class="mb-0"><strong>📍 Address:</strong> {{ $selectedClient->address ?? 'N/A' }}</p>
+                        <div class="col-12">
+                            <div class="card border-info shadow-sm">
+                                <div class="card-header bg-info bg-opacity-10 fw-semibold text-info">
+                                    👤 Selected Client
+                                </div>
+                                <div class="card-body small">
+                                    <h6 class="mb-1">{{ $selectedClient->username }} — {{ $selectedClient->name }}</h6>
+                                    <p class="mb-1"><strong>📞</strong> {{ $selectedClient->contact }}</p>
+                                    <p class="mb-1"><strong>📦</strong> {{ $selectedClient->package ?? 'N/A' }}</p>
+                                    <p class="mb-0"><strong>📍</strong> {{ $selectedClient->address ?? 'N/A' }}</p>
                                 </div>
                             </div>
                         </div>
                     @endif
 
-                    <div class="col-12 text-end">
-                        <button class="btn btn-success px-4 py-2 fw-bold shadow" wire:click="submitTicket">
+                    <div class="col-6 text-end">
+                        <button class="btn btn-success  px-4" wire:click="submitTicket">
                             🚀 Submit Ticket
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>
 
         {{-- Tickets Table --}}
-        <div class="card glass-card fade-in">
-            <div class="card-header bg-transparent fw-bold fs-5">📋 Active Tickets</div>
-            <div class="card-body table-responsive">
-                <table class="table table-hover align-middle text-dark">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Client</th>
-                            <th>Technician</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                            <th>Assign</th>
-                            <th>Timeline</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($tickets as $ticket)
-                            <tr class="fade-in">
-                                <td>{{ $ticket->id }}</td>
-                                <td>{{ $ticket->client->username ?? '' }}<br><small>{{ $ticket->client->contact ?? '' }}</small></td>
-                                <td>{{ $ticket->technician->name ?? 'Unassigned' }}</td>
-                                <td>{{ $ticket->complainType->name ?? '' }}</td>
-                                <td>{{ $ticket->description }}</td>
-
-                                {{-- Priority Badge --}}
-                                @php $priorityColors = ['low'=>'#4caf50','medium'=>'#ffc107','high'=>'#f44336']; @endphp
-                                <td><span class="badge-modern" style="background: {{ $priorityColors[$ticket->priority] ?? '#999' }}">{{ ucfirst($ticket->priority) }}</span></td>
-
-                                {{-- Status Badge + Dropdown --}}
-                                @php $statusColors = ['pending'=>'#bdbdbd','in_progress'=>'#2196f3','resolved'=>'#4caf50','closed'=>'#9e9e9e']; @endphp
-                                <td>
-                                    <span class="badge-modern mb-1" style="background: {{ $statusColors[$ticket->status] ?? '#999' }}">{{ ucfirst($ticket->status) }}</span>
-                                    <select class="form-select form-select-sm" onchange="if(this.value){ Swal.fire({
-                                        title:'Update Status?',
-                                        text:'Are you sure you want to update status?',
-                                        icon:'question',
-                                        showCancelButton:true,
-                                        confirmButtonText:'Yes',
-                                        cancelButtonText:'No'
-                                    }).then((result)=>{ if(result.isConfirmed){ @this.call('updateStatus', {{ $ticket->id }}, this.value); this.value=''; } else { this.value=''; } }); }">
-                                        <option value="">Change</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="resolved">Resolved</option>
-                                        <option value="closed">Closed</option>
-                                    </select>
-                                </td>
-
-                                {{-- Assign Technician --}}
-                                <td>
-                                    <select class="form-select form-select-sm" wire:model="technician_id">
-                                        <option value="">Select</option>
-                                        @foreach($technicians as $tech)
-                                            <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button class="btn btn-sm btn-outline-success mt-1"
-                                        onclick="Swal.fire({
-                                            title:'Assign Technician?',
-                                            text:'Are you sure you want to assign this technician?',
-                                            icon:'question',
-                                            showCancelButton:true,
-                                            confirmButtonText:'Yes',
-                                            cancelButtonText:'No'
-                                        }).then((result)=>{ if(result.isConfirmed){ @this.call('assignTechnician', {{ $ticket->id }}); } });">
-                                        ✔
-                                    </button>
-                                </td>
-
-                                {{-- Timeline --}}
-                                <td>
-                                    <button class="btn btn-sm btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#timeline-{{ $ticket->id }}">
-                                        🕓 View
-                                    </button>
-                                </td>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-secondary text-white fw-semibold">
+                📋 Active Tickets
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Technician</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Assign</th>
+                                <th>Timeline</th>
                             </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($tickets as $ticket)
+                                <tr>
+                                    <td>{{ $ticket->id }}</td>
+                                    <td>
+                                        <div class="fw-semibold">{{ $ticket->client->username ?? '' }}</div>
+                                        <div class="fw-semibold">{{ $ticket->client->name ?? '' }}</div>
 
-                            <tr class="collapse" id="timeline-{{ $ticket->id }}">
-                                <td colspan="9">
-                                    <ul class="list-group list-group-flush glass-card">
-                                        @foreach($ticket->timeline ?? [] as $t)
-                                            <li class="list-group-item bg-transparent">
-                                                <small>{{ $t->created_at }} | {{ $t->performed_by }} | {{ $t->action }} | {{ $t->note }}</small>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                        <small class="text-muted">{{ $ticket->client->contact ?? '' }}</small>
+                                    </td>
+                                    <td>{{ $ticket->technician->name ?? 'Unassigned' }}</td>
+                                    <td>{{ $ticket->complainType->name ?? '' }}</td>
+                                    <td>{{ $ticket->description }}</td>
+
+                                    {{-- Priority --}}
+                                    @php $priorityColors = ['low'=>'success','medium'=>'warning','high'=>'danger']; @endphp
+                                    <td><span class="badge bg-{{ $priorityColors[$ticket->priority] ?? 'secondary' }}">{{ ucfirst($ticket->priority) }}</span></td>
+
+                                    {{-- Status --}}
+                                    @php $statusColors = ['pending'=>'secondary','in_progress'=>'info','resolved'=>'success','closed'=>'dark']; @endphp
+                                    <td>
+                                        <span class="badge bg-{{ $statusColors[$ticket->status] ?? 'secondary' }}">{{ ucfirst($ticket->status) }}</span>
+                                        <select class="form-select form-select-sm mt-1"
+                                            onchange="if(this.value){ Swal.fire({
+                                                title:'Update Status?',
+                                                text:'Confirm status change.',
+                                                icon:'question',
+                                                showCancelButton:true,
+                                                confirmButtonText:'Yes',
+                                                cancelButtonText:'No'
+                                            }).then((r)=>{ if(r.isConfirmed){ @this.call('updateStatus', {{ $ticket->id }}, this.value); this.value=''; } else { this.value=''; } }); }">
+                                            <option value="">Change</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="resolved">Resolved</option>
+                                            <option value="closed">Closed</option>
+                                        </select>
+                                    </td>
+
+                                    {{-- Assign Technician --}}
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <select class="form-select form-select-sm" wire:model="technician_id">
+                                                <option value="">Select</option>
+                                                @foreach($technicians as $tech)
+                                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button class="btn btn-sm btn-outline-success"
+                                                onclick="Swal.fire({
+                                                    title:'Assign Technician?',
+                                                    text:'Confirm assignment.',
+                                                    icon:'question',
+                                                    showCancelButton:true,
+                                                    confirmButtonText:'Yes',
+                                                    cancelButtonText:'No'
+                                                }).then((r)=>{ if(r.isConfirmed){ @this.call('assignTechnician', {{ $ticket->id }}); } });">
+                                                ✔
+                                            </button>
+                                        </div>
+                                    </td>
+
+                                    {{-- Timeline --}}
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#timeline-{{ $ticket->id }}">
+                                            🕓 View
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <tr class="collapse bg-light" id="timeline-{{ $ticket->id }}">
+                                    <td colspan="9">
+                                        <ul class="list-group list-group-flush small">
+                                            @foreach($ticket->timeline ?? [] as $t)
+                                                <li class="list-group-item">
+                                                    <strong>{{ $t->created_at }}</strong> —
+                                                    {{ $t->performed_by }} → {{ $t->action }}
+                                                    <span class="text-muted">({{ $t->note }})</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

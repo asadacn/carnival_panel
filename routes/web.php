@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Http\Livewire\TicketManager;
+use App\Http\Livewire\TechnicianManager;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -85,4 +86,7 @@ Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'ac
 
 
 Route::get('/ticket', TicketManager::class)->name('tickets.live');
+
+Route::get('/technicians', TechnicianManager::class)->name('technicians');
+
 });
