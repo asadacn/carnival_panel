@@ -1,208 +1,128 @@
-<div class="container-fluid py-4">
+<div class="container py-4">
+    {{-- Flash Messages --}}
+    @if (session()->has('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @elseif (session()->has('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
-    {{-- SweetAlert2 --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <div class="bg-light rounded-4 shadow-sm p-4">
-
-        <h2 class="text-center fw-bold mb-4">🎫 Ticket Manager</h2>
-
-        {{-- Alerts --}}
-        @if(session()->has('success'))
-            <div class="alert alert-success alert-dismissible fade show">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    {{-- Message Control --}}
+    <div class="card mb-4">
+        <div class="card-body d-flex gap-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" wire:model="send_sms" id="smsCheck">
+                <label class="form-check-label" for="smsCheck">📱 SMS পাঠানো সক্রিয়</label>
             </div>
-        @endif
-        @if(session()->has('error'))
-            <div class="alert alert-danger alert-dismissible fade show">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        {{-- Create Ticket --}}
-        <div class="card mb-5 border-0 shadow-sm">
-            <div class="card-header bg-primary text-white fw-semibold">
-                🧾 Create New Ticket
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    {{-- Client Search --}}
-                    <div class="col-md-6 position-relative">
-                        <input type="text" class="form-control" placeholder="Search client..." wire:model.debounce.300ms="searchClient">
-                        @if(!empty($clients))
-                            <ul class="list-group position-absolute w-100 mt-1 shadow-sm">
-                                @foreach($clients as $client)
-                                    <li class="list-group-item list-group-item-action"
-                                        wire:click="selectClient({{ $client->id }})">
-                                        <strong>{{ $client->username }}</strong> — {{ $client->contact }}
-                                        <br><small class="text-muted">{{ $client->name ?? 'N/A' }} | {{ $client->package ?? 'N/A' }}</small>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
-                    </div>
-
-                    <div class="col-md-6">
-                        <select class="form-select" wire:model="complain_type_id">
-                            <option value="">Select Complain Type</option>
-                            @foreach($complainTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-6">
-                        <select class="form-select" wire:model="priority">
-                            <option value="low">Low Priority</option>
-                            <option value="medium">Medium Priority</option>
-                            <option value="high">High Priority</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12">
-                        <textarea class="form-control" wire:model="description" rows="3" placeholder="Describe the issue..."></textarea>
-                    </div>
-
-                    {{-- Selected Client Card --}}
-                    @if($selectedClient)
-                        <div class="col-12">
-                            <div class="card border-info shadow-sm">
-                                <div class="card-header bg-info bg-opacity-10 fw-semibold text-info">
-                                    👤 Selected Client
-                                </div>
-                                <div class="card-body small">
-                                    <h6 class="mb-1">{{ $selectedClient->username }} — {{ $selectedClient->name }}</h6>
-                                    <p class="mb-1"><strong>📞</strong> {{ $selectedClient->contact }}</p>
-                                    <p class="mb-1"><strong>📦</strong> {{ $selectedClient->package ?? 'N/A' }}</p>
-                                    <p class="mb-0"><strong>📍</strong> {{ $selectedClient->address ?? 'N/A' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    <div class="col-6 text-end">
-                        <button class="btn btn-success  px-4" wire:click="submitTicket">
-                            🚀 Submit Ticket
-                        </button>
-                    </div>
-                </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" wire:model="send_telegram" id="telegramCheck">
+                <label class="form-check-label" for="telegramCheck">🤖 Telegram পাঠানো সক্রিয়</label>
             </div>
         </div>
+    </div>
 
-        {{-- Tickets Table --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-secondary text-white fw-semibold">
-                📋 Active Tickets
+    {{-- Create Ticket --}}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white fw-bold">নতুন টিকেট তৈরি</div>
+        <div class="card-body">
+            {{-- Client Search --}}
+            <div class="mb-3 position-relative">
+                <input type="text" wire:model.debounce.300ms="search" class="form-control"
+                       placeholder="ক্লায়েন্টের নাম, আইডি বা ফোন লিখুন ...">
+
+                @if (!empty($clients) && $search != '')
+                    <ul class="list-group position-absolute w-100" style="z-index:1000; max-height:200px; overflow-y:auto;">
+                        @foreach ($clients as $client)
+                            <li class="list-group-item list-group-item-action"
+                                wire:click="$set('selectedClient', {{ $client->id }})"
+                                style="cursor:pointer;">
+                                {{ $client->name }} - {{ $client->contact }}
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Client</th>
-                                <th>Technician</th>
-                                <th>Type</th>
-                                <th>Description</th>
-                                <th>Priority</th>
-                                <th>Status</th>
-                                <th>Assign</th>
-                                <th>Timeline</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($tickets as $ticket)
-                                <tr>
-                                    <td>{{ $ticket->id }}</td>
-                                    <td>
-                                        <div class="fw-semibold">{{ $ticket->client->username ?? '' }}</div>
-                                        <div class="fw-semibold">{{ $ticket->client->name ?? '' }}</div>
 
-                                        <small class="text-muted">{{ $ticket->client->contact ?? '' }}</small>
-                                    </td>
-                                    <td>{{ $ticket->technician->name ?? 'Unassigned' }}</td>
-                                    <td>{{ $ticket->complainType->name ?? '' }}</td>
-                                    <td>{{ $ticket->description }}</td>
+            {{-- Selected Client --}}
+            @if ($selectedClient)
+                @php $client = \App\Models\Client::find($selectedClient); @endphp
+                @if($client)
+                    <div class="alert alert-success">
+                        নির্বাচিত ক্লায়েন্ট: <strong>{{ $client->name }}</strong> ({{ $client->contact }})
+                    </div>
+                @endif
+            @endif
 
-                                    {{-- Priority --}}
-                                    @php $priorityColors = ['low'=>'success','medium'=>'warning','high'=>'danger']; @endphp
-                                    <td><span class="badge bg-{{ $priorityColors[$ticket->priority] ?? 'secondary' }}">{{ ucfirst($ticket->priority) }}</span></td>
+            {{-- Complain Type & Priority --}}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">অভিযোগের ধরন</label>
+                    <select wire:model="complain_type_id" class="form-select">
+                        <option value="">নির্বাচন করুন</option>
+                        @foreach ($complain_types as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                                    {{-- Status --}}
-                                    @php $statusColors = ['pending'=>'secondary','in_progress'=>'info','resolved'=>'success','closed'=>'dark']; @endphp
-                                    <td>
-                                        <span class="badge bg-{{ $statusColors[$ticket->status] ?? 'secondary' }}">{{ ucfirst($ticket->status) }}</span>
-                                        <select class="form-select form-select-sm mt-1"
-                                            onchange="if(this.value){ Swal.fire({
-                                                title:'Update Status?',
-                                                text:'Confirm status change.',
-                                                icon:'question',
-                                                showCancelButton:true,
-                                                confirmButtonText:'Yes',
-                                                cancelButtonText:'No'
-                                            }).then((r)=>{ if(r.isConfirmed){ @this.call('updateStatus', {{ $ticket->id }}, this.value); this.value=''; } else { this.value=''; } }); }">
-                                            <option value="">Change</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="resolved">Resolved</option>
-                                            <option value="closed">Closed</option>
-                                        </select>
-                                    </td>
-
-                                    {{-- Assign Technician --}}
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <select class="form-select form-select-sm" wire:model="technician_id">
-                                                <option value="">Select</option>
-                                                @foreach($technicians as $tech)
-                                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button class="btn btn-sm btn-outline-success"
-                                                onclick="Swal.fire({
-                                                    title:'Assign Technician?',
-                                                    text:'Confirm assignment.',
-                                                    icon:'question',
-                                                    showCancelButton:true,
-                                                    confirmButtonText:'Yes',
-                                                    cancelButtonText:'No'
-                                                }).then((r)=>{ if(r.isConfirmed){ @this.call('assignTechnician', {{ $ticket->id }}); } });">
-                                                ✔
-                                            </button>
-                                        </div>
-                                    </td>
-
-                                    {{-- Timeline --}}
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-info" type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#timeline-{{ $ticket->id }}">
-                                            🕓 View
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <tr class="collapse bg-light" id="timeline-{{ $ticket->id }}">
-                                    <td colspan="9">
-                                        <ul class="list-group list-group-flush small">
-                                            @foreach($ticket->timeline ?? [] as $t)
-                                                <li class="list-group-item">
-                                                    <strong>{{ $t->created_at }}</strong> —
-                                                    {{ $t->performed_by }} → {{ $t->action }}
-                                                    <span class="text-muted">({{ $t->note }})</span>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                <div class="col-md-6">
+                    <label class="form-label">Priority</label>
+                    <select wire:model="priority" class="form-select">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
                 </div>
             </div>
-        </div>
 
+            {{-- Description --}}
+            <div class="mb-3">
+                <label class="form-label">বিস্তারিত</label>
+                <textarea wire:model="description" class="form-control" rows="3"></textarea>
+            </div>
+
+            {{-- Submit Button --}}
+            <button wire:click="submitTicket" class="btn btn-primary">
+                ➕ টিকেট তৈরি করুন
+            </button>
+        </div>
+    </div>
+
+    {{-- Active Tickets --}}
+    <div class="card">
+        <div class="card-header bg-success text-white fw-bold">Active Tickets</div>
+        <div class="card-body">
+            @forelse ($tickets as $ticket)
+                <div class="border-bottom pb-3 mb-3">
+                    <h6>#{{ $ticket->id }} - {{ $ticket->client->name }}
+                        <span class="badge bg-secondary">{{ ucfirst($ticket->priority) }}</span>
+                    </h6>
+                    <p class="mb-1">{{ $ticket->description }}</p>
+                    <small class="text-muted">📞 {{ $ticket->client->contact }} |
+                        স্ট্যাটাস: {{ ucfirst($ticket->status) }}</small>
+
+                    <div class="d-flex gap-2 mt-2">
+                        {{-- Assign Technician --}}
+                        <select wire:model="technician_id" class="form-select form-select-sm w-auto">
+                            <option value="">Select Technician</option>
+                            @foreach ($technicians as $tech)
+                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                            @endforeach
+                        </select>
+                        <button wire:click="assignTechnician({{ $ticket->id }})"
+                                class="btn btn-sm btn-success">Assign</button>
+
+                        {{-- Update Status --}}
+                        <select wire:change="updateStatus({{ $ticket->id }}, $event.target.value)"
+                                class="form-select form-select-sm w-auto">
+                            <option value="">Change Status</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+            @empty
+                <p class="text-center text-muted">কোনো টিকেট নেই।</p>
+            @endforelse
+        </div>
     </div>
 </div>

@@ -267,6 +267,32 @@
 
     </div>
 </section>
+<!-- Floating Button -->
+<a href="{{ route('tickets.live') }}"
+   class="btn btn-primary rounded-circle position-fixed d-flex justify-content-center align-items-center"
+   style="bottom: 30px; right: 30px; width: 60px; height: 60px; font-size: 28px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 9999; transition: transform 0.2s;"
+   data-bs-toggle="tooltip" data-bs-placement="left" title="Create Ticket">
+    +
+</a>
+
+<!-- Initialize Bootstrap Tooltip -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+<!-- Optional: Hover effect -->
+<style>
+    a.btn-primary.rounded-circle:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+
 @endsection
 
 @section('scripts')

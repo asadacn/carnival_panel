@@ -85,7 +85,7 @@ Route::get('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sen
 Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');
 
 
-Route::get('/ticket', TicketManager::class)->name('tickets.live');
+Route::get('/tickets', TicketManager::class)->name('tickets.live');
 
 Route::get('/technicians', TechnicianManager::class)->name('technicians');
 
