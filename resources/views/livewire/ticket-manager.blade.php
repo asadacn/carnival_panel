@@ -1,127 +1,220 @@
 <div class="container py-4">
-    {{-- Flash Messages --}}
-    @if (session()->has('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @elseif (session()->has('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+    <style>
+        /* Modern touches */
+        .card-modern { border: 0; border-radius: 12px; box-shadow: 0 6px 18px rgba(22,24,26,0.08); }
+        .search-suggestions li:hover { background: #f8fafc; transform: translateY(-1px); }
+        .avatar-circle { width:44px; height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:600; color:#fff; }
+        .chip { border-radius:999px; padding:6px 10px; background:#f1f5f9; display:inline-flex; gap:8px; align-items:center; }
+        .muted-small { font-size:.85rem; color:#6b7280; }
+    </style>
 
-    {{-- Message Control --}}
-    <div class="card mb-4">
-        <div class="card-body d-flex gap-4">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" wire:model="send_sms" id="smsCheck">
-                <label class="form-check-label" for="smsCheck">📱 SMS পাঠানো সক্রিয়</label>
+    {{-- Top Controls --}}
+    <div class="d-flex gap-3 mb-4 align-items-center bg-white p-3 rounded shadow-sm">
+        <h4 class="mb-0 fw-semibold">Ticket Manager</h4>
+        <small class="muted-small">Fast, clear and modern UI</small>
+
+        <div class="ms-auto d-flex gap-2 align-items-center">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" wire:model="send_sms" id="smsSwitch">
+                <label class="form-check-label muted-small" for="smsSwitch">SMS</label>
             </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" wire:model="send_telegram" id="telegramCheck">
-                <label class="form-check-label" for="telegramCheck">🤖 Telegram পাঠানো সক্রিয়</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" wire:model="send_telegram" id="tgSwitch">
+                <label class="form-check-label muted-small" for="tgSwitch">Telegram</label>
             </div>
         </div>
     </div>
 
-    {{-- Create Ticket --}}
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white fw-bold">নতুন টিকেট তৈরি</div>
+    {{-- Create Ticket Card --}}
+    <div class="card card-modern mb-4">
         <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="mb-1 fw-bold">নতুন টিকেট</h5>
+                    <small class="muted-small">Quickly create a ticket with recommended defaults</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button wire:click="$set('search','')" class="btn btn-sm btn-outline-secondary" title="Reset form">Reset</button>
+                </div>
+            </div>
+
             {{-- Client Search --}}
             <div class="mb-3 position-relative">
-                <input type="text" wire:model.debounce.300ms="search" class="form-control"
-                       placeholder="ক্লায়েন্টের নাম, আইডি বা ফোন লিখুন ...">
+                <label class="form-label small text-muted">ক্লায়েন্ট খুঁজুন</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0">🔎</span>
+                    <input type="text"
+                           wire:model.debounce.400ms="search"
+                           wire:keydown="$set('selectedClient', null)"
+                           class="form-control rounded-start"
+                           placeholder="Name, ID or Contact..."
+                           aria-autocomplete="list"
+                           aria-expanded="{{ (!empty($clients) && $search != '' && !$selectedClient) ? 'true' : 'false' }}">
+                    @if($search)
+                        <button type="button" wire:click="$set('search','')" class="btn btn-light border">✖</button>
+                    @endif
+                </div>
 
-                @if (!empty($clients) && $search != '')
-                    <ul class="list-group position-absolute w-100" style="z-index:1000; max-height:200px; overflow-y:auto;">
+                @if (!empty($clients) && $search != '' && !$selectedClient)
+                    <ul class="list-group position-absolute w-100 mt-2 shadow-sm rounded search-suggestions" style="z-index:1000; max-height:260px; overflow:auto;">
                         @foreach ($clients as $client)
-                            <li class="list-group-item list-group-item-action"
-                                wire:click="$set('selectedClient', {{ $client->id }})"
-                                style="cursor:pointer;">
-                                {{ $client->name }} - {{ $client->contact }}
+                            <li class="list-group-item list-group-item-action d-flex gap-3 align-items-center"
+                                wire:click="$set('selectedClient', {{ $client->id }})" style="cursor:pointer;">
+                                <div>
+                                    <div class="avatar-circle" style="background:#0d6efd;">
+                                        {{ strtoupper(substr($client->name,0,1)) }}
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>#{{ $client->username }} • {{ $client->name }}</strong>
+                                            <div class="muted-small">{{ $client->contact }} • {{ Str::limit($client->address, 50) }}</div>
+                                        </div>
+                                        <div class="text-end muted-small">ID: {{ $client->id }}</div>
+                                    </div>
+                                </div>
                             </li>
                         @endforeach
                     </ul>
                 @endif
             </div>
 
-            {{-- Selected Client --}}
+            {{-- Selected Client Chip --}}
             @if ($selectedClient)
                 @php $client = \App\Models\Client::find($selectedClient); @endphp
                 @if($client)
-                    <div class="alert alert-success">
-                        নির্বাচিত ক্লায়েন্ট: <strong>{{ $client->name }}</strong> ({{ $client->contact }})
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="chip">
+                            <div class="avatar-circle" style="background:#198754; width:36px; height:36px; font-size:.9rem;">
+                                {{ strtoupper(substr($client->name,0,1)) }}
+                            </div>
+                            <div class="d-flex flex-column">
+                                <strong>{{ $client->name }}</strong>
+                                <small class="muted-small">📞 {{ $client->contact }}</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" wire:click="$set('selectedClient', null)">Change</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" wire:click="$set('search','')">Clear</button>
                     </div>
                 @endif
             @endif
 
-            {{-- Complain Type & Priority --}}
-            <div class="row mb-3">
+            <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label">অভিযোগের ধরন</label>
-                    <select wire:model="complain_type_id" class="form-select">
-                        <option value="">নির্বাচন করুন</option>
-                        @foreach ($complain_types as $type)
-                            <option value="{{ $type->id }}">{{ $type->name }}</option>
-                        @endforeach
-                    </select>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-0">📋</span>
+                        <select wire:model="complain_type_id" class="form-select">
+                            <option value="">নির্বাচন করুন</option>
+                            @foreach ($complain_types as $type)
+                                <option value="{{ $type->id }}">{{ $type->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('complain_type_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
                 <div class="col-md-6">
                     <label class="form-label">Priority</label>
-                    <select wire:model="priority" class="form-select">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
+                    <div class="d-flex gap-2 align-items-center">
+                        <select wire:model="priority" class="form-select w-auto">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <div>
+                            @if($priority === 'high')
+                                <span class="badge bg-danger">High</span>
+                            @elseif($priority === 'medium')
+                                <span class="badge bg-warning text-dark">Medium</span>
+                            @else
+                                <span class="badge bg-secondary">Low</span>
+                            @endif
+                        </div>
+                    </div>
+                    @error('priority') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
             </div>
 
-            {{-- Description --}}
-            <div class="mb-3">
-                <label class="form-label">বিস্তারিত</label>
-                <textarea wire:model="description" class="form-control" rows="3"></textarea>
+            <div class="form-floating mb-3">
+                <textarea wire:model="description" class="form-control" placeholder="Ticket details..." id="ticketDescription" style="height:110px; border-radius:10px"></textarea>
+                <label for="ticketDescription">বিস্তারিত</label>
             </div>
+            @error('description') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
-            {{-- Submit Button --}}
-            <button wire:click="submitTicket" class="btn btn-primary">
-                ➕ টিকেট তৈরি করুন
-            </button>
+            <div class="d-flex gap-2">
+                <button wire:click="submitTicket" wire:loading.attr="disabled" class="btn btn-primary d-flex align-items-center">
+                    <span class="me-2">➕</span>
+                    <span wire:loading.remove>টিকেট তৈরি করুন</span>
+                    <span wire:loading class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" wire:click="$refresh">বাতিল</button>
+                <div class="ms-auto muted-small align-self-center">Tip: select client to auto-fill</div>
+            </div>
         </div>
     </div>
 
-    {{-- Active Tickets --}}
-    <div class="card">
-        <div class="card-header bg-success text-white fw-bold">Active Tickets</div>
+    {{-- Active Tickets List (modern cards) --}}
+    <div class="card card-modern">
+        <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+            <div class="fw-bold">Active Tickets</div>
+            <small class="muted-small">{{ $tickets->count() }} active</small>
+        </div>
+
         <div class="card-body">
             @forelse ($tickets as $ticket)
-                <div class="border-bottom pb-3 mb-3">
-                    <h6>#{{ $ticket->id }} - {{ $ticket->client->name }}
-                        <span class="badge bg-secondary">{{ ucfirst($ticket->priority) }}</span>
-                    </h6>
-                    <p class="mb-1">{{ $ticket->description }}</p>
-                    <small class="text-muted">📞 {{ $ticket->client->contact }} |
-                        স্ট্যাটাস: {{ ucfirst($ticket->status) }}</small>
+                <div class="d-flex gap-3 mb-3 p-3 rounded" style="background:#f8fafc; align-items:flex-start;">
+                    <div>
+                        <div class="avatar-circle" style="background:#0d6efd; width:48px; height:48px;">
+                            {{ strtoupper(substr($ticket->client->name,0,1)) }}
+                        </div>
+                    </div>
 
-                    <div class="d-flex gap-2 mt-2">
-                        {{-- Assign Technician --}}
-                        <select wire:model="technician_id" class="form-select form-select-sm w-auto">
-                            <option value="">Select Technician</option>
-                            @foreach ($technicians as $tech)
-                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                            @endforeach
-                        </select>
-                        <button wire:click="assignTechnician({{ $ticket->id }})"
-                                class="btn btn-sm btn-success">Assign</button>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <strong>#{{ $ticket->id }} • {{ $ticket->client->name }}</strong>
+                                    <span class="badge px-1 py-0 shadow-sm @if($ticket->priority=='high') bg-danger @elseif($ticket->priority=='medium') bg-warning text-dark @else bg-secondary @endif">
+                                        {{ ucfirst($ticket->priority) }}
+                                    </span>
+                                    <span class="badge px-1 py-0 bg-secondary text-dark">ID: {{ $ticket->client->username }}</span>
+                                </div>
+                                <div class="muted-small mt-1">{{ Str::limit($ticket->description, 160) }}</div>
+                            </div>
+                            <div class="text-end muted-small">
+                                <div>📞 {{ $ticket->client->contact }}</div>
+                                <div class="mt-2">স্ট্যাটাস: <strong>{{ ucfirst($ticket->status) }}</strong></div>
+                            </div>
+                        </div>
 
-                        {{-- Update Status --}}
-                        <select wire:change="updateStatus({{ $ticket->id }}, $event.target.value)"
-                                class="form-select form-select-sm w-auto">
-                            <option value="">Change Status</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="closed">Closed</option>
-                        </select>
+                        <div class="d-flex gap-2 mt-3">
+                            <select wire:model="technician_map.{{ $ticket->id }}" class="form-select form-select-sm w-auto">
+                                <option value="">Assign Tech</option>
+                                @foreach ($technicians as $tech)
+                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                @endforeach
+                            </select>
+                            <button wire:click="assignTechnician({{ $ticket->id }})" class="btn btn-sm btn-primary" wire:loading.attr="disabled">
+                                Assign
+                            </button>
+
+                            <select wire:change="updateStatus({{ $ticket->id }}, $event.target.value)" class="form-select form-select-sm w-auto">
+                                <option value="">Change Status</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="closed">Closed</option>
+                            </select>
+
+                            <div class="ms-auto d-flex gap-2">
+                                <button wire:click="openDetails({{ $ticket->id }})" class="btn btn-sm btn-outline-primary">Details</button>
+                                <button wire:click="quickComment({{ $ticket->id }})" class="btn btn-sm btn-outline-secondary">Comment</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @empty
-                <p class="text-center text-muted">কোনো টিকেট নেই।</p>
+                <p class="text-center muted-small">কোনো টিকেট নেই।</p>
             @endforelse
         </div>
     </div>
