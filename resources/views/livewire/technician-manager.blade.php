@@ -1,4 +1,4 @@
-<div class="container py-4">
+<div class="container py-4 my-3">
     <div class="card shadow">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Technician Manager</h5>

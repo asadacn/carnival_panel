@@ -31,7 +31,9 @@
 <li class="{{ Request::is('collectors*') ? 'active' : '' }}">
     <a href="{{ route('collectors.index') }}"><i class="fa fa-users"></i><span>@lang('models/collectors.plural')</span></a>
 </li>
-
+<li class="{{ Request::is('technicians*') ? 'active' : '' }}">
+    <a href="{{ route('technicians') }}"><i class="fa fa-users"></i><span>Technicians</span></a>
+</li>
 <li class="{{ Request::is('sMSTEMPALTES*') ? 'active' : '' }}">
     <a href="{{ route('create_bulk_sms') }}"><i class="fa fa-sms"></i><span>Bulk SMS</span></a>
     <a href="{{ route('sMSTEMPALTES.index') }}"><i class="fa fa-sms"></i><span>@lang('models/sMSTEMPALTES.plural')</span></a>
