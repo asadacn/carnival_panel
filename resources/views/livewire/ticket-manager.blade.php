@@ -190,7 +190,7 @@
                         </div>
 
                         <div class="d-flex gap-2 mt-3">
-                            <select wire:model="technician_map.{{ $ticket->id }}" class="form-select form-select-sm w-auto">
+                            {{-- <select wire:model="technician_map.{{ $ticket->id }}" class="form-select form-select-sm w-auto">
                                 <option value="">Assign Tech</option>
                                 @foreach ($technicians as $tech)
                                     <option value="{{ $tech->id }}">{{ $tech->name }}</option>
@@ -204,11 +204,78 @@
                                 <option value="">Change Status</option>
                                 <option value="in_progress">In Progress</option>
                                 <option value="closed">Closed</option>
-                            </select>
+                            </select> --}}
 
-                            <div class="ms-auto d-flex gap-2">
-                                <button wire:click="openDetails({{ $ticket->id }})" class="btn btn-sm btn-outline-primary">Details</button>
-                                <button wire:click="quickComment({{ $ticket->id }})" class="btn btn-sm btn-outline-secondary">Comment</button>
+                            <div class="d-flex gap-2 mt-3 flex-wrap align-items-start">
+                                <select wire:model="technician_map.{{ $ticket->id }}" class="form-select form-select-sm w-auto">
+                                    <option value="">Assign Tech</option>
+                                    @foreach ($technicians as $tech)
+                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button wire:click="assignTechnician({{ $ticket->id }})" class="btn btn-sm btn-primary" wire:loading.attr="disabled">
+                                    Assign
+                                </button>
+
+                                <select wire:change="updateStatus({{ $ticket->id }}, $event.target.value)" class="form-select form-select-sm w-auto">
+                                    <option value="">Change Status</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="closed">Closed</option>
+                                </select>
+
+                                <div class="d-flex align-items-start gap-2 flex-shrink-0">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#timeline-{{ $ticket->id }}" aria-expanded="false" aria-controls="timeline-{{ $ticket->id }}">
+                                        Details
+                                    </button>
+
+                                    <button wire:click="quickComment({{ $ticket->id }})" class="btn btn-sm btn-outline-secondary">Comment</button>
+                                </div>
+                            </div>
+
+                            {{-- Collapsible timeline moved outside the inline controls so controls don't expand --}}
+                            <div class="w-100 mt-2">
+                                <div class="collapse" id="timeline-{{ $ticket->id }}">
+                                    @php
+                                        $timeline = \App\Models\TicketTimeline::where('ticket_id', $ticket->id)->latest()->get();
+                                    @endphp
+
+                                    <div class="card mt-1 p-2 shadow-sm" style="max-width:100%; max-height:260px; overflow:auto; border-radius:10px;">
+                                        @if($timeline->isEmpty())
+                                            <div class="muted-small small px-2 py-3">No timeline entries.</div>
+                                        @else
+                                            <ul class="list-group list-group-flush">
+                                                @foreach($timeline as $item)
+                                                    <li class="list-group-item small py-2">
+                                                        <div class="d-flex">
+                                                            <div class="me-2" style="min-width:44px;">
+                                                                <div class="avatar-circle" style="width:36px; height:36px; font-size:.85rem; background:#6c757d;">
+                                                                    {{ strtoupper(substr(($item->performed_by ?? 'S'), 0, 1)) }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="flex-grow-1">
+                                                                <div class="d-flex justify-content-between">
+                                                                    <div>
+                                                                        <div class="fw-semibold">{{ ucfirst($item->action) }}</div>
+                                                                        <div class="muted-small">by {{ $item->performed_by ?? 'System' }}</div>
+                                                                    </div>
+                                                                    <div class="text-end muted-small" style="min-width:90px;">
+                                                                        <div title="{{ $item->created_at }}">{{ $item->created_at->format('d M Y, H:i') }}</div>
+                                                                        <div class="text-muted small">{{ $item->created_at->diffForHumans() }}</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                @if($item->note)
+                                                                    <div class="mt-1">{{ \Illuminate\Support\Str::limit($item->note, 220) }}</div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
