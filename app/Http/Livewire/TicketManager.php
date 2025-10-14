@@ -7,13 +7,18 @@ use App\Models\Ticket;
 use App\Models\Client;
 use App\Models\Technician;
 use App\Models\ComplainType;
+use App\Models\TicketTimeline; // Added import
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str; // Added import for Str::limit
 
 class TicketManager extends Component
 {
     public $clients = [], $complain_types, $technicians;
     public $selectedClient, $complain_type_id, $description, $priority = 'low', $technician_id;
     public $search = '';
+
+    // Technician assignment mapping for the ticket list and comment storage
+    public $technician_map = [];
 
     // Message control
     public $send_sms = true;
@@ -22,7 +27,8 @@ class TicketManager extends Component
     public function mount()
     {
         $this->complain_types = ComplainType::all();
-        $this->technicians = Technician::where('status', 'active')->get();
+        // Load only necessary fields for efficiency
+        $this->technicians = Technician::where('status', 'active')->get(['id', 'name', 'phone', 'telegram_id']);
     }
 
     // Client search
@@ -59,8 +65,24 @@ class TicketManager extends Component
             'status' => 'pending',
         ]);
 
+        // 1. Create Timeline entry for ticket creation
+        TicketTimeline::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'Ticket Created',
+            'performed_by' => auth()->check() ? auth()->user()->name : 'Manager',
+            'note' => Str::limit($this->description, 200),
+        ]);
+
+        // 2. Send SMS to client
         if ($this->send_sms) {
-            $this->sendSMS($client->contact, "আপনার অভিযোগ (#{$ticket->id}) গ্রহণ করা হয়েছে। শীঘ্রই সমাধান করা হবে।");
+            $this->sendSMS($client->contact, "আপনার অভিযোগ (#{$ticket->id}) গ্রহণ করা হয়েছে। শীঘ্রই সমাধান করা হবে।");
+        }
+
+        // 3. Send Telegram notification to the main group
+        if ($this->send_telegram) {
+            $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
+            $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
+            $this->sendTelegram($text);
         }
 
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
@@ -70,7 +92,10 @@ class TicketManager extends Component
     // Assign technician
     public function assignTechnician($ticketId)
     {
-        if (!$this->technician_id) {
+        // Get technician ID from the map
+        $techId = $this->technician_map[$ticketId] ?? null;
+
+        if (!$techId) {
             session()->flash('error', 'Please select a technician first.');
             return;
         }
@@ -81,12 +106,16 @@ class TicketManager extends Component
             return;
         }
 
-        $technician = Technician::find($this->technician_id);
+        $technician = Technician::find($techId);
+        $client = $ticket->client;
+
+        $oldTechnicianName = $ticket->technician ? $ticket->technician->name : 'None';
+
         $ticket->technician_id = $technician->id;
         $ticket->status = 'in_progress';
         $ticket->save();
 
-        // ETA using if-elseif-else (PHP 7.x compatible)
+        // ETA using if-elseif-else
         if ($ticket->priority == 'high') {
             $eta = '১ ঘন্টার মধ্যে';
         } elseif ($ticket->priority == 'medium') {
@@ -95,21 +124,35 @@ class TicketManager extends Component
             $eta = '২ ঘন্টার মধ্যে';
         }
 
-        // SMS
+        // 1. Create Timeline entry for assignment
+        TicketTimeline::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'Assigned',
+            'performed_by' => auth()->check() ? auth()->user()->name : 'Manager',
+            'note' => "Technician assigned: {$technician->name}. Status set to in progress. ETA: {$eta}. (Previously: {$oldTechnicianName})",
+        ]);
+
+        // 2. Send SMS to client
         if ($this->send_sms) {
-            $client = $ticket->client;
-            $msg = "আপনার টিকেট (#{$ticket->id}) {$eta} সমাধান করা হবে।\n👨‍🔧 টেকনিশিয়ান: {$technician->name}\n📞 {$technician->phone}";
+            $msg = "আপনার টিকেট (#{$ticket->id}) {$eta} সমাধান করা হবে।\n👨‍🔧 টেকনিশিয়ান: {$technician->name}\n📞 {$technician->phone}";
             $this->sendSMS($client->contact, $msg);
         }
 
-        // Telegram
-        if ($this->send_telegram) {
-            $client = $ticket->client;
-            $text = "🛠 নতুন টিকেট অ্যাসাইন হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n🏠 ঠিকানা: {$client->address}\n⚙️ Priority: {$ticket->priority}\n👨‍🔧 Technician: {$technician->name}\n📞 {$technician->phone}";
-            $this->sendTelegram($text);
+        // 3. Send Telegram to Tech (if telegram_id exists)
+        if ($this->send_telegram && $technician->telegram_id) {
+            $text_to_tech = "🛠 আপনাকে একটি নতুন টিকেট অ্যাসাইন করা হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n🏠 ঠিকানা: {$client->address}\n⚙️ Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100) . "\n⏱ ETA: {$eta}";
+            // Send to tech's private chat
+            $this->sendTelegram($text_to_tech, $technician->telegram_id);
         }
 
-        $this->technician_id = null;
+        // 4. Send Telegram to main group
+        if ($this->send_telegram) {
+            $text = "✅ টিকেট অ্যাসাইন হয়েছে: {$ticket->id}\n👤 {$client->name}\n👨‍🔧 টেকনিশিয়ান: {$technician->name}\n⏱ ETA: {$eta}";
+            $this->sendTelegram($text); // Sends to default chat_id
+        }
+
+        // Clear the specific map entry after successful assignment
+        unset($this->technician_map[$ticketId]);
         session()->flash('success', 'Technician assigned successfully!');
     }
 
@@ -119,9 +162,20 @@ class TicketManager extends Component
         $ticket = Ticket::find($ticketId);
         if (!$ticket) return;
 
+        $oldStatus = $ticket->status;
+
         $ticket->status = $status;
         $ticket->save();
 
+        // 1. Create Timeline entry for status update
+        TicketTimeline::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'Status Change',
+            'performed_by' => auth()->check() ? auth()->user()->name : 'Manager',
+            'note' => "Status changed from {$oldStatus} to {$status}.",
+        ]);
+
+        // 2. Send SMS to client on closure
         if ($status == 'closed' && $this->send_sms) {
             $this->sendSMS($ticket->client->contact, "আপনার টিকেট (#{$ticket->id}) সমাধান সম্পন্ন হয়েছে। ধন্যবাদ!");
         }
@@ -129,75 +183,102 @@ class TicketManager extends Component
         session()->flash('success', 'Status updated successfully!');
     }
 
+    // Quick Comment (New Method)
+    public function quickComment($ticketId)
+    {
+        // Key is 'comment-TICKET_ID'
+        $comment = $this->technician_map['comment-' . $ticketId] ?? null;
 
-    function sendSMS($contacts, $message, $type = 'unicode')
-{
-    $api_key  = env('MRAM_API_KEY');
-    $senderid = env('MRAM_SENDER_ID');
-
-    // -----------------------------
-    // Number normalization
-    // -----------------------------
-    if ($contacts instanceof \Illuminate\Support\Collection) {
-        $contacts = $contacts->toArray();
-    }
-
-    if (is_string($contacts)) {
-        $contacts = [$contacts];
-    }
-
-    // প্রতিটি নাম্বারের আগে 88 যোগ করা
-    $contacts = array_map(function ($number) {
-        $number = preg_replace('/\D/', '', $number); // শুধু digits রাখবে
-        return str_starts_with($number, '88') ? $number : '88' . $number;
-    }, $contacts);
-
-    // একসাথে join করা MRAM API অনুযায়ী
-    $contacts = implode('+', $contacts);
-
-    // -----------------------------
-    // API call
-    // -----------------------------
-    try {
-        $response = Http::asForm()->post("https://sms.mram.com.bd/smsapi", [
-            "api_key"  => $api_key,
-            "type"     => $type,
-            "contacts" => $contacts,
-            "senderid" => $senderid,
-            "msg"      => $message,
-        ]);
-
-        $body = $response->body();
-
-        // যদি API তে কোনো Error থাকে
-        if (strpos($body, 'Error') !== false) {
-            return false;
+        if (!$comment) {
+            session()->flash('error', 'Please write a comment first.');
+            return;
         }
 
-        return true;
+        $ticket = Ticket::find($ticketId);
+        if (!$ticket) return;
 
-    } catch (\Exception $e) {
-        return false;
+        // Create Timeline entry for comment
+        TicketTimeline::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'Comment Added',
+            'performed_by' => auth()->check() ? auth()->user()->name : 'Manager',
+            'note' => $comment,
+        ]);
+
+        // Clear the comment text
+        unset($this->technician_map['comment-' . $ticketId]);
+        session()->flash('success', 'Comment added to timeline!');
     }
-}
 
-    // Telegram API
-    protected function sendTelegram($message)
+
+    function sendSMS($contacts, $message, $type = 'unicode')
+    {
+        // ... (SMS logic remains the same)
+        $api_key = env('MRAM_API_KEY');
+        $senderid = env('MRAM_SENDER_ID');
+
+        if ($contacts instanceof \Illuminate\Support\Collection) {
+            $contacts = $contacts->toArray();
+        }
+
+        if (is_string($contacts)) {
+            $contacts = [$contacts];
+        }
+
+        $contacts = array_map(function ($number) {
+            $number = preg_replace('/\D/', '', $number);
+            return str_starts_with($number, '88') ? $number : '88' . $number;
+        }, $contacts);
+
+        $contacts = implode('+', $contacts);
+
+        try {
+            $response = Http::asForm()->post("https://sms.mram.com.bd/smsapi", [
+                "api_key" => $api_key,
+                "type" => $type,
+                "contacts" => $contacts,
+                "senderid" => $senderid,
+                "msg" => $message,
+            ]);
+
+            $body = $response->body();
+
+            if (strpos($body, 'Error') !== false) {
+                 \Log::error("SMS send error for contacts: {$contacts}. Response: {$body}");
+                return false;
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+             \Log::error("SMS API Exception: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    // Telegram API - modified to accept an optional recipient chatId
+    protected function sendTelegram($message, $recipientChatId = null)
     {
         try {
             $botToken = config('services.telegram.bot_token');
-            $chatId = config('services.telegram.chat_id');
+            // Use provided chat ID or fall back to default group chat ID
+            $chatId = $recipientChatId ?? config('services.telegram.chat_id');
 
             Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                 'chat_id' => $chatId,
                 'text' => $message,
+                // Using Markdown for better formatting in Telegram
+                'parse_mode' => 'Markdown',
             ]);
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            // Fails silently, but can be logged for debugging
+            \Log::warning("Telegram send failed: " . $e->getMessage());
+        }
     }
 
     public function render()
     {
-        $tickets = Ticket::with(['client', 'technician'])
+        $tickets = Ticket::with(['client', 'technician', 'complainType'])
             ->latest()
             ->take(10)
             ->get();
