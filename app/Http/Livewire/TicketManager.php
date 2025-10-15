@@ -47,7 +47,7 @@ class TicketManager extends Component
         $this->validate([
             'selectedClient' => 'required',
             'complain_type_id' => 'required',
-            'description' => 'required|string|min:5',
+            'description' => 'nullable|string|min:5',
         ]);
 
         $client = Client::find($this->selectedClient);
@@ -145,11 +145,6 @@ class TicketManager extends Component
             $this->sendTelegram($text_to_tech, $technician->telegram_id);
         }
 
-        // 4. Send Telegram to main group
-        if ($this->send_telegram) {
-            $text = "✅ টিকেট অ্যাসাইন হয়েছে: {$ticket->id}\n👤 {$client->name}\n👨‍🔧 টেকনিশিয়ান: {$technician->name}\n⏱ ETA: {$eta}";
-            $this->sendTelegram($text); // Sends to default chat_id
-        }
 
         // Clear the specific map entry after successful assignment
         unset($this->technician_map[$ticketId]);
@@ -260,9 +255,9 @@ class TicketManager extends Component
     protected function sendTelegram($message, $recipientChatId = null)
     {
         try {
-            $botToken = config('services.telegram.bot_token');
+            $botToken = env('TELEGRAM_BOT_TOKEN');
             // Use provided chat ID or fall back to default group chat ID
-            $chatId = $recipientChatId ?? config('services.telegram.chat_id');
+            $chatId = $recipientChatId ?? env('TELEGRAM_CHAT_ID');
 
             Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                 'chat_id' => $chatId,
