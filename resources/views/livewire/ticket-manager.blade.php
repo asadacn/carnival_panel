@@ -207,7 +207,9 @@
                             </div>
                             <div class="text-end muted-small flex-shrink-0">
                                 <div>📞 {{ $ticket->client->contact }}</div>
-                                <div class="mt-2">স্ট্যাটাস: <strong>{{ ucfirst($ticket->status) }}</strong></div>
+                                <div class="mt-2">স্ট্যাটাস:   <span class="badge px-1 py-0 shadow-sm @if($ticket->status=='pending') bg-danger @elseif($ticket->status=='in_progress') bg-warning text-dark @else bg-success @endif">
+                                        {{ ucfirst($ticket->status) }}
+                                    </span></div>
                             </div>
                         </div>
 
