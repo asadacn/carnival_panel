@@ -82,7 +82,7 @@ class TicketManager extends Component
         if ($this->send_telegram) {
             $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
             $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
-            $this->sendTelegram($text);
+            $this->sendTelegram($text, env('Telegram_GROUP_CHAT_ID'));
         }
 
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
