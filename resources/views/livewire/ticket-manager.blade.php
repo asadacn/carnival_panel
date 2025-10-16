@@ -52,18 +52,18 @@
                 </div>
             </div>
 
-            {{-- Client Search (No Change) --}}
+            {{-- Client Search --}}
             <div class="mb-3 position-relative">
                 <label class="form-label small text-muted">ক্লায়েন্ট খুঁজুন</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-0">🔎</span>
                     <input type="text"
-                                wire:model.debounce.400ms="search"
-                                wire:keydown="$set('selectedClient', null)"
-                                class="form-control rounded-start"
-                                placeholder="Name, ID or Contact..."
-                                aria-autocomplete="list"
-                                aria-expanded="{{ (!empty($clients) && $search != '' && !$selectedClient) ? 'true' : 'false' }}">
+                                 wire:model.debounce.400ms="search"
+                                 wire:keydown="$set('selectedClient', null)"
+                                 class="form-control rounded-start"
+                                 placeholder="Name, ID or Contact..."
+                                 aria-autocomplete="list"
+                                 aria-expanded="{{ (!empty($clients) && $search != '' && !$selectedClient) ? 'true' : 'false' }}">
                     @if($search)
                         <button type="button" wire:click="$set('search','')" class="btn btn-light border">✖</button>
                     @endif
@@ -94,7 +94,7 @@
                 @endif
             </div>
 
-            {{-- Selected Client Chip (No Change) --}}
+            {{-- Selected Client Chip --}}
             @if ($selectedClient)
                 @php $client = \App\Models\Client::find($selectedClient); @endphp
                 @if($client)
@@ -114,7 +114,7 @@
                 @endif
             @endif
 
-            {{-- Form Fields (No Change) --}}
+            {{-- Form Fields --}}
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label">অভিযোগের ধরন</label>
@@ -152,8 +152,8 @@
                 </div>
             </div>
 
-            <div class="form-floating mb-3">
-                <textarea wire:model="description" class="form-control" placeholder="Ticket details..." id="ticketDescription" style="height:110px; border-radius:10px"></textarea>
+            <div class="form-floating mb-3 p-3">
+                <textarea wire:model="description" class="form-control" placeholder="Ticket details..." id="ticketDescription" style="height:110px; border-radius:10px "></textarea>
                 <label for="ticketDescription">বিস্তারিত</label>
             </div>
             @error('description') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
@@ -176,7 +176,7 @@
     <div class="card card-modern">
         <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
             <div class="fw-bold">Active Tickets</div>
-            <small class="muted-small">{{ $tickets->count() }} active</small>
+            <small class="muted-small">{{ $tickets->total() }} total (Page {{ $tickets->currentPage() }})</small>
         </div>
 
         <div class="card-body">
@@ -184,7 +184,7 @@
                 <div class="d-flex gap-3 mb-3 p-3 rounded" style="background:#f8fafc; align-items:flex-start;">
                     <div>
                         <div class="avatar-circle" style="background:#0d6efd; width:48px; height:48px;">
-                            {{ strtoupper(substr($ticket->client->name,0,1)) }}
+                            #{{ $ticket->id }}
                         </div>
                     </div>
 
@@ -192,7 +192,7 @@
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="d-flex gap-2 align-items-center">
-                                    <strong>#{{ $ticket->id }} • {{ $ticket->client->name }}</strong>
+                                    <strong> {{ $ticket->client->name }}</strong>
                                     <span class="badge px-1 py-0 shadow-sm @if($ticket->priority=='high') bg-danger @elseif($ticket->priority=='medium') bg-warning text-dark @else bg-secondary @endif">
                                         {{ ucfirst($ticket->priority) }}
                                     </span>
@@ -207,44 +207,92 @@
                             </div>
                             <div class="text-end muted-small flex-shrink-0">
                                 <div>📞 {{ $ticket->client->contact }}</div>
-                                <div class="mt-2">স্ট্যাটাস:   <span class="badge px-1 py-0 shadow-sm @if($ticket->status=='pending') bg-danger @elseif($ticket->status=='in_progress') bg-warning text-dark @else bg-success @endif">
+
+                                {{-- Client Address Added Here --}}
+                                @if($ticket->client->address)
+                                    <div class="mt-1" title="Client Address">
+                                        🏠 {{ Str::limit($ticket->client->address, 30) }}
+                                    </div>
+                                @endif
+                                {{-- End Client Address --}}
+
+                                <div class="mt-2">স্ট্যাটাস:   <span class="badge px-1 py-0 shadow-sm @if($ticket->status=='pending') bg-danger @elseif($ticket->status=='in_progress') bg-warning text-dark @else bg-success @endif">
                                         {{ ucfirst($ticket->status) }}
                                     </span></div>
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-3 flex-wrap align-items-start">
-                            {{-- Assign Technician Controls --}}
-                            <select wire:model="technician_map.{{ $ticket->id }}" class="form-select form-select-sm w-auto">
-                                <option value="">Assign Tech</option>
-                                @foreach ($technicians as $tech)
-                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                @endforeach
-                            </select>
-                            <button wire:click="assignTechnician({{ $ticket->id }})" class="btn btn-sm btn-primary" wire:loading.attr="disabled">
-                                Assign
-                            </button>
+                        {{-- TICKET CONTROLS: Assign, Status Buttons, Details, Comment, Delete --}}
+                        <div class="d-flex justify-content-between gap-3 mt-3 flex-wrap w-100 align-items-start">
 
-                            {{-- Status Change Control --}}
-                            <select wire:change="updateStatus({{ $ticket->id }}, $event.target.value)" class="form-select form-select-sm w-auto">
-                                <option value="">Change Status</option>
-                                <option value="pending" {{ $ticket->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="in_progress" {{ $ticket->status == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                <option value="closed" {{ $ticket->status == 'closed' ? 'selected' : '' }}>Closed</option>
-                            </select>
+                            {{-- বামদিকের কন্ট্রোল গ্রুপ: Assign Tech এবং Status Change Buttons --}}
+                            <div class="d-flex gap-2 flex-wrap">
+                                {{-- Assign Technician Controls (Select + Button with Confirmation) --}}
+                                <div class="d-flex gap-2">
+                                    <select wire:model="technician_map.{{ $ticket->id }}" class="form-select form-select-sm w-auto">
+                                        <option value="">Assign Tech</option>
+                                        @foreach ($technicians as $tech)
+                                            <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button
+                                        onclick="confirm('আপনি কি নিশ্চিত যে আপনি এই টিকেটটি টেকনিশিয়ানকে অ্যাসাইন করতে চান?') || event.stopImmediatePropagation()"
+                                        wire:click="assignTechnician({{ $ticket->id }})"
+                                        class="btn btn-sm btn-primary"
+                                        wire:loading.attr="disabled">
+                                        Assign
+                                    </button>
+                                </div>
 
-                            {{-- Details and Comment Controls --}}
-                            <div class="d-flex align-items-start gap-2 flex-shrink-0">
+                                {{-- Status Change Buttons (with Confirmation) --}}
+                                <div class="d-flex gap-2">
+                                    {{-- Pending Button --}}
+                                    @if($ticket->status !== 'pending')
+                                        <button
+                                            onclick="confirm('আপনি কি নিশ্চিত যে আপনি স্ট্যাটাস Pending করতে চান?') || event.stopImmediatePropagation()"
+                                            wire:click="updateStatus({{ $ticket->id }}, 'pending')"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            wire:loading.attr="disabled">
+                                            Pending
+                                        </button>
+                                    @endif
+
+                                    {{-- Closed Button --}}
+                                    @if($ticket->status !== 'closed')
+                                        <button
+                                            onclick="confirm('আপনি কি নিশ্চিত যে এই টিকেটটি সমাধান হয়ে গেছে এবং এটি Closed স্ট্যাটাসে পরিবর্তন করতে চান?') || event.stopImmediatePropagation()"
+                                            wire:click="updateStatus({{ $ticket->id }}, 'closed')"
+                                            class="btn btn-sm btn-outline-success"
+                                            wire:loading.attr="disabled">
+                                            Close
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+
+
+                            {{-- ডানদিকের কন্ট্রোল গ্রুপ: Details, Comment এবং DELETE --}}
+                            <div class="d-flex align-items-start gap-2 flex-shrink-0 ms-auto">
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#timeline-{{ $ticket->id }}" aria-expanded="false" aria-controls="timeline-{{ $ticket->id }}">
                                     Details
                                 </button>
                                 <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#comment-{{ $ticket->id }}" aria-expanded="false" aria-controls="comment-{{ $ticket->id }}">
                                     Comment
                                 </button>
+                                {{-- Delete Button (with Confirmation) --}}
+                                <button
+                                    onclick="confirm('আপনি কি নিশ্চিত যে আপনি টিকেট #{{ $ticket->id }} স্থায়ীভাবে মুছে ফেলতে চান?') || event.stopImmediatePropagation()"
+                                    wire:click="deleteTicket({{ $ticket->id }})"
+                                    class="btn btn-sm btn-outline-danger"
+                                    title="টিকেট মুছে ফেলুন"
+                                    wire:loading.attr="disabled">
+                                    <span class="d-none d-sm-inline">Delete</span>
+                                </button>
                             </div>
                         </div>
+                        {{-- END TICKET CONTROLS --}}
 
-                        {{-- Comment Section (New) --}}
+                        {{-- Comment Section (Collapsible) --}}
                         <div class="w-100 mt-2 collapse" id="comment-{{ $ticket->id }}">
                             <div class="input-group input-group-sm">
                                 <input type="text" wire:model.defer="technician_map.comment-{{ $ticket->id }}" class="form-control" placeholder="Add a quick note...">
@@ -252,7 +300,7 @@
                             </div>
                         </div>
 
-                        {{-- Collapsible timeline (Logic is fine, just cleaning up old comments) --}}
+                        {{-- Collapsible timeline --}}
                         <div class="w-100 mt-2">
                             <div class="collapse" id="timeline-{{ $ticket->id }}">
                                 @php
@@ -303,6 +351,12 @@
             @empty
                 <p class="text-center muted-small">কোনো টিকেট নেই।</p>
             @endforelse
+
+            {{-- ADDED: Pagination Links --}}
+            <div class="mt-4">
+                {{ $tickets->links() }}
+            </div>
+            {{-- END Pagination Links --}}
         </div>
     </div>
 </div>

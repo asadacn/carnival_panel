@@ -7,12 +7,17 @@ use App\Models\Ticket;
 use App\Models\Client;
 use App\Models\Technician;
 use App\Models\ComplainType;
-use App\Models\TicketTimeline; // Added import
+use App\Models\TicketTimeline;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str; // Added import for Str::limit
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Livewire\WithPagination; // <--- ADDED: Pagination Trait
 
 class TicketManager extends Component
 {
+    use WithPagination; // <--- ADDED: Use Trait
+    protected $paginationTheme = 'bootstrap'; // <--- ADDED: Set Theme
+
     public $clients = [], $complain_types, $technicians;
     public $selectedClient, $complain_type_id, $description, $priority = 'low', $technician_id;
     public $search = '';
@@ -27,7 +32,6 @@ class TicketManager extends Component
     public function mount()
     {
         $this->complain_types = ComplainType::all();
-        // Load only necessary fields for efficiency
         $this->technicians = Technician::where('status', 'active')->get(['id', 'name', 'phone', 'telegram_id']);
     }
 
@@ -39,6 +43,12 @@ class TicketManager extends Component
             ->orWhere('username', 'like', '%' . $this->search . '%')
             ->limit(10)
             ->get();
+    }
+
+    // Reset pagination when search term changes
+    public function updatedSearchTerm()
+    {
+        $this->resetPage();
     }
 
     // Ticket submit
@@ -82,17 +92,17 @@ class TicketManager extends Component
         if ($this->send_telegram) {
             $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
             $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
-            $this->sendTelegram($text, env('Telegram_GROUP_CHAT_ID'));
+            $this->sendTelegram($text, env('TELEGRAM_GROUP_CHAT_ID'));
         }
 
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
         session()->flash('success', 'Ticket created successfully!');
+        $this->resetPage(); // নতুন টিকেট যোগ হলে প্রথম পেজে যান
     }
 
     // Assign technician
     public function assignTechnician($ticketId)
     {
-        // Get technician ID from the map
         $techId = $this->technician_map[$ticketId] ?? null;
 
         if (!$techId) {
@@ -115,7 +125,6 @@ class TicketManager extends Component
         $ticket->status = 'in_progress';
         $ticket->save();
 
-        // ETA using if-elseif-else
         if ($ticket->priority == 'high') {
             $eta = '১ ঘন্টার মধ্যে';
         } elseif ($ticket->priority == 'medium') {
@@ -141,14 +150,13 @@ class TicketManager extends Component
         // 3. Send Telegram to Tech (if telegram_id exists)
         if ($this->send_telegram && $technician->telegram_id) {
             $text_to_tech = "🛠 আপনাকে একটি নতুন টিকেট অ্যাসাইন করা হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n🏠 ঠিকানা: {$client->address}\n⚙️ Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100) . "\n⏱ ETA: {$eta}";
-            // Send to tech's private chat
             $this->sendTelegram($text_to_tech, $technician->telegram_id);
         }
 
 
-        // Clear the specific map entry after successful assignment
         unset($this->technician_map[$ticketId]);
         session()->flash('success', 'Technician assigned successfully!');
+        $this->resetPage();
     }
 
     // Update status
@@ -176,12 +184,12 @@ class TicketManager extends Component
         }
 
         session()->flash('success', 'Status updated successfully!');
+        $this->resetPage();
     }
 
-    // Quick Comment (New Method)
+    // Quick Comment
     public function quickComment($ticketId)
     {
-        // Key is 'comment-TICKET_ID'
         $comment = $this->technician_map['comment-' . $ticketId] ?? null;
 
         if (!$comment) {
@@ -203,12 +211,40 @@ class TicketManager extends Component
         // Clear the comment text
         unset($this->technician_map['comment-' . $ticketId]);
         session()->flash('success', 'Comment added to timeline!');
+        $this->resetPage();
+    }
+
+    /**
+     * Delete Ticket
+     * @param int $ticketId
+     */
+    public function deleteTicket($ticketId)
+    {
+        $ticket = Ticket::find($ticketId);
+
+        if (!$ticket) {
+            session()->flash('error', 'টিকেটটি খুঁজে পাওয়া যায়নি।');
+            return;
+        }
+
+        // Before deleting the ticket, log the action in the timeline
+        TicketTimeline::create([
+            'ticket_id' => $ticket->id,
+            'action' => 'Ticket Deleted',
+            'performed_by' => auth()->check() ? auth()->user()->name : 'Manager',
+            'note' => "টিকেট #{$ticket->id} (ক্লায়েন্ট: {$ticket->client->name}) ম্যানুয়ালি ডিলিট করা হয়েছে।",
+        ]);
+
+        // Delete the ticket
+        $ticket->delete();
+
+        session()->flash('success', "টিকেট #{$ticketId} সফলভাবে মুছে ফেলা হয়েছে। 🗑️");
+        $this->resetPage();
     }
 
 
     function sendSMS($contacts, $message, $type = 'unicode')
     {
-        // ... (SMS logic remains the same)
         $api_key = env('MRAM_API_KEY');
         $senderid = env('MRAM_SENDER_ID');
 
@@ -239,35 +275,31 @@ class TicketManager extends Component
             $body = $response->body();
 
             if (strpos($body, 'Error') !== false) {
-                 \Log::error("SMS send error for contacts: {$contacts}. Response: {$body}");
+                Log::error("SMS send error for contacts: {$contacts}. Response: {$body}");
                 return false;
             }
 
             return true;
 
         } catch (\Exception $e) {
-             \Log::error("SMS API Exception: " . $e->getMessage());
+            Log::error("SMS API Exception: " . $e->getMessage());
             return false;
         }
     }
 
-    // Telegram API - modified to accept an optional recipient chatId
     protected function sendTelegram($message, $recipientChatId = null)
     {
         try {
             $botToken = env('TELEGRAM_BOT_TOKEN');
-            // Use provided chat ID or fall back to default group chat ID
             $chatId = $recipientChatId ?? env('TELEGRAM_CHAT_ID');
 
             Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                 'chat_id' => $chatId,
                 'text' => $message,
-                // Using Markdown for better formatting in Telegram
                 'parse_mode' => 'Markdown',
             ]);
         } catch (\Exception $e) {
-            // Fails silently, but can be logged for debugging
-            \Log::warning("Telegram send failed: " . $e->getMessage());
+            Log::warning("Telegram send failed: " . $e->getMessage());
         }
     }
 
@@ -275,8 +307,7 @@ class TicketManager extends Component
     {
         $tickets = Ticket::with(['client', 'technician', 'complainType'])
             ->latest()
-            ->take(10)
-            ->get();
+            ->paginate(5); // <--- CHANGED: Paginate 5 items per page
 
         return view('livewire.ticket-manager', compact('tickets'));
     }
