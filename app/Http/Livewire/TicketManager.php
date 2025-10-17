@@ -91,7 +91,7 @@ class TicketManager extends Component
         // 3. Send Telegram notification to the main group
         if ($this->send_telegram) {
             $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
-            $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
+            $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n ক্লায়েন্ট: {$client->name}\n🏠ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
             $this->sendTelegram($text, env('TELEGRAM_GROUP_CHAT_ID'));
         }
 
@@ -149,7 +149,7 @@ class TicketManager extends Component
 
         // 3. Send Telegram to Tech (if telegram_id exists)
         if ($this->send_telegram && $technician->telegram_id) {
-            $text_to_tech = "🛠 আপনাকে একটি নতুন টিকেট অ্যাসাইন করা হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤 ক্লায়েন্ট: {$client->name}\n📞 {$client->contact}\n🏠 ঠিকানা: {$client->address}\n⚙️ Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100) . "\n⏱ ETA: {$eta}";
+            $text_to_tech = "🛠 আপনাকে একটি নতুন টিকেট অ্যাসাইন করা হয়েছে!\n\n📄টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n ক্লায়েন্ট: {$client->name}\n🏠ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100) . "\n⏱ ETA: {$eta}";
             $this->sendTelegram($text_to_tech, $technician->telegram_id);
         }
 
