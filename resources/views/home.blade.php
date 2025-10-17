@@ -437,7 +437,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="expiredClientsChart" height="80"></canvas>
+                <canvas id="expiredClientsChart" height="auto"></canvas>
             </div>
         </div>
 
