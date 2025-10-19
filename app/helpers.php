@@ -141,3 +141,87 @@ if(!function_exists('sendTelegram')){
     }
 }
 
+//VOICE BROADCAST CAMPAIGN SENDER USING ELIT CALL API
+
+if (!function_exists('sendVoiceCampaign')) {
+    /**
+     * Send a voice broadcast campaign using Elit Call API
+     *
+     * @param  string  $title
+     * @param  int     $broadcastId
+     * @param  string  $sender
+     * @param  array   $numbers
+     * @return array
+     */
+    function sendVoiceCampaign($title, $broadcastId, $sender, array $numbers)
+    {
+        try {
+            $apiKey = config('services.elitcall.key') ?? env('ELITCALL_API_KEY');
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type'  => 'application/json',
+            ])->post('https://call.mram.com.bd/api/send-broadcast-campaign', [
+                'title'         => $title,
+                'broadcast_id'  => $broadcastId,
+                'sender'        => $sender,
+                'numbers'       => $numbers,
+            ]);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json(),
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+}
+
+if (!function_exists('getVoiceCampaignDetails')) {
+    /**
+     * Get details of a voice broadcast campaign
+     *
+     * @param  int  $campaignId
+     * @return array
+     */
+    function getVoiceCampaignDetails($campaignId)
+    {
+        try {
+            $apiKey = config('services.elitcall.key') ?? env('ELITCALL_API_KEY');
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+            ])->get("https://call.mram.com.bd/api/campaign/{$campaignId}");
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'data' => $response->json(),
+                ];
+            }
+
+            return [
+                'success' => false,
+                'error' => $response->json(),
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+}
