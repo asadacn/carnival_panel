@@ -29,12 +29,15 @@ class TicketManager extends Component
     public $send_sms = true;
     public $send_telegram = true;
 
-    // *** NEW: Public property to hold the counts ***
+    // --- ADDED FOR DASHBOARD COUNTS AND FILTERING ---
     public $ticketCounts = [
         'pending' => 0,
         'progress' => 0,
         'closed' => 0,
     ];
+    public $filterTicketId = '';
+    public $filterStatus = 'all'; // Default to 'all'
+    // ------------------------------------------------
 
     public function mount()
     {
@@ -57,6 +60,25 @@ class TicketManager extends Component
     {
         $this->resetPage();
     }
+    
+    // --- ADDED: Reset pagination when filters change ---
+    public function updatedFilterStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterTicketId()
+    {
+        $this->resetPage();
+    }
+    
+    // Resets both filters when called from the Blade button
+    public function resetFilters()
+    {
+        $this->reset(['filterStatus', 'filterTicketId']);
+        $this->resetPage();
+    }
+    // ----------------------------------------------------
 
     // Ticket submit
     public function submitTicket()
@@ -129,7 +151,7 @@ class TicketManager extends Component
         $oldTechnicianName = $ticket->technician ? $ticket->technician->name : 'None';
 
         $ticket->technician_id = $technician->id;
-        $ticket->status = 'assigned'; // Changed status to 'assigned' for clarity
+        $ticket->status = 'assigned'; 
         $ticket->save();
 
         if ($ticket->priority == 'high') {
@@ -252,33 +274,102 @@ class TicketManager extends Component
 
     function sendSMS($contacts, $message, $type = 'unicode')
     {
-        // ... (No changes here)
+        $api_key = env('MRAM_API_KEY');
+        $senderid = env('MRAM_SENDER_ID');
+
+        if ($contacts instanceof \Illuminate\Support\Collection) {
+            $contacts = $contacts->toArray();
+        }
+
+        if (is_string($contacts)) {
+            $contacts = [$contacts];
+        }
+
+        $contacts = array_map(function ($number) {
+            $number = preg_replace('/\D/', '', $number);
+            return str_starts_with($number, '88') ? $number : '88' . $number;
+        }, $contacts);
+
+        $contacts = implode('+', $contacts);
+
+        try {
+            $response = Http::asForm()->post("https://sms.mram.com.bd/smsapi", [
+                "api_key" => $api_key,
+                "type" => $type,
+                "contacts" => $contacts,
+                "senderid" => $senderid,
+                "msg" => $message,
+            ]);
+
+            $body = $response->body();
+
+            if (strpos($body, 'Error') !== false) {
+                Log::error("SMS send error for contacts: {$contacts}. Response: {$body}");
+                return false;
+            }
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("SMS API Exception: " . $e->getMessage());
+            return false;
+        }
     }
 
     protected function sendTelegram($message, $recipientChatId = null)
     {
-        // ... (No changes here)
+        try {
+            $botToken = env('TELEGRAM_BOT_TOKEN');
+            $chatId = $recipientChatId ?? env('TELEGRAM_CHAT_ID');
+
+            Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                'chat_id' => $chatId,
+                'text' => $message,
+                'parse_mode' => 'Markdown',
+            ]);
+        } catch (\Exception $e) {
+            Log::warning("Telegram send failed: " . $e->getMessage());
+        }
     }
 
     public function render()
     {
-        // 1. Calculate Counts
+        // 1. Calculate Counts (For Dashboard Cards)
         $this->ticketCounts['pending'] = Ticket::where('status', 'pending')->count();
         $this->ticketCounts['closed'] = Ticket::where('status', 'closed')->count();
-
-        // Progress includes tickets that are 'open', 'assigned', or 'in_progress' (adjust this based on your exact status names)
+        // Progress includes 'open', 'assigned', and 'in_progress'
         $this->ticketCounts['progress'] = Ticket::whereIn('status', ['open', 'assigned', 'in_progress'])->count();
 
 
-        // 2. Fetch Paginated Tickets
-        $tickets = Ticket::with(['client', 'technician', 'complainType'])
-            ->latest()
-            ->paginate(5);
+        // 2. Start Query
+        $query = Ticket::with(['client', 'technician', 'complainType']);
 
-        // 3. Pass both to the view
+        // --- APPLY FILTERS ---
+
+        // Filter by Status (MODIFIED LOGIC for 'progress')
+        if (!empty($this->filterStatus) && $this->filterStatus !== 'all') {
+            if ($this->filterStatus === 'progress') {
+                // Map the 'progress' filter value to multiple actual statuses in the database
+                $query->whereIn('status', ['open', 'assigned', 'in_progress']);
+            } else {
+                // For 'pending' and 'closed', use the value directly
+                $query->where('status', $this->filterStatus);
+            }
+        }
+        
+        // Filter by Ticket ID
+        if (!empty($this->filterTicketId) && is_numeric($this->filterTicketId)) {
+            $query->where('id', (int)$this->filterTicketId);
+        }
+        
+        // --- END FILTERS ---
+
+        // 3. Fetch Paginated Tickets
+        $tickets = $query->latest()->paginate(5);
+
+        // 4. Pass to the view
         return view('livewire.ticket-manager', [
             'tickets' => $tickets,
-            // $this->ticketCounts is now automatically available in the view because it's a public property.
         ]);
     }
 }

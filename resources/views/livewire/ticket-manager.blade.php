@@ -11,11 +11,11 @@
 
         .card-modern {
             border: none;
-            border-radius: 1rem; /* Softer rounded corners */
-            box-shadow: 0 8px 24px rgba(22, 24, 26, 0.08); /* Stronger, softer shadow */
+            border-radius: 1rem;
+            box-shadow: 0 8px 24px rgba(22, 24, 26, 0.08);
         }
 
-        /* NEW: Stats Card Styles */
+        /* Stats Card Styles */
         .stats-card {
             border: none;
             border-radius: 1rem;
@@ -46,15 +46,10 @@
             background: #e8f5e9;
             color: var(--success-color);
         }
-        /* END NEW: Stats Card Styles */
+        /* End Stats Card Styles */
 
 
-        /* Search/Selection Enhancements */
-        .search-suggestions li:hover {
-            background: #f8fafc;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* subtle lift */
-        }
+        /* Avatar and Status Colors */
         .avatar-circle {
             width: 40px;
             height: 40px;
@@ -66,24 +61,18 @@
             font-size: 1rem;
             color: #fff;
             flex-shrink: 0;
-            /* Default background is set for new tickets if no status class is applied */
             background: var(--primary-color);
         }
 
-        /* --- TICKET STATUS COLORS (FIXED) --- */
-        .avatar-circle.status-open {
-            background: var(--danger-color) !important; /* লাল: নতুন বা হাই প্রায়োরিটি */
+        .avatar-circle.status-open, .avatar-circle.status-pending {
+            background: var(--danger-color) !important;
         }
         .avatar-circle.status-assigned {
-            background: var(--warning-color) !important; /* হলুদ/কমলা: টেকনিশিয়ানের কাছে আছে */
-        }
-        .avatar-circle.status-pending {
-            background: var(--muted-color) !important; /* ধূসর: অপেক্ষমাণ */
+            background: var(--warning-color) !important;
         }
         .avatar-circle.status-closed {
-            background: var(--success-color) !important; /* সবুজ: সম্পন্ন */
+            background: var(--success-color) !important;
         }
-        /* --- END STATUS COLORS --- */
 
         .chip {
             border-radius: 999px;
@@ -97,7 +86,7 @@
             font-weight: 500;
         }
         .muted-small {
-            font-size: 0.875rem; /* Slightly larger for better readability */
+            font-size: 0.875rem;
             color: var(--muted-color);
         }
 
@@ -130,22 +119,17 @@
             border-left: none;
         }
 
-        /* Form Floating Fix - IMPROVED FOR TEXTAREA */
+        /* Form Floating Fix */
         .form-floating > .form-control:not(:placeholder-shown) ~ label,
         .form-floating > .form-control-plaintext:not(:placeholder-shown) ~ label,
         .form-floating > .form-select ~ label {
-            /* Adjusted Y position to ensure label is fully above text content */
             transform: scale(.85) translateY(-1.05rem) translateX(.15rem);
         }
-        /* Adjusted overall padding for general form inputs in floating state */
         .form-floating .form-control {
             min-height: calc(3.5rem + 2px);
             height: auto;
-            /* Default: padding: 1rem 0.75rem 0.5rem 0.75rem; */
         }
-        /* KEY FIX: Specific padding adjustment for the large textarea */
         .form-floating .form-control#ticketDescription {
-             /* Increased top padding to ensure the first line of text is not obscured by the floating label */
              padding-top: 2rem;
              min-height: 110px;
         }
@@ -183,7 +167,7 @@
         </div>
     </div>
 
-    {{-- NEW: TICKET STATUS DASHBOARD COUNTERS --}}
+    {{-- TICKET STATUS DASHBOARD COUNTERS --}}
     <div class="row mb-5 g-4">
 
         {{-- Pending Count Card --}}
@@ -195,8 +179,7 @@
                     </div>
                     <div>
                         <div class="muted-small fw-semibold text-warning">Pending Tickets</div>
-                        {{-- Assuming $ticketCounts['pending'] exists in your Livewire component --}}
-                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['pending'] ?? 0 }}</h3>
+                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['pending'] }}</h3>
                     </div>
                 </div>
             </div>
@@ -211,8 +194,7 @@
                     </div>
                     <div>
                         <div class="muted-small fw-semibold text-primary">In Progress (Assigned)</div>
-                        {{-- Assuming $ticketCounts['progress'] or ['assigned'] exists --}}
-                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['progress'] ?? $ticketCounts['assigned'] ?? 0 }}</h3>
+                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['progress'] }}</h3>
                     </div>
                 </div>
             </div>
@@ -227,8 +209,7 @@
                     </div>
                     <div>
                         <div class="muted-small fw-semibold text-success">Closed Tickets</div>
-                        {{-- Assuming $ticketCounts['closed'] exists --}}
-                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['closed'] ?? 0 }}</h3>
+                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['closed'] }}</h3>
                     </div>
                 </div>
             </div>
@@ -346,7 +327,7 @@
                 </div>
             </div>
 
-            {{-- Description Field (FIXED) --}}
+            {{-- Description Field --}}
             <div class="form-floating mb-4">
                 <textarea
                     wire:model="description"
@@ -375,13 +356,47 @@
         </h4>
         <div class="chip bg-white border border-secondary-subtle py-2 px-3 shadow-sm">
             <span class="fw-bold text-dark">{{ $tickets->total() }}</span>
-            <span class="muted-small">Total Tickets</span>
+            <span class="muted-small">Total Tickets (Filtered)</span>
             <span class="mx-2 text-muted">|</span>
             <span class="muted-small">Page {{ $tickets->currentPage() }}</span>
         </div>
     </div>
     {{-- END IMPROVED HEADER --}}
 
+    <div class="row g-3 mb-4 align-items-center">
+
+        {{-- Status Filter (MODIFIED OPTIONS) --}}
+        <div class="col-md-4">
+            <label class="form-label fw-semibold small text-muted mb-1">Filter by Status</label>
+            <select wire:model.live="filterStatus" class="form-select rounded-pill form-select-sm">
+                <option value="all">-- All Tickets --</option>
+                <option value="pending">Pending</option>
+                <option value="progress">In Progress</option>
+                <option value="closed">Closed</option>
+            </select>
+        </div>
+
+        {{-- Ticket ID Search --}}
+        <div class="col-md-4">
+            <label class="form-label fw-semibold small text-muted mb-1">Search by Ticket ID</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light border-end-0 rounded-start-pill">#</span>
+                <input type="number"
+                       wire:model.live.debounce.300ms="filterTicketId"
+                       class="form-control rounded-end-pill"
+                       placeholder="Enter Ticket ID (e.g. 102)"
+                       min="1">
+            </div>
+        </div>
+
+        {{-- Reset Button --}}
+        <div class="col-md-4 d-flex align-items-end">
+            <button wire:click="resetFilters" class="btn btn-sm btn-outline-secondary rounded-pill w-auto">
+                <i class="bi bi-x-circle me-1"></i> Clear Filters
+            </button>
+        </div>
+
+    </div>
     {{-- Active Tickets List (modern cards) --}}
     <div class="card card-modern">
 
@@ -389,7 +404,7 @@
             @forelse ($tickets as $ticket)
                 <div class="ticket-card d-flex gap-3 mb-4 p-4 align-items-start">
 
-                    {{-- Left Side: Ticket ID & Client Info (FIXED: Dynamically assigned status class) --}}
+                    {{-- Left Side: Ticket ID & Client Info --}}
                     <div class="flex-shrink-0 text-center">
                         <div
                             class="avatar-circle status-{{ $ticket->status }}"
@@ -437,7 +452,7 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li>
                                     <button class="dropdown-item" data-bs-toggle="collapse" data-bs-target="#timeline-{{ $ticket->id }}">
-                                        <i class="bi bi-clock-history me-2"></i> View Details/Timeline
+                                        <i class="bi bi-clock-history me-2"></i>Timeline
                                     </button>
                                 </li>
                                 <li>
@@ -471,7 +486,7 @@
                 {{-- Collapsible Footer (Actions, Comment, Timeline) --}}
                 <div class="row g-3 px-3 mb-4">
                     {{-- Technician Assignment --}}
-                    <div class="col-lg-6">
+                    <div class="col-lg-3">
                         <div class="input-group input-group-sm">
                             <select wire:model="technician_map.{{ $ticket->id }}" class="form-select rounded-start-pill">
                                 <option value="">-- Assign Technician --</option>
@@ -537,7 +552,7 @@
                     </div>
                 </div>
             @empty
-                <p class="text-center p-5 muted-small">🎉 Great job! No open tickets found matching your criteria.</p>
+                <p class="text-center p-5 muted-small">🎉 Great job! No tickets found matching the current filters.</p>
             @endforelse
 
             {{-- Pagination Links --}}
