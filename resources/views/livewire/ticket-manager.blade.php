@@ -15,6 +15,40 @@
             box-shadow: 0 8px 24px rgba(22, 24, 26, 0.08); /* Stronger, softer shadow */
         }
 
+        /* NEW: Stats Card Styles */
+        .stats-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+        }
+        .stats-card:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .icon-box.bg-soft-primary {
+            background: #e9f0ff;
+            color: var(--primary-color);
+        }
+        .icon-box.bg-soft-warning {
+            background: #fff8e1;
+            color: var(--warning-color);
+        }
+        .icon-box.bg-soft-success {
+            background: #e8f5e9;
+            color: var(--success-color);
+        }
+        /* END NEW: Stats Card Styles */
+
+
         /* Search/Selection Enhancements */
         .search-suggestions li:hover {
             background: #f8fafc;
@@ -32,7 +66,25 @@
             font-size: 1rem;
             color: #fff;
             flex-shrink: 0;
+            /* Default background is set for new tickets if no status class is applied */
+            background: var(--primary-color);
         }
+
+        /* --- TICKET STATUS COLORS (FIXED) --- */
+        .avatar-circle.status-open {
+            background: var(--danger-color) !important; /* লাল: নতুন বা হাই প্রায়োরিটি */
+        }
+        .avatar-circle.status-assigned {
+            background: var(--warning-color) !important; /* হলুদ/কমলা: টেকনিশিয়ানের কাছে আছে */
+        }
+        .avatar-circle.status-pending {
+            background: var(--muted-color) !important; /* ধূসর: অপেক্ষমাণ */
+        }
+        .avatar-circle.status-closed {
+            background: var(--success-color) !important; /* সবুজ: সম্পন্ন */
+        }
+        /* --- END STATUS COLORS --- */
+
         .chip {
             border-radius: 999px;
             padding: 4px 12px;
@@ -131,6 +183,59 @@
         </div>
     </div>
 
+    {{-- NEW: TICKET STATUS DASHBOARD COUNTERS --}}
+    <div class="row mb-5 g-4">
+
+        {{-- Pending Count Card --}}
+        <div class="col-lg-4 col-md-6">
+            <div class="card stats-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-soft-warning me-3">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div>
+                        <div class="muted-small fw-semibold text-warning">Pending Tickets</div>
+                        {{-- Assuming $ticketCounts['pending'] exists in your Livewire component --}}
+                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['pending'] ?? 0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- In Progress/Assigned Count Card --}}
+        <div class="col-lg-4 col-md-6">
+            <div class="card stats-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-soft-primary me-3">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                    <div>
+                        <div class="muted-small fw-semibold text-primary">In Progress (Assigned)</div>
+                        {{-- Assuming $ticketCounts['progress'] or ['assigned'] exists --}}
+                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['progress'] ?? $ticketCounts['assigned'] ?? 0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Closed Count Card --}}
+        <div class="col-lg-4 col-md-12">
+            <div class="card stats-card p-3">
+                <div class="d-flex align-items-center">
+                    <div class="icon-box bg-soft-success me-3">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div>
+                        <div class="muted-small fw-semibold text-success">Closed Tickets</div>
+                        {{-- Assuming $ticketCounts['closed'] exists --}}
+                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['closed'] ?? 0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- END TICKET STATUS DASHBOARD COUNTERS --}}
+
     {{-- Create Ticket Card --}}
     <div class="card card-modern mb-5">
         <div class="card-body p-4">
@@ -151,11 +256,11 @@
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0 rounded-start-pill">🔍</span>
                         <input type="text"
-                             wire:model.debounce.400ms="search"
-                             wire:keydown="$set('selectedClient', null)"
-                             class="form-control rounded-end-pill"
-                             placeholder="Search client..."
-                             aria-autocomplete="list">
+                               wire:model.debounce.400ms="search"
+                               wire:keydown="$set('selectedClient', null)"
+                               class="form-control rounded-end-pill"
+                               placeholder="Search client..."
+                               aria-autocomplete="list">
                         @if($search)
                             <button type="button" wire:click="$set('search','')" class="btn btn-light border-0 px-3">✖</button>
                         @endif
@@ -261,7 +366,7 @@
         </div>
     </div>
 
- 
+
 
     {{-- IMPROVED ACTIVE TICKETS HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
@@ -284,9 +389,11 @@
             @forelse ($tickets as $ticket)
                 <div class="ticket-card d-flex gap-3 mb-4 p-4 align-items-start">
 
-                    {{-- Left Side: Ticket ID & Client Info --}}
+                    {{-- Left Side: Ticket ID & Client Info (FIXED: Dynamically assigned status class) --}}
                     <div class="flex-shrink-0 text-center">
-                        <div class="avatar-circle" style="background:var(--primary-color); width:50px; height:50px; font-size:1.1rem; margin-bottom: 0.5rem;">
+                        <div
+                            class="avatar-circle status-{{ $ticket->status }}"
+                            style="width:50px; height:50px; font-size:1.1rem; margin-bottom: 0.5rem;">
                             #{{ $ticket->id }}
                         </div>
                         <div class="muted-small" title="Complain Type">{{ $ticket->complainType->name ?? 'N/A' }}</div>
@@ -307,12 +414,12 @@
 
                         <div class="d-flex flex-wrap gap-3 align-items-center">
                              <span class="chip bg-light-info text-primary border border-info-subtle">
-                                <i class="bi bi-person-fill"></i> Status: <strong class="text-dark">{{ ucfirst($ticket->status) }}</strong>
+                                 <i class="bi bi-person-fill"></i> Status: <strong class="text-dark">{{ ucfirst($ticket->status) }}</strong>
                             </span>
-                             @if($ticket->technician)
-                                <span class="chip bg-light-warning text-warning border border-warning-subtle">
-                                    👨‍🔧 Assigned: <strong>{{ $ticket->technician->name }}</strong>
-                                </span>
+                            @if($ticket->technician)
+                                 <span class="chip bg-light-warning text-warning border border-warning-subtle">
+                                     👨‍🔧 Assigned: <strong>{{ $ticket->technician->name }}</strong>
+                                 </span>
                             @endif
                             <span class="muted-small ms-auto">Created: {{ $ticket->created_at->diffForHumans() }}</span>
                         </div>
@@ -350,11 +457,11 @@
                                 </li>
                                 <li>
                                      <button
-                                        onclick="confirm('Are you absolutely sure you want to PERMANENTLY DELETE ticket #{{ $ticket->id }}?') || event.stopImmediatePropagation()"
-                                        wire:click="deleteTicket({{ $ticket->id }})"
-                                        class="dropdown-item text-danger">
-                                        <i class="bi bi-trash-fill me-2"></i> Delete Ticket
-                                    </button>
+                                         onclick="confirm('Are you absolutely sure you want to PERMANENTLY DELETE ticket #{{ $ticket->id }}?') || event.stopImmediatePropagation()"
+                                         wire:click="deleteTicket({{ $ticket->id }})"
+                                         class="dropdown-item text-danger">
+                                         <i class="bi bi-trash-fill me-2"></i> Delete Ticket
+                                     </button>
                                 </li>
                             </ul>
                         </div>
@@ -398,6 +505,7 @@
                             <div class="card bg-light p-3 mt-3 shadow-sm border-0" style="max-height:300px; overflow-y:auto; border-radius:0.75rem;">
                                 <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">Ticket Timeline 📜</h6>
                                 @php
+                                     // NOTE: You must ensure TicketTimeline model exists and has the correct relationships/data
                                     $timeline = \App\Models\TicketTimeline::where('ticket_id', $ticket->id)->latest()->get();
                                 @endphp
 
@@ -408,7 +516,7 @@
                                         @foreach($timeline as $item)
                                             <li class="d-flex mb-3 timeline-item">
                                                 <div class="me-3 flex-shrink-0">
-                                                     <div class="avatar-circle" style="width:30px; height:30px; font-size:.7rem; background:#6c757d;">
+                                                    <div class="avatar-circle" style="width:30px; height:30px; font-size:.7rem; background:#6c757d;">
                                                         {{ strtoupper(substr(($item->performed_by ?? 'S'), 0, 1)) }}
                                                     </div>
                                                 </div>
@@ -425,7 +533,7 @@
                                     </ul>
                                 @endif
                             </div>
-                        </div>
+                         </div>
                     </div>
                 </div>
             @empty
