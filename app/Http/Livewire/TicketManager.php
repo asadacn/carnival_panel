@@ -60,7 +60,7 @@ class TicketManager extends Component
     {
         $this->resetPage();
     }
-    
+
     // --- ADDED: Reset pagination when filters change ---
     public function updatedFilterStatus()
     {
@@ -71,7 +71,7 @@ class TicketManager extends Component
     {
         $this->resetPage();
     }
-    
+
     // Resets both filters when called from the Blade button
     public function resetFilters()
     {
@@ -151,7 +151,7 @@ class TicketManager extends Component
         $oldTechnicianName = $ticket->technician ? $ticket->technician->name : 'None';
 
         $ticket->technician_id = $technician->id;
-        $ticket->status = 'assigned'; 
+        $ticket->status = 'in_progress';
         $ticket->save();
 
         if ($ticket->priority == 'high') {
@@ -356,12 +356,12 @@ class TicketManager extends Component
                 $query->where('status', $this->filterStatus);
             }
         }
-        
+
         // Filter by Ticket ID
         if (!empty($this->filterTicketId) && is_numeric($this->filterTicketId)) {
             $query->where('id', (int)$this->filterTicketId);
         }
-        
+
         // --- END FILTERS ---
 
         // 3. Fetch Paginated Tickets
