@@ -9,7 +9,7 @@ use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
-
+use Illuminate\Database\Eloquent\Model;
 class InvestmentController extends AppBaseController
 {
     /** @var  InvestmentRepository */

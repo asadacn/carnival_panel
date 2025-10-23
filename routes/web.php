@@ -75,7 +75,10 @@ Route::get('create_bulk_sms',[SmsController::class,"create_bulk_sms"])->name('cr
 Route::get('reg_bulk_sms',[SmsController::class,"reg_bulk_sms"])->name('reg_bulk_sms');
 Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');
 
-
+// In your routes/web.php file
+// ... existing routes
+Route::post('bulk-voice-campaign', [App\Http\Controllers\SmsController::class, 'bulk_voice_campaign'])->name('bulk_voice_campaign');
+// ... existing routes
 
 Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class);
 
