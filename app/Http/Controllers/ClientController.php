@@ -10,6 +10,8 @@ use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
 use Flash;
 use Response;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 use App\Imports\ClientsImport;
 use App\Models\Client;
@@ -38,41 +40,65 @@ class ClientController extends AppBaseController
      */
     public function index(Request $request)
     {
-        // $clients = $this->clientRepository->all();
-
-        // return view('clients.index')
-        //     ->with('clients', $clients);
-
         if ($request->ajax()) {
+            // OPTIMIZATION: Use Client::query() to enable server-side processing
+            $data = Client::query();
 
-            $data = Client::all();
-
-            return DataTables::of($data)->addIndexColumn()
+            return DataTables::of($data)
+                ->addIndexColumn()
                 ->addColumn('action', function ($client) {
+                    $name = addslashes($client->name);
+                    $contact = addslashes($client->contact);
 
-                    $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
-                     $btn = $btn .= '<a href="#" onclick="showQr('
-                                    . $client->id . ', '
-                                    . '\'' . addslashes($client->name) . '\', '
-                                    . '\'' . addslashes($client->contact) . '\')"
-                                    class="btn btn-outline-primary action-btn">
-                                    <i class="fas fa-qrcode"></i>
-                                </a>';
+                    // 🚀 UI/UX FIX: Generate URLs for cleaner dropdown
+                    $viewUrl = route('clients.show', $client->id);
+                    $editUrl = route('clients.edit', $client->id);
 
-                    $btn = $btn . '<a href="#" data-toggle="modal" onclick="setSmsId(' . $client->id . ')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
-                    $btn = $btn . '<a href="' . route('clients.show', [$client->id]) . '" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
-                    $btn = $btn . '<a href="' . route('clients.edit', [$client->id]) . '" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
-                    $btn = $btn . ' <a href="' . route('clients.destroy', [$client->id]) . '" onclick="return confirm(\'Are you sure?\')"   data-id="' . $client->id . '" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
-                    $btn = $btn . '</div>';
+                    // 🚀 UI/UX FIX: Use a dropdown for less common actions to de-clutter
+                    $btn = <<<EOT
+                    <div class="btn-group">
+                        <a href="{$editUrl}" class="btn btn-warning btn-sm" title="Edit">
+                            <i class="fa fa-edit"></i>
+                        </a>
+
+                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{$viewUrl}" title="View">
+                                    <i class="fa fa-eye me-2"></i> View
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="showQr({$client->id}, '{$name}', '{$contact}')" title="QR Code & WhatsApp">
+                                    <i class="fas fa-qrcode me-2"></i> Show QR
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" onclick="setSmsId({$client->id})" data-bs-target="#smsModal" title="Send SMS">
+                                    <i class="fa fa-envelope me-2"></i> Send SMS
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}" title="Delete">
+                                    <i class="fa fa-trash me-2"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+EOT;
                     return $btn;
                 })
                 ->rawColumns(['action'])
                 ->editColumn('expiration', function($row) {
-                if (! $row->expiration) return '-';
-                $dt = $row->expiration->copy()->setTimezone('Asia/Dhaka');
-                return $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans();
-            })
-            ->make(true);
+                    if (! $row->expiration) return '-';
+                    // Using optional helper for safe access
+                    $dt = optional($row->expiration)->copy()->setTimezone('Asia/Dhaka');
+                    return $dt ? $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans() : '-';
+                })
+                ->make(true);
         }
 
         $templates = SMS_TEMPALTE::all();
@@ -87,7 +113,7 @@ class ClientController extends AppBaseController
      */
     public function create()
     {
-        $packages = Package::all(); // Package dropdown
+        $packages = Package::all();
         return view('clients.create', compact('packages'));
     }
 
@@ -146,7 +172,8 @@ class ClientController extends AppBaseController
     public function edit($id)
     {
         $client = $this->clientRepository->find($id);
-        $packages = Package::all(); // Package dropdown
+        $packages = Package::all();
+
         if (empty($client)) {
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
 
@@ -182,35 +209,70 @@ class ClientController extends AppBaseController
     }
 
     /**
-     * Remove the specified Client from storage.
+     * Remove the specified Client from storage with password verification.
      *
      * @param int $id
      *
      * @throws \Exception
      *
-     * @return Response
+     * @return Response | \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {
+        // Check for AJAX request to perform password verification
+        if (request()->ajax() || request()->wantsJson()) {
+            $password = request('password');
+
+            // 1. Password Presence Check
+            if (!$password) {
+                 return response()->json([
+                    'status' => 'error',
+                    'message' => 'Password is required for verification.'
+                ], 400); // Bad Request
+            }
+
+            // 2. Password Match Check
+            $user = Auth::user();
+            if (!Hash::check($password, $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Password verification failed. The provided password is incorrect.'
+                ], 401); // Unauthorized
+            }
+        }
+
+        // 3. Find Client
         $client = $this->clientRepository->find($id);
 
         if (empty($client)) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => __('messages.not_found', ['model' => __('models/clients.singular')])
+                ], 404);
+            }
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
-
             return redirect(route('clients.index'));
         }
 
+        // 4. Delete Client
         $this->clientRepository->delete($id);
 
-        Flash::success(__('messages.deleted', ['model' => __('models/clients.singular')]));
+        // 5. Return Response
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => __('messages.deleted', ['model' => __('models/clients.singular')])
+            ]);
+        }
 
+        // Fallback for non-AJAX requests
+        Flash::success(__('messages.deleted', ['model' => __('models/clients.singular')]));
         return redirect(route('clients.index'));
     }
 
     public function export()
     {
-
-
         return Excel::download(new ClientExport, 'clients.xlsx');
     }
 
@@ -218,15 +280,15 @@ class ClientController extends AppBaseController
     {
         if (request()->file('clients_file')) {
             if (Excel::import(new ClientsImport, request()->file('clients_file'))) {
-                Flash::success(__('Import Successfull'));
+                Flash::success(__('Import Successful'));
                 return back()->with('success', 'All good!');
             } else {
                 Flash::error(__('Import Failed'));
                 return back()->with('error', 'Import Failed');
             }
         } else {
-            Flash::warning(__('Please select a file first !'));
-            return back()->with('error', 'Please select a file first !');
+            Flash::warning(__('Please select a file first!'));
+            return back()->with('error', 'Please select a file first!');
         }
     }
 
@@ -234,8 +296,7 @@ class ClientController extends AppBaseController
     public function erase()
     {
         Client::query()->truncate();
-        flash('Truncate Successfull')->success();
-        //Flash::success(__('Truncate Successfull', ['model' => __('models/clients.singular')]));
+        flash('Truncate Successful')->success();
         return back();
     }
 }
