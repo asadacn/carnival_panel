@@ -76,24 +76,30 @@
         {{-- Client Management Overviews --}}
         <div class="row g-4 mb-5">
 
-            {{-- Client Analytics & Value (FIXED: Tabbed UI to control length) --}}
-            <div class="col-lg-8">
+            {{-- Client Analytics & Value (NOW 12 COLUMNS) --}}
+            <div class="col-lg-12">
                 <div class="card shadow-lg border-0 rounded-4">
                     <div class="card-header border-0 bg-white pt-4 pb-0">
                         <h5 class="mb-0 fw-bold d-flex align-items-center text-primary">
                             <i data-lucide="activity" class="me-2"></i> Client Analytics & Value
                         </h5>
 
-                        {{-- Tab Navigation for Chart and Table --}}
+                        {{-- Tab Navigation for Chart, Table, and Protected Data --}}
                         <ul class="nav nav-pills mt-3" id="clientAnalyticsTab" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="chart-tab" data-bs-toggle="pill" data-bs-target="#chart-content" type="button" role="tab" aria-controls="chart-content" aria-selected="true">
-                                    <i data-lucide="bar-chart-2" style="width:16px;height:16px" class="me-1"></i> Chart View
+                                    <i data-lucide="bar-chart-2" style="width:16px;height:16px" class="me-1"></i> Trend Chart
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-content" type="button" role="tab" aria-controls="table-content" aria-selected="false">
                                     <i data-lucide="list-ordered" style="width:16px;height:16px" class="me-1"></i> Data Table ({{ $registered_clients }})
+                                </button>
+                            </li>
+                            {{-- NEW PROTECTED TAB --}}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="commission-tab" data-bs-toggle="pill" data-bs-target="#commission-content" type="button" role="tab" aria-controls="commission-content" aria-selected="false">
+                                    <i data-lucide="lock" style="width:16px;height:16px" class="me-1"></i> Protected Value
                                 </button>
                             </li>
                         </ul>
@@ -102,7 +108,7 @@
                     <div class="card-body pt-3">
                         <div class="tab-content" id="clientAnalyticsTabContent">
 
-                            {{-- Tab 1: Chart View --}}
+                            {{-- Tab 1: Chart View (Existing) --}}
                             <div class="tab-pane fade show active" id="chart-content" role="tabpanel" aria-labelledby="chart-tab">
                                 <h6 class="text-muted mb-3 mt-2">Clients by Package & Value Trend</h6>
                                 <div style="height: 350px;">
@@ -110,7 +116,7 @@
                                 </div>
                             </div>
 
-                            {{-- Tab 2: Registered Clients Table --}}
+                            {{-- Tab 2: Registered Clients Table (Existing) --}}
                             <div class="tab-pane fade" id="table-content" role="tabpanel" aria-labelledby="table-tab">
                                 <h6 class="text-muted mb-3 mt-2">Registered Clients Summary</h6>
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -140,30 +146,45 @@
                                 </div>
                             </div>
 
+                            {{-- Tab 3: Protected Commission View (NEW) --}}
+                            <div class="tab-pane fade" id="commission-content" role="tabpanel" aria-labelledby="commission-tab">
+
+                                {{-- Protected Content Area (Hidden by default) --}}
+                                <div id="protected-commission-chart" style="display: none;">
+                                    <h6 class="text-muted mb-3 mt-2">Monthly Value & Commission Breakdown</h6>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
+                                            <div class="w-100" style="max-height: 350px;">
+                                                <canvas id="commissionPieChart"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="p-4 border rounded-4 bg-light text-center">
+                                                <p class="mb-1 small text-muted">Total Monthly Revenue (Gross):</p>
+                                                <h4 class="fw-bolder text-dark mb-3 display-6">{{ takaFormat($total) }} ৳</h4>
+                                                <div id="commission-details">
+                                                    {{-- Details will be populated here by JS --}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Unlock Button Area (Visible by default) --}}
+                                <div id="unlock-area" class="d-flex flex-column justify-content-center align-items-center p-5 text-center" style="height: 350px;">
+                                    <i data-lucide="lock" class="text-secondary mb-3" style="width:48px; height:48px;"></i>
+                                    <p class="text-muted mb-3">Sensitive value data is protected.</p>
+                                    <button class="btn btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                                        <i data-lucide="key" style="width:18px;height:18px" class="me-2"></i> Unlock Commission Data
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{-- Commission Pie Chart - Right Column (NEW CHART) --}}
-            <div class="col-lg-4">
-                <div class="card shadow-lg border-0 rounded-4 h-100">
-                    <div class="card-header border-0 text-white bg-info rounded-top-4">
-                        <h5 class="mb-0 fw-bold d-flex align-items-center">
-                            <i data-lucide="pie-chart" class="me-2"></i> Monthly Value & Commission
-                        </h5>
-                    </div>
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center py-4">
-                        <div class="w-100" style="max-height: 250px;">
-                            <canvas id="commissionPieChart"></canvas>
-                        </div>
-                        <div class="p-3 border rounded-3 mt-4 w-100 bg-light text-center">
-                            <p class="mb-1 small text-muted">Total Monthly Revenue:</p>
-                            <h4 class="fw-bolder text-dark mb-0">{{ takaFormat($total) }} ৳</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
 
@@ -181,7 +202,7 @@
 
             <div class="row">
 
-            <div class="col-lg-6">  {{-- 1. Today's Expired Clients (Wired) --}}
+            <div class="col-lg-6"> 	{{-- 1. Today's Expired Clients (Wired) --}}
 
                 <div class="card mb-4 shadow-sm border-0 rounded-4" id="todaysExpiredClients">
 
@@ -281,105 +302,33 @@
 
 
 
-             {{-- 3. Postpaid Clients Being Expired (MOVED HERE) --}}
+                	{{-- 3. Postpaid Clients Being Expired (MOVED HERE) --}}
 
 
 
-                <div class="card mb-4 shadow-sm border-0 rounded-4">
+                    <div class="card mb-4 shadow-sm border-0 rounded-4">
 
-                    <div class="card-header text-white fw-bold d-flex align-items-center" style="background: linear-gradient(135deg,#f7971e,#ffd200)">
+                        <div class="card-header text-white fw-bold d-flex align-items-center" style="background: linear-gradient(135deg,#f7971e,#ffd200)">
 
-                        <i data-lucide="credit-card" class="me-2"></i> Postpaid Clients Being Expired
+                            <i data-lucide="credit-card" class="me-2"></i> Postpaid Clients Being Expired
 
-                    </div>
+                        </div>
 
-                    <div class="card-body table-responsive">
+                        <div class="card-body table-responsive">
 
-                        <table class="table table-hover table-bordered table-sm align-middle">
+                            <table class="table table-hover table-bordered table-sm align-middle">
 
-                            <thead class="table-light">
-
-                                <tr>
-
-                                    <th>Client Name</th>
-
-                                    <th>Carnival ID</th>
-
-                                    <th>Package</th>
-
-                                    <th>Expired Date</th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                @forelse($expiredPostpaidClients as $client)
-
-                                    <tr>
-
-                                        <td>{{ $client->name }}</td>
-
-                                        <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" class="text-primary fw-bold">{{ $client->username }}</a></td>
-
-                                        <td><span class="badge bg-info text-dark">{{ $client->package ?? '-' }}</span></td>
-
-                                        <td class="text-danger fw-bold">{{ \Carbon\Carbon::parse($client->expiration)->format('d M, Y') }}</td>
-
-                                    </tr>
-
-                                @empty
-
-                                    <tr>
-
-                                        <td colspan="4" class="text-center text-muted">No expired postpaid clients found.</td>
-
-                                    </tr>
-
-                                @endforelse
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-
-
-
-
-             {{-- 4. Free ONU Expired Clients (MOVED HERE) --}}
-
-
-
-                <div class="card mb-4 shadow-sm border-0 rounded-4">
-
-                    <div class="card-header text-white fw-bold d-flex align-items-center" style="background: linear-gradient(135deg,#4b5563,#6b7280)">
-
-                        <i data-lucide="package-minus" class="me-2"></i> Expired Clients (Free ONU to Collect)
-
-                    </div>
-
-                    <div class="card-body table-responsive">
-
-                        @if($freeOnuExpiredClients->count() > 0)
-
-                            <table class="table table-striped table-hover table-sm align-middle">
-
-                                <thead class="table-dark">
+                                <thead class="table-light">
 
                                     <tr>
 
                                         <th>Client Name</th>
 
-                                        <th>Mobile</th>
+                                        <th>Carnival ID</th>
 
-                                        <th>Expiration</th>
+                                        <th>Package</th>
 
-                                        <th>ONU Serial</th>
+                                        <th>Expired Date</th>
 
                                     </tr>
 
@@ -387,35 +336,107 @@
 
                                 <tbody>
 
-                                    @foreach($freeOnuExpiredClients as $client)
+                                    @forelse($expiredPostpaidClients as $client)
 
                                         <tr>
 
                                             <td>{{ $client->name }}</td>
 
-                                            <td><a href="tel:{{ $client->contact }}" class="btn btn-sm btn-outline-primary"><i data-lucide="phone" style="width:14px;height:14px"></i></a></td>
+                                            <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" class="text-primary fw-bold">{{ $client->username }}</a></td>
 
-                                            <td class="text-danger fw-bold">{{ $client->expiration_formatted }}</td>
+                                            <td><span class="badge bg-info text-dark">{{ $client->package ?? '-' }}</span></td>
 
-                                            <td>{{ $client->onu_serial ?? 'N/A' }}</td>
+                                            <td class="text-danger fw-bold">{{ \Carbon\Carbon::parse($client->expiration)->format('d M, Y') }}</td>
 
                                         </tr>
 
-                                    @endforeach
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="4" class="text-center text-muted">No expired postpaid clients found.</td>
+
+                                        </tr>
+
+                                    @endforelse
 
                                 </tbody>
 
                             </table>
 
-                        @else
-
-                            <p class="text-success mb-0 fw-bold">✅ কোনো Expired Free ONU client ফেরতবিহীন নেই।</p>
-
-                        @endif
+                        </div>
 
                     </div>
 
-                </div>
+
+
+
+
+                	{{-- 4. Free ONU Expired Clients (MOVED HERE) --}}
+
+
+
+                    <div class="card mb-4 shadow-sm border-0 rounded-4">
+
+                        <div class="card-header text-white fw-bold d-flex align-items-center" style="background: linear-gradient(135deg,#4b5563,#6b7280)">
+
+                            <i data-lucide="package-minus" class="me-2"></i> Expired Clients (Free ONU to Collect)
+
+                        </div>
+
+                        <div class="card-body table-responsive">
+
+                            @if($freeOnuExpiredClients->count() > 0)
+
+                                <table class="table table-striped table-hover table-sm align-middle">
+
+                                    <thead class="table-dark">
+
+                                        <tr>
+
+                                            <th>Client Name</th>
+
+                                            <th>Mobile</th>
+
+                                            <th>Expiration</th>
+
+                                            <th>ONU Serial</th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        @foreach($freeOnuExpiredClients as $client)
+
+                                            <tr>
+
+                                                <td>{{ $client->name }}</td>
+
+                                                <td><a href="tel:{{ $client->contact }}" class="btn btn-sm btn-outline-primary"><i data-lucide="phone" style="width:14px;height:14px"></i></a></td>
+
+                                                <td class="text-danger fw-bold">{{ $client->expiration_formatted }}</td>
+
+                                                <td>{{ $client->onu_serial ?? 'N/A' }}</td>
+
+                                            </tr>
+
+                                        @endforeach
+
+                                    </tbody>
+
+                                </table>
+
+                            @else
+
+                                <p class="text-success mb-0 fw-bold">✅ কোনো Expired Free ONU client ফেরতবিহীন নেই।</p>
+
+                            @endif
+
+                        </div>
+
+                    </div>
 
 
 
@@ -445,11 +466,33 @@
 </section>
 
 <a href="{{ route('tickets.live') }}"
-   class="btn btn-primary rounded-circle position-fixed d-flex justify-content-center align-items-center"
-   style="bottom: 30px; right: 30px; width: 60px; height: 60px; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 9999; transition: transform 0.2s, box-shadow 0.2s;"
-   data-bs-toggle="tooltip" data-bs-placement="left" title="Create New Ticket">
+    class="btn btn-primary rounded-circle position-fixed d-flex justify-content-center align-items-center"
+    style="bottom: 30px; right: 30px; width: 60px; height: 60px; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 9999; transition: transform 0.2s, box-shadow 0.2s;"
+    data-bs-toggle="tooltip" data-bs-placement="left" title="Create New Ticket">
     +
 </a>
+
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="passwordModalLabel"><i data-lucide="key" class="me-2"></i> Unlock Commission Data</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">Enter the password for your session account to view sensitive metrics.</p>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="accessPassword" placeholder="Session Password">
+                </div>
+                <div id="passwordError" class="text-danger small" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning btn-sm" id="checkPasswordBtn">Unlock</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
     /* Custom utility for 5-column layout on large screens */
@@ -489,17 +532,78 @@
 <script>
 lucide.createIcons();
 
+// Sensitive Data Placeholder
+const totalRevenue = @json($total ?? 0);
+// CRITICAL FIX: Inject the current user's email for re-authentication
+const userEmail = "{{ Auth::check() ? Auth::user()->email : '' }}";
+
+function initCommissionChart(commAmount, remAmount) {
+    const commissionPieChartElement = document.getElementById('commissionPieChart');
+    const commissionDetailsDiv = document.getElementById('commission-details');
+
+    // Check if the chart has already been initialized to prevent errors
+    if (commissionPieChartElement.chart) {
+        commissionPieChartElement.chart.destroy();
+    }
+
+    if (commissionPieChartElement) {
+        // Commission Pie Chart Definition
+        const commissionPieChart = new Chart(commissionPieChartElement.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: [
+                    `40% Commission`,
+                    `60% Remaining`
+                ],
+                datasets: [{
+                    data: [commAmount, remAmount],
+                    backgroundColor: [
+                        '#10b981', // Green for commission
+                        '#34d399', // Lighter green for remaining
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 13 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (context.parsed !== null) {
+                                    let value = context.parsed.toFixed(2);
+                                    label += `: ${value} ৳`;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        // Attach chart instance for later checks/destruction
+        commissionPieChartElement.chart = commissionPieChart;
+    }
+
+    // Populate the details section
+    commissionDetailsDiv.innerHTML = `
+        <p class="mb-2 small text-danger fw-bold border-bottom pb-1">40% Commission: <span class="float-end">${commAmount.toFixed(2)} ৳</span></p>
+        <p class="mb-2 small text-info fw-bold">60% Remaining: <span class="float-end">${remAmount.toFixed(2)} ৳</span></p>
+    `;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const clientsChartElement = document.getElementById('clientsChart');
     const expiredClientsChartElement = document.getElementById('expiredClientsChart');
-    const commissionPieChartElement = document.getElementById('commissionPieChart');
-
-    // --- Data Calculation for Commission Chart ---
-    // NOTE: $total is already calculated in the PHP blade above.
-    const totalRevenue = @json($total ?? 0);
-    const commissionRate = 0.40; // 40%
-    const commissionAmount = totalRevenue * commissionRate;
-    const remainingAmount = totalRevenue - commissionAmount;
 
     // --- Chart Initializations ---
 
@@ -598,62 +702,54 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (commissionPieChartElement) {
-        // Commission Pie Chart Definition (NEW)
-        const commissionPieChart = new Chart(commissionPieChartElement.getContext('2d'), {
-            type: 'pie',
-            data: {
-                labels: [
-                    `40% Commission (${commissionAmount.toFixed(2)} ৳)`,
-                    `60% Remaining (${remainingAmount.toFixed(2)} ৳)`
-                ],
-                datasets: [{
-                    data: [commissionAmount, remainingAmount],
-                    backgroundColor: [
-                        '#10b981', // Green for commission
-                        '#34d399', // Lighter green for remaining
-                    ],
-                    hoverOffset: 4
-                }]
+    // --- Password Check Logic ---
+    document.getElementById('checkPasswordBtn').addEventListener('click', function() {
+        const password = document.getElementById('accessPassword').value;
+        const errorDiv = document.getElementById('passwordError');
+        const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+
+        errorDiv.style.display = 'none';
+
+        // IMPORTANT: Ensure your Laravel route is correctly configured for this endpoint
+        fetch('/api/check-master-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // This assumes you have the meta tag for CSRF in your main layout file:
+                // <meta name="csrf-token" content="{{ csrf_token() }}">
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: { size: 13 }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    // Use the takaFormat function (assuming it's available in your JS scope or defined in your blade/app.js)
-                                    // If not available, use a standard formatting function
-                                    let value = context.parsed.toFixed(2);
-                                    label += `${value} ৳`;
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
+            body: JSON.stringify({
+                // CRITICAL FIX: Sending the logged-in user's email is required for Auth::attempt()
+                email: userEmail,
+                password: password,
+                totalRevenue: totalRevenue
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Hide modal, show chart area
+                modal.hide();
+                document.getElementById('unlock-area').style.display = 'none';
+                document.getElementById('protected-commission-chart').style.display = 'block';
+
+                // Initialize Chart with returned data
+                const commAmount = data.commissionAmount;
+                const remAmount = data.remainingAmount;
+                initCommissionChart(commAmount, remAmount);
+
+            } else {
+                errorDiv.innerText = data.message || 'Authentication failed. Please check your password.';
+                errorDiv.style.display = 'block';
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            errorDiv.innerText = 'An unexpected error occurred during authentication.';
+            errorDiv.style.display = 'block';
         });
-    }
-
+    });
 });
-
-// NOTE: Since the `takaFormat()` function is likely a PHP helper,
-// you may need to ensure a similar JavaScript formatting function
-// is available if you want to use it in the Chart.js tooltip
-// (which is currently using toFixed(2) as a fallback).
 </script>
 @endsection

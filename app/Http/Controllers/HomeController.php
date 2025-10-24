@@ -8,12 +8,46 @@ use App\Models\HotspotClient;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth; // Added for completeness, although not used in index
 
 class HomeController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function checkMasterPassword(Request $request)
+    {
+        // Validation ensures email, password, and revenue are provided
+        $request->validate([
+            'email' => 'required|email',    // This is required to identify the user
+            'password' => 'required|string',
+            'totalRevenue' => 'required|numeric',
+        ]);
+
+        // Use Auth::attempt() to verify the email and password against the session user
+        if (!Auth::attempt(['email' => $request->input('email'), 'password' => $request->input('password')])) {
+
+            // If attempt failed, deny access to the sensitive data.
+            return response()->json([
+                'success' => false,
+                'message' => 'Incorrect password for your session account. Access denied.'
+            ], 403);
+        }
+
+        // Verification successful: calculate and return the sensitive data
+        $totalRevenue = (float) $request->input('totalRevenue');
+        $commissionRate = 0.40; // 40%
+
+        $commissionAmount = $totalRevenue * $commissionRate;
+        $remainingAmount = $totalRevenue - $commissionAmount;
+
+        return response()->json([
+            'success' => true,
+            'commissionAmount' => $commissionAmount,
+            'remainingAmount' => $remainingAmount,
+        ]);
     }
 
     public function index()
@@ -43,6 +77,9 @@ class HomeController extends Controller
             )
             ->groupBy('clients.package')
             ->get();
+
+        // --- CRITICAL ADDITION: Explicitly calculate and pass $total revenue ---
+        $total = $clients_by_package->sum('total_amount');
 
         $registered_clients = DB::table('clients')
             ->where('status','Registered')->count();
@@ -107,6 +144,8 @@ class HomeController extends Controller
                 'previous' => array_values($previousYearDataFilled),
             ],
             'lastUpdated' => $lastUpdated ? Carbon::parse($lastUpdated)->format('d-m-Y H:i:s') : null,
+            // --- Pass total revenue to the view ---
+            'total' => $total,
         ]);
     }
 }

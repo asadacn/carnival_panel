@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CardSellerController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HotspotZoneController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\HotspotClientController;
@@ -92,32 +93,7 @@ Route::get('/tickets', TicketManager::class)->name('tickets.live');
 
 Route::get('/technicians', TechnicianManager::class)->name('technicians');
 
+
+Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPassword']);
 });
 
-
-// ElitCall Voice Campaign Test Route
-Route::get('/test-voice-campaign', function () {
-    // --- Send a test campaign ---
-    $response = sendVoiceCampaign(
-        'Test Campaign from Carnival Panel', // campaign name
-        113, // your broadcast_id from ElitCall dashboard
-        '9610990410', // your sender number
-        ['8801770033448', '8801687181828'] // test numbers
-    );
-
-    if (!$response['success']) {
-        return response()->json(['error' => $response['error']], 400);
-    }
-
-    $campaignId = $response['data']['campaign_id'];
-
-    // --- Get campaign details ---
-    $details = getVoiceCampaignDetails($campaignId);
-
-    return response()->json([
-        'message' => 'Voice campaign test successful!',
-        'campaign_id' => $campaignId,
-        'create_response' => $response['data'],
-        'details_response' => $details['data'] ?? null,
-    ]);
-});
