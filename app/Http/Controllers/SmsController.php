@@ -9,8 +9,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laracasts\Flash\Flash;
-use function App\Helpers\sms;
-use function App\Helpers\sendVoiceCampaign;
 
 class SmsController extends Controller
 {
@@ -232,7 +230,7 @@ class SmsController extends Controller
                 Flash::error("Voice Campaign sending failed! Error: " . $errorMessage);
             }
         } catch (\Throwable $th) {
-            Flash::error("An unexpected error occurred during Voice Campaign submission.");
+            Flash::error("An unexpected error occurred during Voice Campaign submission.\n" . $th->getMessage());
         }
 
         return redirect()->back();
