@@ -27,12 +27,73 @@
             </div>
 
         </div>
+
+        <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="card card-statistic-1">
+                    <div class="card-icon bg-primary">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="card-wrap">
+                        <div class="card-header">
+                            <h4>Registered Clients</h4>
+                        </div>
+                        <div class="card-body">
+                            {{ $registeredClientsCount }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="card card-statistic-1">
+                    <div class="card-icon bg-danger">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="card-wrap">
+                        <div class="card-header">
+                            <h4>Expired Clients</h4>
+                        </div>
+                        <div class="card-body">
+                            {{ $expiredClientsCount }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="card card-statistic-1">
+                    <div class="card-icon bg-info">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="card-wrap">
+                        <div class="card-header">
+                            <h4>Free ONU</h4>
+                        </div>
+                        <div class="card-body">
+                            {{ $freeOnuClientsCount }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-12">
+                <div class="card card-statistic-1">
+                    <div class="card-icon bg-success">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <div class="card-wrap">
+                        <div class="card-header">
+                            <h4>Cable Returned</h4>
+                        </div>
+                        <div class="card-body">
+                            {{ $cableReturnedClientsCount }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="section-body">
-
             <div class="card">
-
                 <div class="card-body">
-
                     <div class="table-responsive">
                         <table class="table table-bordered" id="clients">
                             <thead>
@@ -57,11 +118,9 @@
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>
-
     </section>
 
     <div class="modal fade" id="smsModal" tabindex="-1" aria-labelledby="smsModalLabel" aria-hidden="true">
@@ -340,10 +399,10 @@
             if (selectedData.length > 0 && selectedData.length <= 50) { //Bulk sms
 
                 $.ajax({
-                    type: 'POST', // 🚀 UX/Security FIX: Use POST
+                    type: 'POST', // UX/Security FIX: Use POST
                     url: '{{ route('bulk_sms') }}',
                     data: {
-                        _token: '{{ csrf_token() }}', // 🚀 UX/Security FIX: Add CSRF token
+                        _token: '{{ csrf_token() }}', // UX/Security FIX: Add CSRF token
                         clients: clientsData,
                         sms: $('#sms-body').val()
                     },
@@ -375,7 +434,7 @@
 
             } else if (selectedData.length > 51) {
                 Swal.hideLoading();
-                // 🚀 UX FIX: Improved error message
+                // UX FIX: Improved error message
                 Swal.fire({
                     icon: 'error',
                     title: 'Too Many Clients Selected',
@@ -387,10 +446,10 @@
                 //single sms
                 Swal.hideLoading();
                 $.ajax({
-                    type: 'POST', // 🚀 UX/Security FIX: Use POST
+                    type: 'POST', // UX/Security FIX: Use POST
                     url: '{{ route('solo_sms') }}',
                     data: {
-                        _token: '{{ csrf_token() }}', // 🚀 UX/Security FIX: Add CSRF token
+                        _token: '{{ csrf_token() }}', // UX/Security FIX: Add CSRF token
                         client_id: $('#client_id').val(),
                         sms: $('#sms-body').val()
                     },

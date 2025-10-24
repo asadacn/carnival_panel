@@ -50,11 +50,10 @@ class ClientController extends AppBaseController
                     $name = addslashes($client->name);
                     $contact = addslashes($client->contact);
 
-                    // 🚀 UI/UX FIX: Generate URLs for cleaner dropdown
                     $viewUrl = route('clients.show', $client->id);
                     $editUrl = route('clients.edit', $client->id);
 
-                    // 🚀 UI/UX FIX: Use a dropdown for less common actions to de-clutter
+                    // UI/UX FIX: Use a dropdown for less common actions
                     $btn = <<<EOT
                     <div class="btn-group">
                         <a href="{$editUrl}" class="btn btn-warning btn-sm" title="Edit">
@@ -103,7 +102,20 @@ EOT;
 
         $templates = SMS_TEMPALTE::all();
 
-        return view('clients.index', compact('templates'));
+        // 🚀 NEW: Calculate all 4 dashboard stats
+        $registeredClientsCount = Client::where('status', 'Registered')->count();
+        $expiredClientsCount = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
+        $freeOnuClientsCount = Client::where('onu_free', 1)->count();
+        $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
+
+        // 🚀 NEW: Pass all 4 stats to the view
+        return view('clients.index', compact(
+            'templates',
+            'registeredClientsCount',
+            'expiredClientsCount',
+            'freeOnuClientsCount',
+            'cableReturnedClientsCount'
+        ));
     }
 
     /**
