@@ -481,13 +481,13 @@
         }
 
         function showQr(id, name, contact) {
-            // QR code data (vCard)
+            // QR code data (vCard) - use \r\n for line endings and no indentation
             const vCard =
-        `BEGIN:VCARD
-        VERSION:3.0
-        FN:${name}
-        TEL;TYPE=CELL:${contact}
-        END:VCARD`;
+                "BEGIN:VCARD\r\n" +
+                "VERSION:3.0\r\n" +
+                `FN:${name}\r\n` +
+                `TEL;TYPE=CELL:${contact}\r\n` +
+                "END:VCARD";
 
             // WhatsApp message
             const message = `কার্নিভাল রিচার্জ\n` +
