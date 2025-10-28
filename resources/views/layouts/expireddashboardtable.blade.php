@@ -4,8 +4,9 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>@lang('models/clients.fields.username')</th>
                 <th>@lang('models/clients.fields.name')</th>
+                <th>@lang('models/clients.fields.username')</th>
+
                 <th>@lang('models/clients.fields.contact')</th>
                 <th>@lang('models/clients.fields.address')</th>
                 <th>@lang('models/clients.fields.package')</th>
@@ -25,8 +26,9 @@
         @foreach($clients as $client)
             <tr>
                 <td>{{ $loop->iteration }}</td>
+                <td>{{ $client->name }}</td>
                 <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" rel="noopener noreferrer">{{ $client->username }}</a></td>
-                       <td>{{ $client->name }}</td>
+
             <td><a href="tel:{{ $client->contact }}">{{ $client->contact }}</a></td>
             <td>{{ $client->address }}</td>
             <td>{{ $client->package }}</td>

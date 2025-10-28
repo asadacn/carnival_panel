@@ -252,7 +252,7 @@
 
                                         <th>Name</th>
 
-                                        <th>Package</th>
+                                        <th>Contact</th>
 
                                         <th>Expires At</th>
 
@@ -270,7 +270,7 @@
 
                                         <td><i data-lucide="user" style="width:14px;height:14px" class="me-1"></i> {{ $client->name }}</td>
 
-                                        <td><span class="badge bg-secondary">{{ $client->package ?? '-' }}</span></td>
+                                        <td>{{ $client->contact ?? 'N/A' }}</td>
 
                                         <td>{{ $client->expires_at ? \Carbon\Carbon::parse($client->expires_at)->format('d M, Y') : '-' }}</td>
 
@@ -326,7 +326,7 @@
 
                                         <th>Carnival ID</th>
 
-                                        <th>Package</th>
+                                        <th>Address</th>
 
                                         <th>Expired Date</th>
 
@@ -340,11 +340,11 @@
 
                                         <tr>
 
-                                            <td>{{ $client->name }}</td>
+                                            <td><i data-lucide="user" style="width:14px;height:14px" class="me-1"></i>  {{ $client->name }}</td>
 
                                             <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" class="text-primary fw-bold">{{ $client->username }}</a></td>
 
-                                            <td><span class="badge bg-info text-dark">{{ $client->package ?? '-' }}</span></td>
+                                            <td><span class="badge bg-info text-dark">{{ $client->address ?? '-' }}</span></td>
 
                                             <td class="text-danger fw-bold">{{ \Carbon\Carbon::parse($client->expiration)->format('d M, Y') }}</td>
 
@@ -395,7 +395,7 @@
                                         <tr>
 
                                             <th>Client Name</th>
-
+<th>Id</th>
                                             <th>Mobile</th>
 
                                             <th>Expiration</th>
@@ -412,9 +412,9 @@
 
                                             <tr>
 
-                                                <td>{{ $client->name }}</td>
-
-                                                <td><a href="tel:{{ $client->contact }}" class="btn btn-sm btn-outline-primary"><i data-lucide="phone" style="width:14px;height:14px"></i></a></td>
+                                                <td><i data-lucide="user" style="width:14px;height:14px" class="me-1"></i>  {{ $client->name }}</td>
+ <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" class="text-primary fw-bold">{{ $client->username }}</a></td>
+                                                <td><a href="tel:{{ $client->contact }}" >{{ $client->contact }}</a></td>
 
                                                 <td class="text-danger fw-bold">{{ $client->expiration_formatted }}</td>
 
