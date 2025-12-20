@@ -36,10 +36,10 @@
                     </div>
                     <div class="card-wrap">
                         <div class="card-header">
-                            <h4>Registered Clients</h4>
+                            <h4>Active Clients</h4>
                         </div>
                         <div class="card-body">
-                            {{ $registeredClientsCount }}
+                            {{ $ActiveClientsCount }}
                         </div>
                     </div>
                 </div>
@@ -109,6 +109,7 @@
                                     <th>Cable</th>
                                     <th>ONU</th>
                                     <th>Comment</th>
+                                    <th>ISP</th>
                                     <th>@lang('models/clients.fields.status')</th>
                                     <th>Action</th>
                                 </tr>
@@ -261,6 +262,7 @@
                         orderable: false
                     },
                     { data: 'comment', name: 'comment' },
+                    { data: 'isp_code', name: 'isp_code' },
                     { data: 'status', name: 'status' },
                     { data: 'action', name: 'action', searchable: false, orderable: false },
                 ],
@@ -272,8 +274,8 @@
                     selector: 'td:first-child'
                 },
                 rowCallback: function(row, data) {
-                    const statusCell = $("td:eq(11)", row);
-                    if (data.status === "Registered") {
+                    const statusCell = $("td:eq(12)", row);
+                    if (data.status === "Active") {
                         statusCell.addClass("text-success");
                     } else {
                         statusCell.addClass("text-danger");

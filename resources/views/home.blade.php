@@ -93,7 +93,7 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-content" type="button" role="tab" aria-controls="table-content" aria-selected="false">
-                                    <i data-lucide="list-ordered" style="width:16px;height:16px" class="me-1"></i> Data Table ({{ $registered_clients }})
+                                    <i data-lucide="list-ordered" style="width:16px;height:16px" class="me-1"></i> Data Table ({{ $Active_clients }})
                                 </button>
                             </li>
                             {{-- NEW PROTECTED TAB --}}
@@ -116,9 +116,9 @@
                                 </div>
                             </div>
 
-                            {{-- Tab 2: Registered Clients Table (Existing) --}}
+                            {{-- Tab 2: Active Clients Table (Existing) --}}
                             <div class="tab-pane fade" id="table-content" role="tabpanel" aria-labelledby="table-tab">
-                                <h6 class="text-muted mb-3 mt-2">Registered Clients Summary</h6>
+                                <h6 class="text-muted mb-3 mt-2">Active Clients Summary</h6>
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-sm table-striped table-hover mb-0">
                                         <thead class="table-light sticky-top">

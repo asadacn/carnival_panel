@@ -105,6 +105,7 @@
                     </span>
                 </div>
                 <div class="col-md-6"><strong>Comment:</strong> <span class="text-muted">{{ $client->comment ?? '-' }}</span></div>
+                 <div class="col-md-6"><strong>ISP:</strong> <span class="text-muted">{{ $client->isp_code ?? '-' }}</span></div>
             </div>
         </div>
     </div>

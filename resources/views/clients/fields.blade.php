@@ -33,6 +33,11 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
+                              <!-- Carnival ID / Username -->
+                <div class="col-md-4">
+                    {!! Form::label('isp', __('models/clients.fields.isp').':', ['class' => 'form-label']) !!}
+                    {!! Form::text('isp_code', null, ['class' => 'form-control', 'placeholder' => 'Enter ISP']) !!}
+                </div>
                 <!-- Carnival ID / Username -->
                 <div class="col-md-4">
                     {!! Form::label('username', __('models/clients.fields.username').':', ['class' => 'form-label']) !!}
@@ -114,7 +119,7 @@
                 </div>
                 <div class="col-md-6">
                     {!! Form::label('status', __('models/clients.fields.status').':', ['class' => 'form-label']) !!}
-                    {!! Form::select('status', ['Registered' => 'Registered', 'Expired' => 'Expired'], null, ['class' => 'form-select']) !!}
+                    {!! Form::select('status', ['Active' => 'Active', 'Expired' => 'Expired'], null, ['class' => 'form-select']) !!}
                 </div>
                 <div class="col-12 mt-3">
                     {!! Form::label('comment', __('models/clients.fields.comment').':', ['class' => 'form-label']) !!}

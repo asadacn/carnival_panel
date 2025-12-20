@@ -13,6 +13,7 @@
                 <th>Cable</th>
                 <th>ONU</th>
                 <th>Comment</th>
+                <th>ISP</th>
                 <th>@lang('models/clients.fields.status')</th>
                 <th>Action</th>
 

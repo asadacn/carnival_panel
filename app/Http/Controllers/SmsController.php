@@ -42,7 +42,7 @@ class SmsController extends Controller
         }
 
         $request->validate([
-            'sms_body' => 'required|string|max:160',
+            'sms_body' => 'required|string|max:250',
             'client_status' => 'required|string',
         ]);
 

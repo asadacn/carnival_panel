@@ -18,6 +18,7 @@ class Client extends Model
     protected $fillable = [
         'name',
         'contact',
+        'isp_code',
         'secondary_contact',
         'email',
         'address',
@@ -48,6 +49,7 @@ class Client extends Model
         'address'           => 'string',
         'package'           => 'string',
         'username'          => 'string',
+        'isp_code'          => 'string',
         'password'          => 'string',
         'Onu_mac'           => 'string',
         'onu_serial'        => 'string',
@@ -73,6 +75,7 @@ class Client extends Model
         'address'           => 'nullable|string|max:255',
         'package'           => 'required|string|max:255',
         'username'          => 'nullable|string|max:255',
+        'isp_code'          => 'required|string|max:255',
         'password'          => 'nullable|string|max:255',
         'Onu_mac'           => 'nullable|string|max:255',
         'onu_serial'        => 'nullable|string|max:255',
@@ -86,7 +89,7 @@ class Client extends Model
         'billing_type'      => 'nullable|string|max:255',
         'gps_location'      => 'nullable|string|max:255',
         'expiration'        => 'nullable|date',
-        'status'            => 'required|in:Registered,Expired',
+        'status'            => 'required|in:Registered,Active,Expired',
         'comment'           => 'nullable|string|max:500',
     ];
 

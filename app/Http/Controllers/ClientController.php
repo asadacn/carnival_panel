@@ -103,7 +103,7 @@ EOT;
         $templates = SMS_TEMPALTE::all();
 
         // 🚀 NEW: Calculate all 4 dashboard stats
-        $registeredClientsCount = Client::where('status', 'Registered')->count();
+        $ActiveClientsCount = Client::where('status', 'Active')->count();
         $expiredClientsCount = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
         $freeOnuClientsCount = Client::where('onu_free', 1)->count();
         $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
@@ -111,7 +111,7 @@ EOT;
         // 🚀 NEW: Pass all 4 stats to the view
         return view('clients.index', compact(
             'templates',
-            'registeredClientsCount',
+            'ActiveClientsCount',
             'expiredClientsCount',
             'freeOnuClientsCount',
             'cableReturnedClientsCount'
@@ -288,23 +288,48 @@ EOT;
         return Excel::download(new ClientExport, 'clients.xlsx');
     }
 
-    public function import()
-    {
-        if (request()->file('clients_file')) {
-            if (Excel::import(new ClientsImport, request()->file('clients_file'))) {
-                Flash::success(__('Import Successful'));
-                return back()->with('success', 'All good!');
-            } else {
-                Flash::error(__('Import Failed'));
-                return back()->with('error', 'Import Failed');
-            }
-        } else {
-            Flash::warning(__('Please select a file first!'));
-            return back()->with('error', 'Please select a file first!');
+    // public function import()
+    // {
+    //     if (request()->file('clients_file')) {
+    //         if (Excel::import(new ClientsImport, request()->file('clients_file'))) {
+    //             Flash::success(__('Import Successful'));
+    //             return back()->with('success', 'All good!');
+    //         } else {
+    //             Flash::error(__('Import Failed'));
+    //             return back()->with('error', 'Import Failed');
+    //         }
+    //     } else {
+    //         Flash::warning(__('Please select a file first!'));
+    //         return back()->with('error', 'Please select a file first!');
+    //     }
+    // }
+public function import()
+{
+    $file = request()->file('clients_file');
+    $isp_code = request()->input('isp_code'); // carnival বা bijoy
+
+    session()->forget('debug_logs');
+
+    if ($file) {
+
+        try {
+            Excel::import(new \App\Imports\ClientsImport($isp_code), $file);
+
+            Flash::success(__('Import Successful for :isp', ['isp' => ucfirst($isp_code)]));
+            return back()->with('success', 'All good!');
+
+        } catch (\Exception $e) {
+            session()->push('debug_logs', 'Client Import Failed, isp: ' . $isp_code . ', error: ' . $e->getMessage());
+
+            Flash::error(__('Import Failed for :isp', ['isp' => ucfirst($isp_code)]));
+            return back()->with('error', 'Import Failed');
         }
+
+    } else {
+        Flash::warning(__('Please select a file first!'));
+        return back()->with('error', 'Please select a file first!');
     }
-
-
+}
     public function erase()
     {
         Client::query()->truncate();

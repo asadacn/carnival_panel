@@ -69,7 +69,7 @@ class HomeController extends Controller
 
         $clients_by_package = DB::table('clients')
             ->join('packages', 'clients.package', '=', 'packages.title')
-            ->where('clients.status', 'Registered')
+            ->where('clients.status', 'Active')
             ->select(
                 'clients.package',
                 DB::raw('count(*) as total_clients'),
@@ -81,8 +81,8 @@ class HomeController extends Controller
         // --- CRITICAL ADDITION: Explicitly calculate and pass $total revenue ---
         $total = $clients_by_package->sum('total_amount');
 
-        $registered_clients = DB::table('clients')
-            ->where('status','Registered')->count();
+        $Active_clients = DB::table('clients')
+            ->where('status','Active')->count();
 
         $expiredPostpaidClients = Client::where('billing_type', 'postpaid')
             ->whereDate('expiration', '>=', $today)
@@ -132,7 +132,7 @@ class HomeController extends Controller
             'clients' => $clients,
             'clients_by_package' => $clients_by_package,
             'package' => $package,
-            'registered_clients' => $registered_clients,
+            'Active_clients' => $Active_clients,
             'expiring_soon' => $expiring_soon,
             'expired_today' => $expired_today,
             'expired_this_month' => $expired_this_month,
