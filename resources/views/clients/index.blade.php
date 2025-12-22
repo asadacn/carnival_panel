@@ -234,12 +234,21 @@
                 columns: [
                     { data: null, defaultContent: '', orderable: false, searchable: false }, // Checkbox
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', searchable: false, orderable: false },
-                    {
+                   {
                         data: 'username',
                         name: 'username',
-                        // Optimized for rendering link
                         createdCell: function (td, cellData, rowData) {
-                             $(td).html(`<a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid=${rowData.username}" target="_blank">${cellData}</a>`);
+                            let url = '';
+
+                            // ISP অনুযায়ী লিংকের কন্ডিশন
+                            if (rowData.isp_code === 'bijoy') {
+                                url = `https://selfcare.bijoy.net/pay/${rowData.username}`;
+                            } else {
+                                // ডিফল্ট অথবা Carnival-এর জন্য আগের লিংক
+                                url = `https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid=${rowData.username}`;
+                            }
+
+                            $(td).html(`<a href="${url}" target="_blank">${cellData}</a>`);
                         }
                     },
                     { data: 'name', name: 'name' },

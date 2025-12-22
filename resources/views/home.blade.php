@@ -342,7 +342,19 @@
 
                                             <td><i data-lucide="user" style="width:14px;height:14px" class="me-1"></i>  {{ $client->name }}</td>
 
-                                            <td><a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" class="text-primary fw-bold">{{ $client->username }}</a></td>
+                                          <td>
+                                            @if($client->isp_code === 'bijoy')
+                                                {{-- Bijoy ISP এর জন্য লিংক --}}
+                                                <a href="https://selfcare.bijoy.net/pay/" target="_blank" class="text-primary fw-bold">
+                                                    {{ $client->username }}
+                                                </a>
+                                            @else
+                                                {{-- ডিফল্ট অথবা Carnival ISP এর জন্য লিংক --}}
+                                                <a href="https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid={{ $client->username }}" target="_blank" class="text-primary fw-bold">
+                                                    {{ $client->username }}
+                                                </a>
+                                            @endif
+                                        </td>
 
                                             <td><span class="badge bg-info text-dark">{{ $client->address ?? '-' }}</span></td>
 
