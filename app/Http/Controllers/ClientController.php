@@ -85,9 +85,20 @@ EOT;
                 })
                 ->rawColumns(['action'])
                 ->editColumn('expiration', function ($row) {
-                    if (!$row->expiration) return '-';
-                    $dt = optional($row->expiration)->copy()->setTimezone('Asia/Dhaka');
-                    return $dt ? $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans() : '-';
+                    if (empty($row->expiration)) return '-';
+
+                    try {
+                        // Ensure it's a Carbon instance
+                        $dt = $row->expiration instanceof \Carbon\Carbon
+                            ? $row->expiration
+                            : \Carbon\Carbon::parse($row->expiration);
+
+                        // Convert to Asia/Dhaka timezone
+                        $dt = $dt->copy()->setTimezone('Asia/Dhaka');
+                        return $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans();
+                    } catch (\Exception $e) {
+                        return '-';
+                    }
                 })
                 ->editColumn('isp_code', function ($row) {
                     return ucfirst($row->isp_code);

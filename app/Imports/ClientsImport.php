@@ -87,9 +87,14 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             $username = trim((string) $username);
 
             // 2. Expiration
-            $expiration = $this->parseExpiration(
-                $this->resolveField($row, $config['expiration_keys'])
-            );
+            $rawExpiration = $this->resolveField($row, $config['expiration_keys']);
+            $expiration = $this->parseExpiration($rawExpiration);
+
+            // DEBUG: Log missing expiration for active clients
+            if (empty($expiration) && !empty($rawExpiration)) {
+                // Value exists in file but couldn't be parsed
+                \Log::warning("[{$this->isp_code}] Failed to parse expiration for {$username}: {$rawExpiration}");
+            }
 
             // 3. Status
             $status = $this->normalizeStatus((string)($row[$config['status_key']] ?? ''));
@@ -223,13 +228,54 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
     protected function parseExpiration(mixed $value): ?\DateTime
     {
         if (empty($value)) return null;
+
+        // Trim whitespace
+        $value = is_string($value) ? trim($value) : $value;
+        if (empty($value)) return null;
+
         try {
-            return is_numeric($value)
-                ? Date::excelToDateTimeObject($value)
-                : Carbon::parse($value)->toDateTime();
-        } catch (\Exception) {
+            if (is_numeric($value)) {
+                // Excel numeric date format
+                return Date::excelToDateTimeObject($value);
+            } elseif (is_string($value)) {
+                // Try various date formats
+                $parsed = null;
+
+                // Try common formats
+                $formats = [
+                    'Y-m-d',
+                    'd-m-Y',
+                    'm-d-Y',
+                    'Y/m/d',
+                    'd/m/Y',
+                    'm/d/Y',
+                    'Y-m-d H:i:s',
+                    'd-m-Y H:i:s',
+                    'm-d-Y H:i:s',
+                ];
+
+                foreach ($formats as $format) {
+                    try {
+                        $parsed = \DateTime::createFromFormat($format, $value);
+                        if ($parsed) break;
+                    } catch (\Exception) {
+                        continue;
+                    }
+                }
+
+                // Fallback to Carbon::parse if specific formats didn't work
+                if (!$parsed) {
+                    $parsed = Carbon::parse($value);
+                }
+
+                return $parsed instanceof \DateTime ? $parsed : $parsed->toDateTime();
+            }
+        } catch (\Exception $e) {
+            \Log::warning("Failed to parse expiration date: {$value} - " . $e->getMessage());
             return null;
         }
+
+        return null;
     }
 
     protected function normalizeStatus(string $raw): string
