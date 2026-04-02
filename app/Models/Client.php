@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 class Client extends Model
 {
     use SoftDeletes, HasFactory;
@@ -93,15 +93,61 @@ class Client extends Model
         'comment'           => 'nullable|string|max:500',
     ];
 
-    /**
-     * Custom formatted expiration date for UI
-     */
-    public function getExpirationFormattedAttribute()
+    // ── Scopes ────────────────────────────────────────────────────────────────
+
+    /** Filter by ISP: Client::isp('carnival')->get() */
+    public function scopeIsp($query, string $isp_code)
+    {
+        return $query->where('isp_code', strtolower($isp_code));
+    }
+
+    /** Client::active()->get() */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'Active');
+    }
+
+    /** Client::expired()->get() */
+    public function scopeExpired($query)
+    {
+        return $query->where('status', 'Expired');
+    }
+
+    /** Client::registered()->get() */
+    public function scopeRegistered($query)
+    {
+        return $query->where('status', 'Registered');
+    }
+
+    /** Clients expiring within N days: Client::expiringWithin(7)->get() */
+    public function scopeExpiringWithin($query, int $days)
+    {
+        return $query->whereBetween('expiration', [now(), now()->addDays($days)]);
+    }
+
+    // ── Accessors ─────────────────────────────────────────────────────────────
+
+    /** e.g. "25-12-2025 [in 3 days]" */
+    public function getExpirationFormattedAttribute(): ?string
     {
         if (!empty($this->attributes['expiration'])) {
             $date = Carbon::parse($this->attributes['expiration']);
             return $date->format('d-m-Y') . ' [' . $date->diffForHumans() . ']';
         }
         return null;
+    }
+
+    /** true if expiration is in the past */
+    public function getIsExpiredAttribute(): bool
+    {
+        return $this->expiration && $this->expiration->isPast();
+    }
+
+    /** true if expiring within 7 days */
+    public function getIsExpiringSoonAttribute(): bool
+    {
+        return $this->expiration
+            && !$this->expiration->isPast()
+            && $this->expiration->diffInDays(now()) <= 7;
     }
 }

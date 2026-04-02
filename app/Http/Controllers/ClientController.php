@@ -23,7 +23,7 @@ use Yajra\DataTables\DataTables;
 
 class ClientController extends AppBaseController
 {
-    /** @var  ClientRepository */
+    /** @var ClientRepository */
     private $clientRepository;
 
     public function __construct(ClientRepository $clientRepo)
@@ -33,55 +33,48 @@ class ClientController extends AppBaseController
 
     /**
      * Display a listing of the Client.
-     *
-     * @param Request $request
-     *
-     * @return Response
      */
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // OPTIMIZATION: Use Client::query() to enable server-side processing
             $data = Client::query();
 
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($client) {
-                    $name = addslashes($client->name);
+                    $name    = addslashes($client->name);
                     $contact = addslashes($client->contact);
 
                     $viewUrl = route('clients.show', $client->id);
                     $editUrl = route('clients.edit', $client->id);
 
-                    // UI/UX FIX: Use a dropdown for less common actions
                     $btn = <<<EOT
                     <div class="btn-group">
                         <a href="{$editUrl}" class="btn btn-warning btn-sm" title="Edit">
                             <i class="fa fa-edit"></i>
                         </a>
-
                         <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item" href="{$viewUrl}" title="View">
+                                <a class="dropdown-item" href="{$viewUrl}">
                                     <i class="fa fa-eye me-2"></i> View
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#" onclick="showQr({$client->id}, '{$name}', '{$contact}')" title="QR Code & WhatsApp">
+                                <a class="dropdown-item" href="#" onclick="showQr({$client->id}, '{$name}', '{$contact}')">
                                     <i class="fas fa-qrcode me-2"></i> Show QR
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" onclick="setSmsId({$client->id})" data-bs-target="#smsModal" title="Send SMS">
+                                <a class="dropdown-item" href="#" data-bs-toggle="modal" onclick="setSmsId({$client->id})" data-bs-target="#smsModal">
                                     <i class="fa fa-envelope me-2"></i> Send SMS
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item text-danger" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}" title="Delete">
+                                <a class="dropdown-item text-danger" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}">
                                     <i class="fa fa-trash me-2"></i> Delete
                                 </a>
                             </li>
@@ -91,24 +84,24 @@ EOT;
                     return $btn;
                 })
                 ->rawColumns(['action'])
-                ->editColumn('expiration', function($row) {
-                    if (! $row->expiration) return '-';
-                    // Using optional helper for safe access
+                ->editColumn('expiration', function ($row) {
+                    if (!$row->expiration) return '-';
                     $dt = optional($row->expiration)->copy()->setTimezone('Asia/Dhaka');
                     return $dt ? $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans() : '-';
+                })
+                ->editColumn('isp_code', function ($row) {
+                    return ucfirst($row->isp_code);
                 })
                 ->make(true);
         }
 
         $templates = SMS_TEMPALTE::all();
 
-        // 🚀 NEW: Calculate all 4 dashboard stats
-        $ActiveClientsCount = Client::where('status', 'Active')->count();
-        $expiredClientsCount = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
-        $freeOnuClientsCount = Client::where('onu_free', 1)->count();
+        $ActiveClientsCount        = Client::where('status', 'Active')->count();
+        $expiredClientsCount       = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
+        $freeOnuClientsCount       = Client::where('onu_free', 1)->count();
         $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
 
-        // 🚀 NEW: Pass all 4 stats to the view
         return view('clients.index', compact(
             'templates',
             'ActiveClientsCount',
@@ -120,8 +113,6 @@ EOT;
 
     /**
      * Show the form for creating a new Client.
-     *
-     * @return Response
      */
     public function create()
     {
@@ -129,24 +120,20 @@ EOT;
         return view('clients.create', compact('packages'));
     }
 
-
+    /**
+     * Show the import form.
+     */
     public function create_import()
     {
         return view('clients.import');
     }
 
-
     /**
      * Store a newly created Client in storage.
-     *
-     * @param CreateClientRequest $request
-     *
-     * @return Response
      */
     public function store(CreateClientRequest $request)
     {
-        $input = $request->all();
-
+        $input  = $request->all();
         $client = $this->clientRepository->create($input);
 
         Flash::success(__('messages.saved', ['model' => __('models/clients.singular')]));
@@ -156,10 +143,6 @@ EOT;
 
     /**
      * Display the specified Client.
-     *
-     * @param int $id
-     *
-     * @return Response
      */
     public function show($id)
     {
@@ -167,7 +150,6 @@ EOT;
 
         if (empty($client)) {
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
-
             return redirect(route('clients.index'));
         }
 
@@ -176,19 +158,14 @@ EOT;
 
     /**
      * Show the form for editing the specified Client.
-     *
-     * @param int $id
-     *
-     * @return Response
      */
     public function edit($id)
     {
-        $client = $this->clientRepository->find($id);
+        $client   = $this->clientRepository->find($id);
         $packages = Package::all();
 
         if (empty($client)) {
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
-
             return redirect(route('clients.index'));
         }
 
@@ -197,11 +174,6 @@ EOT;
 
     /**
      * Update the specified Client in storage.
-     *
-     * @param int $id
-     * @param UpdateClientRequest $request
-     *
-     * @return Response
      */
     public function update($id, UpdateClientRequest $request)
     {
@@ -209,11 +181,10 @@ EOT;
 
         if (empty($client)) {
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
-
             return redirect(route('clients.index'));
         }
 
-        $client = $this->clientRepository->update($request->all(), $id);
+        $this->clientRepository->update($request->all(), $id);
 
         Flash::success(__('messages.updated', ['model' => __('models/clients.singular')]));
 
@@ -222,44 +193,33 @@ EOT;
 
     /**
      * Remove the specified Client from storage with password verification.
-     *
-     * @param int $id
-     *
-     * @throws \Exception
-     *
-     * @return Response | \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {
-        // Check for AJAX request to perform password verification
         if (request()->ajax() || request()->wantsJson()) {
             $password = request('password');
 
-            // 1. Password Presence Check
             if (!$password) {
-                 return response()->json([
-                    'status' => 'error',
+                return response()->json([
+                    'status'  => 'error',
                     'message' => 'Password is required for verification.'
-                ], 400); // Bad Request
+                ], 400);
             }
 
-            // 2. Password Match Check
-            $user = Auth::user();
-            if (!Hash::check($password, $user->password)) {
+            if (!Hash::check($password, Auth::user()->password)) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Password verification failed. The provided password is incorrect.'
-                ], 401); // Unauthorized
+                    'status'  => 'error',
+                    'message' => 'Password verification failed.'
+                ], 401);
             }
         }
 
-        // 3. Find Client
         $client = $this->clientRepository->find($id);
 
         if (empty($client)) {
             if (request()->ajax() || request()->wantsJson()) {
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => __('messages.not_found', ['model' => __('models/clients.singular')])
                 ], 404);
             }
@@ -267,73 +227,98 @@ EOT;
             return redirect(route('clients.index'));
         }
 
-        // 4. Delete Client
         $this->clientRepository->delete($id);
 
-        // 5. Return Response
         if (request()->ajax() || request()->wantsJson()) {
             return response()->json([
-                'status' => 'success',
+                'status'  => 'success',
                 'message' => __('messages.deleted', ['model' => __('models/clients.singular')])
             ]);
         }
 
-        // Fallback for non-AJAX requests
         Flash::success(__('messages.deleted', ['model' => __('models/clients.singular')]));
         return redirect(route('clients.index'));
     }
 
+    /**
+     * Export all clients to Excel.
+     */
     public function export()
     {
         return Excel::download(new ClientExport, 'clients.xlsx');
     }
 
-    // public function import()
-    // {
-    //     if (request()->file('clients_file')) {
-    //         if (Excel::import(new ClientsImport, request()->file('clients_file'))) {
-    //             Flash::success(__('Import Successful'));
-    //             return back()->with('success', 'All good!');
-    //         } else {
-    //             Flash::error(__('Import Failed'));
-    //             return back()->with('error', 'Import Failed');
-    //         }
-    //     } else {
-    //         Flash::warning(__('Please select a file first!'));
-    //         return back()->with('error', 'Please select a file first!');
-    //     }
-    // }
-public function import()
-{
-    $file = request()->file('clients_file');
-    $isp_code = request()->input('isp_code'); // carnival বা bijoy
+    /**
+     * Import clients from Excel file.
+     * Tracks: new inserts, changed fields, skipped rows.
+     */
+    public function import(Request $request)
+    {
+        // 1. Validate file and ISP
+        $request->validate([
+            'clients_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+            'isp_code'     => 'required|in:carnival,bijoy,icc',
+        ]);
 
-    session()->forget('debug_logs');
+        $file     = $request->file('clients_file');
+        $isp_code = strtolower(trim($request->input('isp_code')));
 
-    if ($file) {
+        // 2. Clear all previous session logs before import
+        session()->forget([
+            'debug_logs',
+            'import_errors',
+            'import_changes',
+            'import_new',
+        ]);
 
         try {
-            Excel::import(new \App\Imports\ClientsImport($isp_code), $file);
+            Excel::import(new ClientsImport($isp_code), $file);
 
-            Flash::success(__('Import Successful for :isp', ['isp' => ucfirst($isp_code)]));
-            return back()->with('success', 'All good!');
+            // 3. Collect results from session (set by ClientsImport)
+            $errors  = session('import_errors', []);
+            $changes = session('import_changes', []);
+            $newRows = session('import_new', []);
+
+            // 4. Summary flash message
+            Flash::success(sprintf(
+                'Import done for %s — %d new, %d field(s) updated, %d skipped.',
+                ucfirst($isp_code),
+                count($newRows),
+                count($changes),
+                count($errors)
+            ));
+
+            // 5. Pass all result data back to the view
+            return back()->with([
+                'isp_code'       => $isp_code,
+                'import_errors'  => $errors,
+                'import_changes' => $changes,
+                'import_new'     => $newRows,
+            ]);
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            // Row-level Excel validation failures
+            $failures = collect($e->failures())->map(fn($f) =>
+                "Row {$f->row()}: " . implode(', ', $f->errors())
+            )->toArray();
+
+            Flash::error('Import failed — validation errors found.');
+            return back()->with('import_errors', $failures);
 
         } catch (\Exception $e) {
-            session()->push('debug_logs', 'Client Import Failed, isp: ' . $isp_code . ', error: ' . $e->getMessage());
-
-            Flash::error(__('Import Failed for :isp', ['isp' => ucfirst($isp_code)]));
-            return back()->with('error', 'Import Failed');
+            // Fatal error — bad file, wrong format, DB error etc.
+            Flash::error('Import failed: ' . $e->getMessage());
+            return back()->with('import_error_fatal', $e->getMessage());
         }
-
-    } else {
-        Flash::warning(__('Please select a file first!'));
-        return back()->with('error', 'Please select a file first!');
     }
-}
+
+    /**
+     * Truncate all clients.
+     */
     public function erase()
     {
         Client::query()->truncate();
-        flash('Truncate Successful')->success();
+        Flash::success('Truncate Successful');
         return back();
     }
 }
