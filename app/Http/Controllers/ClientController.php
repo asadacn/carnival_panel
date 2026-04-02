@@ -102,12 +102,20 @@ EOT;
         $freeOnuClientsCount       = Client::where('onu_free', 1)->count();
         $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
 
+        // ISP-wise active clients count
+        $ispWiseActiveClients = Client::where('status', 'Active')
+            ->selectRaw('isp_code, COUNT(*) as count')
+            ->groupBy('isp_code')
+            ->get()
+            ->pluck('count', 'isp_code');
+
         return view('clients.index', compact(
             'templates',
             'ActiveClientsCount',
             'expiredClientsCount',
             'freeOnuClientsCount',
-            'cableReturnedClientsCount'
+            'cableReturnedClientsCount',
+            'ispWiseActiveClients'
         ));
     }
 
@@ -238,6 +246,56 @@ EOT;
 
         Flash::success(__('messages.deleted', ['model' => __('models/clients.singular')]));
         return redirect(route('clients.index'));
+    }
+
+    /**
+     * Get ISP-wise statistics - API endpoint for AJAX requests
+     */
+    public function getIspStatistics(Request $request)
+    {
+        $ispCode = $request->input('isp_code');
+
+        if (!$ispCode) {
+            return response()->json(['error' => 'ISP code is required'], 400);
+        }
+
+        // Get all counts for the specific ISP
+        $ispClientsActive = Client::where('isp_code', $ispCode)
+            ->where('status', 'Active')
+            ->count();
+
+        $ispClientsTotal = Client::where('isp_code', $ispCode)
+            ->count();
+
+        $ispClientsExpired = Client::where('isp_code', $ispCode)
+            ->where(function($q) {
+                $q->where('status', '!=', 'Active')
+                  ->orWhereNotNull('expiration')
+                  ->where('expiration', '<', now());
+            })
+            ->count();
+
+        $ispClientsFreeONU = Client::where('isp_code', $ispCode)
+            ->where('onu_free', 1)
+            ->count();
+
+        $ispClientsCableReturned = Client::where('isp_code', $ispCode)
+            ->where('cable_returned', 1)
+            ->count();
+
+        // Calculate market share
+        $totalActive = Client::where('status', 'Active')->count();
+        $percentage = $totalActive > 0 ? round(($ispClientsActive / $totalActive) * 100, 1) : 0;
+
+        return response()->json([
+            'isp_code' => $ispCode,
+            'active_clients' => $ispClientsActive,
+            'total_clients' => $ispClientsTotal,
+            'expired_clients' => $ispClientsExpired,
+            'free_onu_clients' => $ispClientsFreeONU,
+            'cable_returned_clients' => $ispClientsCableReturned,
+            'market_share_percentage' => $percentage
+        ]);
     }
 
     /**

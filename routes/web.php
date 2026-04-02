@@ -34,6 +34,9 @@ Auth::routes();
 
 
 Route::middleware(['auth'])->group(function () {
+// ISP Statistics API
+Route::get('clients/stats/isp', [ClientController::class, 'getIspStatistics'])->name('clients.isp.stats');
+
 Route::resource('clients', ClientController::class);
 //Clients Import Export
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
