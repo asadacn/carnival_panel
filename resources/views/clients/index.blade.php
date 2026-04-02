@@ -70,6 +70,71 @@
                 </div>
             </div>
 
+            <!-- Billing Statistics Section -->
+            <div class="row mt-4">
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Total outstanding bills amount">
+                        <div class="card-icon bg-warning">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Total Due</h4>
+                            </div>
+                            <div class="card-body">
+                                <span class="display-stat-number" style="font-size: 2rem;">৳ {{ number_format($totalDueAmount, 0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Number of unpaid bills">
+                        <div class="card-icon bg-danger">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Unpaid Bills</h4>
+                            </div>
+                            <div class="card-body">
+                                <span class="display-stat-number">{{ $unpaidBillsCount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Number of overdue bills">
+                        <div class="card-icon bg-secondary">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Overdue Bills</h4>
+                            </div>
+                            <div class="card-body">
+                                <span class="display-stat-number">{{ $overdueBillsCount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
+                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Manage bills and payments">
+                        <div class="card-icon bg-info">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="card-wrap">
+                            <div class="card-header">
+                                <h4>Manage Bills</h4>
+                            </div>
+                            <div class="card-body">
+                                <a href="{{ route('due-bills.index') }}" class="btn btn-sm btn-info w-100">
+                                    <i class="fas fa-arrow-right"></i> View All
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             <!-- ISP-wise Active Clients Section -->
             @if($ispWiseActiveClients->count() > 0)
             <div class="row mt-5">
@@ -189,19 +254,15 @@
             /* ========== DASHBOARD SECTION TOGGLE ========== */
 
             .dashboard-section {
-                max-height: 2000px;
-                overflow: hidden;
-                transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                            opacity 0.6s ease;
+                max-height: none;
+                overflow: visible;
                 opacity: 1;
                 margin-bottom: 24px;
+                display: block !important;
             }
 
             .dashboard-section.hidden {
-                max-height: 0;
-                opacity: 0;
-                margin-bottom: 0;
-                visibility: hidden;
+                display: none !important;
             }
 
             #privacy-toggle-btn {
@@ -602,6 +663,10 @@
                            class="btn btn-sm btn-warning">Bulk SMS <i class="fas fa-envelope"></i> <span id="bulk_count"
                             class="badge badge-success p-1"></span> </a>
 
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#quickBillModal" id="quick-bill-btn" style="display: none;" title="Create quick due bill for current month">
+                            <i class="fas fa-receipt"></i> Quick Bill <span id="quick_bill_count" class="badge badge-light p-1"></span>
+                        </button>
+
                         <div class="btn-group">
                             <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-cogs"></i> Tools
@@ -632,6 +697,7 @@
                                     <th>Comment</th>
                                     <th>ISP</th>
                                     <th>@lang('models/clients.fields.status')</th>
+                                    <th>Total Due</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -725,6 +791,52 @@
         </div>
     </div>
 
+    <div class="modal fade" id="quickBillModal" tabindex="-1" aria-labelledby="quickBillModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quickBillModalLabel">Quick Due Bill - Current Month</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quick_bill_form">
+                        <input type="hidden" id="quick_client_id">
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Client:</strong></label>
+                            <p id="quick_client_name" class="text-muted mb-0"></p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Month/Year:</strong></label>
+                            <p id="quick_month_year" class="text-muted mb-0">{{ now()->format('F Y') }}</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quick_amount" class="form-label">Amount (৳) <span class="text-danger">*</span></label>
+                            <input type="number" id="quick_amount" class="form-control" placeholder="Enter amount" step="0.01" min="0.01" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quick_notes" class="form-label">Notes (Optional)</label>
+                            <textarea id="quick_notes" class="form-control" rows="2" placeholder="Add any notes..."></textarea>
+                        </div>
+
+                        <div class="alert alert-info small">
+                            <i class="fas fa-info-circle"></i> Bill will be created for <strong>{{ now()->format('F Y') }}</strong> with today's date as bill date.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="createQuickBill()">
+                        <i class="fas fa-check"></i> Create Bill
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 
@@ -734,43 +846,19 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script>
-        // ========== PRIVACY TOGGLE FUNCTIONALITY ==========
+        // ========== PRIVACY TOGGLE FUNCTIONALITY - DISABLED ==========
+        // Dashboard always shows by default
         $(document).ready(function() {
-            // Check localStorage for dashboard state
-            const dashboardState = localStorage.getItem('dashboard_hidden') === 'true';
             const $dashboardSection = $('#dashboard-section');
             const $toggleBtn = $('#privacy-toggle-btn');
-            const $toggleText = $('#privacy-toggle-text');
 
-            // Apply saved state on page load
-            if (dashboardState) {
-                $dashboardSection.addClass('hidden');
-                $toggleBtn.removeClass('btn-info').addClass('btn-secondary');
-                $toggleBtn.html('<i class="fas fa-eye"></i> <span id="privacy-toggle-text">Show Dashboard</span>');
-            }
+            // Always keep dashboard visible
+            $dashboardSection.removeClass('hidden');
 
-            // Toggle dashboard visibility
+            // Remove toggle button functionality - keep button visible but inactive
             $toggleBtn.on('click', function(e) {
                 e.preventDefault();
-
-                $dashboardSection.toggleClass('hidden');
-                const isHidden = $dashboardSection.hasClass('hidden');
-
-                // Update button appearance
-                if (isHidden) {
-                    $toggleBtn.removeClass('btn-info').addClass('btn-secondary');
-                    $toggleBtn.html('<i class="fas fa-eye"></i> Show Dashboard');
-                    localStorage.setItem('dashboard_hidden', 'true');
-
-                    // Smooth scroll to table
-                    $('html, body').animate({
-                        scrollTop: $('#clients-header').offset().top - 100
-                    }, 500);
-                } else {
-                    $toggleBtn.removeClass('btn-secondary').addClass('btn-info');
-                    $toggleBtn.html('<i class="fas fa-eye-slash"></i> Hide Dashboard');
-                    localStorage.setItem('dashboard_hidden', 'false');
-                }
+                // Do nothing - dashboard always visible
             });
         });
 
@@ -834,6 +922,13 @@
                     { data: 'comment', name: 'comment' },
                     { data: 'isp_code', name: 'isp_code' },
                     { data: 'status', name: 'status' },
+                    {
+                        data: 'total_due',
+                        name: 'total_due',
+                        searchable: false,
+                        orderable: false,
+                        render: (data) => data
+                    },
                     { data: 'action', name: 'action', searchable: false, orderable: false },
                 ],
                 columnDefs: [
@@ -870,6 +965,9 @@
                 const count = table.rows({ selected: true }).count();
                 $('#bulk_count').text(count);
                 count > 0 ? $('#bulk_btn').show('fast') : $('#bulk_btn').hide('fast');
+
+                // Also update quick bill count
+                updateQuickBillCount();
             });
 
         });
@@ -1239,6 +1337,215 @@
             var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+        });
+
+        // ========== QUICK DUE BILL FUNCTIONALITY ==========
+
+        // Show quick bill modal for a client
+        function showQuickBillModal(clientId, clientName) {
+            document.getElementById('quick_client_id').value = clientId;
+            document.getElementById('quick_client_name').innerText = clientName;
+            document.getElementById('quick_amount').value = '';
+            document.getElementById('quick_notes').value = '';
+
+            // Fetch package price for this client
+            $.ajax({
+                url: `{{ route('clients.package-price', ':id') }}`.replace(':id', clientId),
+                type: 'GET',
+                success: function(response) {
+                    if (response.success && response.price) {
+                        document.getElementById('quick_amount').value = response.price;
+                        console.log(`Package "${response.package_name}" price: ৳${response.price}`);
+                    }
+                },
+                error: function(err) {
+                    console.log('Could not fetch package price');
+                }
+            });
+
+            var quickBillModal = new bootstrap.Modal(document.getElementById('quickBillModal'));
+            quickBillModal.show();
+        }
+
+        // Create quick bill with auto-filled current month
+        function createQuickBill() {
+            const clientId = document.getElementById('quick_client_id').value;
+            const amount = document.getElementById('quick_amount').value;
+            const notes = document.getElementById('quick_notes').value;
+
+            if (!clientId || !amount) {
+                Swal.fire('Error', 'Please fill in all required fields', 'error');
+                return;
+            }
+
+            Swal.showLoading();
+
+            // Today's date for bill_date and calculate due_date (30 days later)
+            const today = new Date();
+            const billDate = today.toISOString().split('T')[0];
+            const dueDate = new Date(today.getTime() + 30*24*60*60*1000).toISOString().split('T')[0];
+
+            const currentMonth = today.getMonth() + 1;
+            const currentYear = today.getFullYear();
+
+            $.ajax({
+                url: '{{ route("due-bills.store") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    client_id: clientId,
+                    month: currentMonth,
+                    year: currentYear,
+                    bill_date: billDate,
+                    due_date: dueDate,
+                    amount: amount,
+                    notes: notes
+                },
+                success: function(response) {
+                    Swal.hideLoading();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Bill Created!',
+                        text: `Due bill for current month created successfully.`,
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        bootstrap.Modal.getInstance(document.getElementById('quickBillModal')).hide();
+                        // Reload the table
+                        $('#clients').DataTable().ajax.reload();
+                    });
+                },
+                error: function(xhr) {
+                    Swal.hideLoading();
+                    let errorMsg = 'Failed to create bill';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', errorMsg, 'error');
+                }
+            });
+        }
+
+        // Add quick bill button to action cells
+        function addQuickBillOption(rowIndex, clientId, clientName) {
+            // This will be called from the DataTable rendering
+        }
+
+        // Update quick bill button count in toolbar
+        function updateQuickBillCount() {
+            const count = $('#bulk_count').text();
+            $('#quick_bill_count').text(count);
+            if (parseInt(count) > 0) {
+                $('#quick-bill-btn').show('fast');
+            } else {
+                $('#quick-bill-btn').hide('fast');
+            }
+        }
+
+        // Handle bulk quick bill creation
+        function createQuickBillForSelected() {
+            const table = $('#clients').DataTable();
+            const selectedData = table.rows({ selected: true }).data().toArray();
+
+            if (selectedData.length === 0) {
+                Swal.fire('Error', 'Please select at least one client', 'error');
+                return;
+            }
+
+            if (selectedData.length === 1) {
+                showQuickBillModal(selectedData[0].id, selectedData[0].name);
+            } else {
+                Swal.fire({
+                    title: 'Create Bills for Multiple Clients?',
+                    text: `Create due bills for ${selectedData.length} selected clients?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Create Bills',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        createMultipleQuickBills(selectedData);
+                    }
+                });
+            }
+        }
+
+        // Create bills for multiple clients
+        function createMultipleQuickBills(clientsData) {
+            Swal.fire({
+                title: 'Enter Amount for All Clients',
+                input: 'number',
+                inputLabel: 'Amount (৳)',
+                inputPlaceholder: 'Enter amount',
+                inputAttributes: {
+                    step: '0.01',
+                    min: '0.01'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Create Bills'
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.showLoading();
+
+                    const today = new Date();
+                    const billDate = today.toISOString().split('T')[0];
+                    const dueDate = new Date(today.getTime() + 30*24*60*60*1000).toISOString().split('T')[0];
+                    const currentMonth = today.getMonth() + 1;
+                    const currentYear = today.getFullYear();
+
+                    let completed = 0;
+                    let failed = 0;
+
+                    clientsData.forEach(function(client) {
+                        $.ajax({
+                            url: '{{ route("due-bills.store") }}',
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                client_id: client.id,
+                                month: currentMonth,
+                                year: currentYear,
+                                bill_date: billDate,
+                                due_date: dueDate,
+                                amount: result.value,
+                                notes: `Bulk created on ${new Date().toLocaleDateString()}`
+                            },
+                            success: function(response) {
+                                completed++;
+                                checkBillCreationComplete(clientsData.length, completed, failed);
+                            },
+                            error: function(xhr) {
+                                failed++;
+                                checkBillCreationComplete(clientsData.length, completed, failed);
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        // Check if all bulk bill creations are complete
+        function checkBillCreationComplete(total, completed, failed) {
+            if ((completed + failed) === total) {
+                Swal.hideLoading();
+                Swal.fire({
+                    icon: failed === 0 ? 'success' : 'warning',
+                    title: 'Bills Created',
+                    text: `Successfully created ${completed} bills${failed > 0 ? `. Failed: ${failed}` : ''}`,
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    $('#clients').DataTable().ajax.reload();
+                });
+            }
+        }
+
+        // Update count on table selection/deselection
+        $(document).on('selection.dt', '#clients', function() {
+            updateQuickBillCount();
+        });
+
+        // Handle quick bill button click
+        $(document).on('click', '#quick-bill-btn', function() {
+            createQuickBillForSelected();
         });
     </script>
 

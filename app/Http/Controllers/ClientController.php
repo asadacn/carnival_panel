@@ -12,6 +12,7 @@ use Flash;
 use Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 use App\Imports\ClientsImport;
 use App\Models\Client;
@@ -41,12 +42,30 @@ class ClientController extends AppBaseController
 
             return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('total_due', function ($client) {
+                    try {
+                        $due = DB::table('due_bills')
+                            ->where('client_id', $client->id)
+                            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                            ->selectRaw('SUM(amount - paid_amount) as total')
+                            ->value('total') ?? 0;
+
+                        if ($due > 0) {
+                            return '<span class="badge bg-danger" style="font-size: 0.9rem;">৳ ' . number_format($due, 0) . '</span>';
+                        }
+                        return '<span class="text-success">✓ Paid</span>';
+                    } catch (\Exception $e) {
+                        return '-';
+                    }
+                })
                 ->addColumn('action', function ($client) {
                     $name    = addslashes($client->name);
                     $contact = addslashes($client->contact);
 
                     $viewUrl = route('clients.show', $client->id);
                     $editUrl = route('clients.edit', $client->id);
+                    $billsUrl = route('clients.due-bills', $client->id);
+                    $addPaymentUrl = route('due-bill-payments.create', ['client_id' => $client->id]);
 
                     $btn = <<<EOT
                     <div class="btn-group">
@@ -74,6 +93,22 @@ class ClientController extends AppBaseController
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
+                                <a class="dropdown-item" href="#" onclick="showQuickBillModal({$client->id}, '{$name}')">
+                                    <i class="fas fa-receipt me-2"></i> Quick Bill
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{$billsUrl}">
+                                    <i class="fas fa-receipt me-2"></i> View Bills
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{$addPaymentUrl}">
+                                    <i class="fas fa-money-bill-wave me-2"></i> Add Payment
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
                                 <a class="dropdown-item text-danger" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}">
                                     <i class="fa fa-trash me-2"></i> Delete
                                 </a>
@@ -83,7 +118,7 @@ class ClientController extends AppBaseController
 EOT;
                     return $btn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'total_due'])
                 ->editColumn('expiration', function ($row) {
                     if (empty($row->expiration)) return '-';
 
@@ -113,6 +148,21 @@ EOT;
         $freeOnuClientsCount       = Client::where('onu_free', 1)->count();
         $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
 
+        // Billing statistics
+        $totalDueAmount = DB::table('due_bills')
+            ->where('status', '!=', 'paid')
+            ->selectRaw('SUM(amount - paid_amount) as total')
+            ->value('total') ?? 0;
+
+        $unpaidBillsCount = DB::table('due_bills')
+            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+            ->count();
+
+        $overdueBillsCount = DB::table('due_bills')
+            ->where('due_date', '<', now()->toDateString())
+            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+            ->count();
+
         // ISP-wise active clients count
         $ispWiseActiveClients = Client::where('status', 'Active')
             ->selectRaw('isp_code, COUNT(*) as count')
@@ -126,6 +176,9 @@ EOT;
             'expiredClientsCount',
             'freeOnuClientsCount',
             'cableReturnedClientsCount',
+            'totalDueAmount',
+            'unpaidBillsCount',
+            'overdueBillsCount',
             'ispWiseActiveClients'
         ));
     }
@@ -145,6 +198,35 @@ EOT;
     public function create_import()
     {
         return view('clients.import');
+    }
+
+    /**
+     * Get client's package price via AJAX
+     */
+    public function getPackagePrice($clientId)
+    {
+        try {
+            $client = Client::findOrFail($clientId);
+            $package = Package::where('title', $client->package)->first();
+
+            if ($package) {
+                return response()->json([
+                    'success' => true,
+                    'price' => $package->price,
+                    'package_name' => $package->title
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Package not found'
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

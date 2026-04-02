@@ -150,4 +150,48 @@ class Client extends Model
             && !$this->expiration->isPast()
             && $this->expiration->diffInDays(now()) <= 7;
     }
+
+    // ── Billing Relationships ─────────────────────────────────────────────────
+
+    /**
+     * Client has many DueBills
+     */
+    public function dueBills()
+    {
+        return $this->hasMany(DueBill::class);
+    }
+
+    /**
+     * Client has many DueBillPayments
+     */
+    public function dueBillPayments()
+    {
+        return $this->hasMany(DueBillPayment::class);
+    }
+
+    /**
+     * Get client's unpaid bills
+     */
+    public function unpaidDueBills()
+    {
+        return $this->hasMany(DueBill::class)->unpaid();
+    }
+
+    /**
+     * Get client's overdue bills
+     */
+    public function overdueDueBills()
+    {
+        return $this->hasMany(DueBill::class)->overdue();
+    }
+
+    /**
+     * Get total due amount
+     */
+    public function getTotalDueAttribute()
+    {
+        return $this->dueBills()
+            ->unpaid()
+            ->sum(\DB::raw('amount - paid_amount'));
+    }
 }

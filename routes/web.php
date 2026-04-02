@@ -6,6 +6,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HotspotZoneController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\HotspotClientController;
+use App\Http\Controllers\DueBillController;
+use App\Http\Controllers\DueBillPaymentController;
 use App\Models\CardSeller;
 use App\Models\Client;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +35,9 @@ Auth::routes();
 
 
 
+// AJAX endpoints for client data (outside auth to test)
+Route::get('ajax/clients/{clientId}/bills', [App\Http\Controllers\DueBillController::class, 'getBillsForClient'])->name('ajax.client.bills');
+
 Route::middleware(['auth'])->group(function () {
 // ISP Statistics API
 Route::get('clients/stats/isp', [ClientController::class, 'getIspStatistics'])->name('clients.isp.stats');
@@ -43,6 +48,9 @@ Route::get('client/export/', [ClientController::class, 'export'])->name('clients
 Route::post('client/import/', [ClientController::class, 'import'])->name('clients.import');
 Route::get('client/import/create', [ClientController::class, 'create_import'])->name('clients.import.create');
 Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.erase')->middleware('password.confirm');
+
+// Get client package price
+Route::get('clients/{clientId}/package-price', [ClientController::class, 'getPackagePrice'])->name('clients.package-price');
 
 //Hotspot Import Export
 Route::get('hotspot/export/', [HotspotZoneController::class, 'export'])->name('hotspots.export');
@@ -96,6 +104,16 @@ Route::get('/tickets', TicketManager::class)->name('tickets.live');
 
 Route::get('/technicians', TechnicianManager::class)->name('technicians');
 
+// Due Bills Management
+Route::resource('due-bills', App\Http\Controllers\DueBillController::class);
+Route::get('due-bills/dashboard', [App\Http\Controllers\DueBillController::class, 'dashboard'])->name('due-bills.dashboard');
+Route::get('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController::class, 'markAsPaid'])->name('due-bills.mark-paid');
+Route::get('clients/{id}/due-bills', [App\Http\Controllers\DueBillController::class, 'clientBills'])->name('clients.due-bills');
+
+// Due Bill Payments Management
+Route::resource('due-bill-payments', App\Http\Controllers\DueBillPaymentController::class);
+Route::get('due-bill-payments/report', [App\Http\Controllers\DueBillPaymentController::class, 'report'])->name('due-bill-payments.report');
+Route::get('clients/{id}/payment-history', [App\Http\Controllers\DueBillPaymentController::class, 'clientPaymentHistory'])->name('clients.payment-history');
 
 Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPassword']);
 });
