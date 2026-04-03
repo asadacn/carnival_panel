@@ -4,265 +4,191 @@
 @endsection
 @section('content')
     <section class="section">
-        <!-- Dashboard Section - Can be hidden for privacy -->
+        <!-- Dashboard Section -->
         <div id="dashboard-section" class="dashboard-section">
-            <!-- Main Statistics Section -->
-            <div class="row">
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Total number of active clients">
-                        <div class="card-icon bg-primary">
-                            <i class="fas fa-user-check"></i>
-                        </div>
+            <!-- All Stats in one compact row -->
+            <div class="row mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Total number of active clients">
+                        <div class="card-icon bg-primary mini-icon"><i class="fas fa-user-check"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Active Clients</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number">{{ $ActiveClientsCount }}</span>
-                            </div>
+                            <div class="card-header"><h4>Active Clients</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $ActiveClientsCount }}</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Clients with expired subscriptions">
-                        <div class="card-icon bg-danger">
-                            <i class="fas fa-user-clock"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients with expired subscriptions">
+                        <div class="card-icon bg-danger mini-icon"><i class="fas fa-user-clock"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Expired Clients</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number">{{ $expiredClientsCount }}</span>
-                            </div>
+                            <div class="card-header"><h4>Expired Clients</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $expiredClientsCount }}</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Clients with free ONU equipment">
-                        <div class="card-icon bg-info">
-                            <i class="fas fa-gift"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients with free ONU equipment">
+                        <div class="card-icon bg-info mini-icon"><i class="fas fa-gift"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Free ONU</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number">{{ $freeOnuClientsCount }}</span>
-                            </div>
+                            <div class="card-header"><h4>Free ONU</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $freeOnuClientsCount }}</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Clients with returned cables">
-                        <div class="card-icon bg-success">
-                            <i class="fas fa-plug"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients with returned cables">
+                        <div class="card-icon bg-success mini-icon"><i class="fas fa-plug"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Cable Returned</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number">{{ $cableReturnedClientsCount }}</span>
-                            </div>
+                            <div class="card-header"><h4>Cable Returned</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $cableReturnedClientsCount }}</span></div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Billing Statistics Section -->
-            <div class="row mt-4">
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Total outstanding bills amount">
-                        <div class="card-icon bg-warning">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Total outstanding bills amount">
+                        <div class="card-icon bg-warning mini-icon"><i class="fas fa-money-bill-wave"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Total Due</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number" style="font-size: 2rem;">৳ {{ number_format($totalDueAmount, 0) }}</span>
-                            </div>
+                            <div class="card-header"><h4>Total Due</h4></div>
+                            <div class="card-body"><span class="mini-stat-number" style="font-size:0.95rem;">৳{{ number_format($totalDueAmount, 0) }}</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Number of unpaid bills">
-                        <div class="card-icon bg-danger">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Number of unpaid bills">
+                        <div class="card-icon bg-danger mini-icon"><i class="fas fa-file-invoice-dollar"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Unpaid Bills</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number">{{ $unpaidBillsCount }}</span>
-                            </div>
+                            <div class="card-header"><h4>Unpaid Bills</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $unpaidBillsCount }}</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Number of overdue bills">
-                        <div class="card-icon bg-secondary">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Number of overdue bills">
+                        <div class="card-icon bg-secondary mini-icon"><i class="fas fa-exclamation-triangle"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Overdue Bills</h4>
-                            </div>
-                            <div class="card-body">
-                                <span class="display-stat-number">{{ $overdueBillsCount }}</span>
-                            </div>
+                            <div class="card-header"><h4>Overdue Bills</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $overdueBillsCount }}</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 mb-3">
-                    <div class="card card-statistic-1 h-100 shadow-sm transition-card" data-toggle="tooltip" title="Manage bills and payments">
-                        <div class="card-icon bg-info">
-                            <i class="fas fa-receipt"></i>
-                        </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Manage bills and payments">
+                        <div class="card-icon bg-info mini-icon"><i class="fas fa-receipt"></i></div>
                         <div class="card-wrap">
-                            <div class="card-header">
-                                <h4>Manage Bills</h4>
-                            </div>
+                            <div class="card-header"><h4>Manage Bills</h4></div>
                             <div class="card-body">
-                                <a href="{{ route('due-bills.index') }}" class="btn btn-sm btn-info w-100">
+                                <a href="{{ route('due-bills.index') }}" class="btn btn-xs btn-info w-100" style="font-size:0.75rem;padding:3px 6px;">
                                     <i class="fas fa-arrow-right"></i> View All
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
             <!-- ISP-wise Active Clients Section -->
             @if($ispWiseActiveClients->count() > 0)
-            <div class="row mt-5">
-            <div class="col-12">
-                <div class="modern-section-header mb-5">
-                    <div class="header-content">
-                        <div class="header-icon">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <div class="header-text">
-                            <h3 class="header-title">ISP Network Analytics</h3>
-                            <p class="header-subtitle">Real-time distribution of active clients across your network providers</p>
+            @php
+                $totalActive = $ispWiseActiveClients->sum();
+                $ispConfig = [
+                    'carnival' => ['icon' => 'fa-router', 'gradientStart' => '#1e3a8a', 'gradientEnd' => '#3b82f6', 'accentColor' => '#175ddc', 'lightBg' => '#eff6ff'],
+                    'bijoy'    => ['icon' => 'fa-broadcast-tower', 'gradientStart' => '#0891b2', 'gradientEnd' => '#06b6d4', 'accentColor' => '#0dcaf0', 'lightBg' => '#ecf9ff'],
+                ];
+            @endphp
+            <div class="row mb-2">
+                <div class="col-12 mb-1">
+                    <small class="text-muted fw-semibold" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.5px;">
+                        <i class="fas fa-globe me-1"></i> ISP Network Analytics
+                    </small>
+                </div>
+                @foreach($ispWiseActiveClients as $ispCode => $count)
+                @php
+                    $percentage = $totalActive > 0 ? round(($count / $totalActive) * 100, 1) : 0;
+                    $config = $ispConfig[strtolower($ispCode)] ?? ['icon' => 'fa-network-wired', 'gradientStart' => '#6366f1', 'gradientEnd' => '#8b5cf6', 'accentColor' => '#7c3aed', 'lightBg' => '#f3e8ff'];
+                @endphp
+                <div class="col-lg-2 col-md-3 col-sm-6 mb-2">
+                    <div class="card mini-stat-card shadow-sm" style="border-top: 3px solid {{ $config['accentColor'] }};">
+                        <div class="card-body" style="padding:8px 10px !important;">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div style="width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,{{ $config['gradientStart'] }},{{ $config['gradientEnd'] }});display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;">
+                                    <i class="fas {{ $config['icon'] }}"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:0.7rem;font-weight:700;color:#1a202c;line-height:1;">{{ ucfirst($ispCode) }}</div>
+                                    <div style="font-size:0.65rem;color:#94a3b8;">Internet Provider</div>
+                                </div>
+                                <span class="ms-auto" style="font-size:0.7rem;font-weight:700;color:{{ $config['accentColor'] }};">{{ $percentage }}%</span>
+                            </div>
+                            <div style="font-size:1.3rem;font-weight:800;color:#1a202c;line-height:1;">{{ $count }}</div>
+                            <div style="font-size:0.65rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.3px;">Active Clients</div>
+                            <div style="height:4px;border-radius:2px;background:{{ $config['lightBg'] }};margin-top:6px;">
+                                <div class="progress-fill" style="height:100%;border-radius:2px;width:0%;background:linear-gradient(90deg,{{ $config['gradientStart'] }},{{ $config['gradientEnd'] }});transition:width 0.8s ease;" data-width="{{ $percentage }}"></div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-1 mt-1">
+                                <button class="filter-by-isp btn btn-xs" data-isp="{{ $ispCode }}" style="font-size:0.65rem;padding:2px 6px;background:#f5f7fa;border:none;border-radius:4px;color:#64748b;">
+                                    <i class="fas fa-sliders-h"></i> Filter
+                                </button>
+                                <button class="details-btn btn btn-xs" data-isp="{{ $ispCode }}" style="font-size:0.65rem;padding:2px 6px;background:#f5f7fa;border:none;border-radius:4px;color:#64748b;">
+                                    <i class="fas fa-arrow-right"></i> Details
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+                @endforeach
             </div>
-            @php
-                $totalActive = $ispWiseActiveClients->sum();
-            @endphp
+            @endif
 
-            <!-- ISP Cards Grid -->
-            <div class="col-12">
-                <div class="isp-cards-grid">
-                    @foreach($ispWiseActiveClients as $ispCode => $count)
-                        @php
-                            $percentage = $totalActive > 0 ? round(($count / $totalActive) * 100, 1) : 0;
-
-                            // Modern color scheme per ISP
-                            $ispConfig = [
-                                'carnival' => [
-                                    'icon' => 'fa-router',
-                                    'gradientStart' => '#1e3a8a',
-                                    'gradientEnd' => '#3b82f6',
-                                    'accentColor' => '#175ddc',
-                                    'lightBg' => '#eff6ff',
-                                    'borderColor' => '#175ddc'
-                                ],
-                                'bijoy' => [
-                                    'icon' => 'fa-broadcast-tower',
-                                    'gradientStart' => '#0891b2',
-                                    'gradientEnd' => '#06b6d4',
-                                    'accentColor' => '#0dcaf0',
-                                    'lightBg' => '#ecf9ff',
-                                    'borderColor' => '#0dcaf0'
-                                ],
-                            ];
-                            $config = $ispConfig[strtolower($ispCode)] ?? [
-                                'icon' => 'fa-network-wired',
-                                'gradientStart' => '#6366f1',
-                                'gradientEnd' => '#8b5cf6',
-                                'accentColor' => '#7c3aed',
-                                'lightBg' => '#f3e8ff',
-                                'borderColor' => '#7c3aed'
-                            ];
-                        @endphp
-                        <div class="modern-isp-card" data-isp="{{ strtolower($ispCode) }}">
-                            <div class="card-content">
-                                <!-- Header with icon -->
-                                <div class="card-header-modern">
-                                    <div class="icon-wrapper" style="background: linear-gradient(135deg, {{ $config['gradientStart'] }} 0%, {{ $config['gradientEnd'] }} 100%);">
-                                        <i class="fas {{ $config['icon'] }}"></i>
-                                    </div>
-                                    <div class="header-info">
-                                        <h5 class="isp-name">{{ ucfirst($ispCode) }}</h5>
-                                        <p class="isp-subtitle">Internet Provider</p>
-                                    </div>
-                                    <div class="percentage-badge" style="background-color: {{ $config['lightBg'] }}; color: {{ $config['accentColor'] }};">
-                                        {{ $percentage }}%
-                                    </div>
-                                </div>
-
-                                <!-- Main Stats -->
-                                <div class="card-stats-section">
-                                    <div class="main-stat">
-                                        <span class="stat-number">{{ $count }}</span>
-                                        <span class="stat-label">Active Clients</span>
-                                    </div>
-
-                                    <!-- Visual Representation -->
-                                    <div class="chart-section">
-                                        <div class="modern-progress-bar">
-                                            <div class="progress-track" style="background: {{ $config['lightBg'] }};">
-                                                <div class="progress-fill"
-                                                     style="width: 0%; background: linear-gradient(90deg, {{ $config['gradientStart'] }} 0%, {{ $config['gradientEnd'] }} 100%); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"
-                                                     data-width="{{ $percentage }}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="progress-info">
-                                            <span class="progress-label">Market Share</span>
-                                            <span class="progress-value">{{ $percentage }}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Actions Footer -->
-                                <div class="card-footer-modern">
-                                    <button class="action-btn filter-btn filter-by-isp" data-isp="{{ $ispCode }}" title="Filter by {{ ucfirst($ispCode) }}">
-                                        <i class="fas fa-sliders-h"></i>
-                                        <span>Filter</span>
-                                    </button>
-                                    <button class="action-btn details-btn" data-isp="{{ $ispCode }}" title="View details">
-                                        <i class="fas fa-arrow-right"></i>
-                                        <span>Details</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
         </div><!-- End of dashboard-section -->
 
         <style>
-            /* ========== DASHBOARD SECTION TOGGLE ========== */
-
+            /* ========== MINI STAT CARDS ========== */
+            .mini-stat-card {
+                border-radius: 8px;
+                border: 1px solid rgba(0,0,0,0.06);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .mini-stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+            }
+            .mini-stat-card .mini-icon {
+                width: 40px !important;
+                height: 40px !important;
+                min-height: unset !important;
+                font-size: 1rem !important;
+                border-radius: 6px !important;
+            }
+            .mini-stat-card .card-header h4 {
+                font-size: 0.72rem !important;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+                color: #6c757d;
+            }
+            .mini-stat-number {
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: #2c3e50;
+                line-height: 1.1;
+            }
+            .mini-stat-card .card-body {
+                padding: 4px 8px 8px !important;
+            }
+            .mini-stat-card .card-header {
+                padding: 8px 8px 2px !important;
+            }
             .dashboard-section {
-                max-height: none;
-                overflow: visible;
-                opacity: 1;
-                margin-bottom: 24px;
-                display: block !important;
+                margin-bottom: 8px;
             }
 
-            .dashboard-section.hidden {
-                display: none !important;
+            .dashboard-section.visible {
+                animation: fadeInDown 0.35s ease;
+            }
+
+            @keyframes fadeInDown {
+                from { opacity: 0; transform: translateY(-12px); }
+                to   { opacity: 1; transform: translateY(0); }
             }
 
             #privacy-toggle-btn {
@@ -655,9 +581,7 @@
                 <div class="card-body">
                     <!-- Compact Toolbar -->
                     <div class="clients-toolbar mb-3" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                        <button type="button" class="btn btn-sm btn-info" id="privacy-toggle-btn" title="Toggle dashboard visibility for privacy">
-                            <i class="fas fa-eye-slash"></i> <span id="privacy-toggle-text">Hide Dashboard</span>
-                        </button>
+
 
                         <a href="#" id="bulk_btn" style="display: none" data-bs-toggle="modal" data-bs-target="#smsModal"
                            class="btn btn-sm btn-warning">Bulk SMS <i class="fas fa-envelope"></i> <span id="bulk_count"
@@ -1183,20 +1107,14 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script>
-        // ========== PRIVACY TOGGLE FUNCTIONALITY - DISABLED ==========
-        // Dashboard always shows by default
+        // ========== SCROLL TO CLIENTS & FOCUS SEARCH ON LOAD ==========
         $(document).ready(function() {
-            const $dashboardSection = $('#dashboard-section');
-            const $toggleBtn = $('#privacy-toggle-btn');
-
-            // Always keep dashboard visible
-            $dashboardSection.removeClass('hidden');
-
-            // Remove toggle button functionality - keep button visible but inactive
-            $toggleBtn.on('click', function(e) {
-                e.preventDefault();
-                // Do nothing - dashboard always visible
-            });
+            setTimeout(function() {
+                var clientsTop = $('#clients-header').offset().top;
+                $(window).scrollTop(clientsTop - 200);
+                // Focus the DataTables search input so user is ready to search
+                $('#clients_filter input').focus();
+            }, 800); // wait for DataTables to fully render
         });
 
         // ------------------ DATA TABLES SETUP ------------------
