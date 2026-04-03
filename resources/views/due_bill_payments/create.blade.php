@@ -4,159 +4,394 @@
     Record Payment
 @endsection
 
+@section('css')
+<style>
+    .payment-form-container {
+        background-color: #f8f9fa;
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    .payment-form-wrapper {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        margin: 0 auto;
+        max-width: 600px;
+    }
+
+    .payment-form-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 1.5rem;
+    }
+
+    .payment-form-header h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .payment-form-header .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .payment-form-header .btn-secondary {
+        background-color: #e5e7eb;
+        color: #374151;
+    }
+
+    .payment-form-header .btn-secondary:hover {
+        background-color: #d1d5db;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .client-info-card {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        border-radius: 10px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        display: none;
+        border: 1px solid #d1d5db;
+    }
+
+    .client-info-card.show {
+        display: block;
+    }
+
+    .client-info-item {
+        margin-bottom: 0.75rem;
+    }
+
+    .client-info-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .client-info-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .client-info-value {
+        font-size: 1rem;
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 0.65rem 0.875rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background-color: #fafbfc;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        background-color: #fff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .bill-info-alert {
+        background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+        border: 1px solid #93c5fd;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: none;
+        font-size: 0.9rem;
+        color: #1e40af;
+    }
+
+    .bill-info-alert.show {
+        display: block;
+    }
+
+    .bill-info-item {
+        display: inline-block;
+        margin-right: 1.5rem;
+    }
+
+    .bill-info-label {
+        font-weight: 600;
+        color: #1e3a8a;
+    }
+
+    .form-section-divider {
+        height: 1px;
+        background-color: #e5e7eb;
+        margin: 2rem 0;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .form-actions .btn-success {
+        background-color: #10b981;
+        color: white;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+
+    .form-actions .btn-success:hover {
+        background-color: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .form-actions .btn-secondary {
+        background-color: #e5e7eb;
+        color: #374151;
+    }
+
+    .form-actions .btn-secondary:hover {
+        background-color: #d1d5db;
+        transform: translateY(-2px);
+    }
+
+    .text-danger {
+        color: #ef4444;
+    }
+
+    .invalid-feedback {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .form-control.is-invalid, .form-select.is-invalid {
+        border-color: #dc2626;
+    }
+
+    @media (max-width: 768px) {
+        .payment-form-wrapper {
+            padding: 1.5rem;
+        }
+
+        .payment-form-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .bill-info-item {
+            display: block;
+            margin-right: 0;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+@endsection
+
 @section('content')
-<section class="section">
-    <div class="section-header">
-        <h1>Record Payment</h1>
-        <div class="section-header-button">
+<div class="payment-form-container">
+    <div class="payment-form-wrapper">
+        <div class="payment-form-header">
+            <h1><i class="fas fa-money-check"></i> Record Payment</h1>
             <a href="{{ route('clients.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
-    </div>
 
-    <div class="section-body">
-        <div class="row">
-            <div class="col-md-8 offset-md-2">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Payment Details</h4>
+        <!-- Client Info Section -->
+        <div id="client-info-section" class="client-info-card">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="client-info-item">
+                        <div class="client-info-label">Client Name</div>
+                        <div class="client-info-value"><span id="client-name">-</span></div>
                     </div>
-                    <div class="card-body">
-                        <!-- Client Info Section -->
-                        <div id="client-info-section" class="alert alert-secondary mb-3" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <small>
-                                        <strong>Client Name:</strong><br>
-                                        <span id="client-name">-</span>
-                                    </small>
-                                </div>
-                                <div class="col-md-4">
-                                    <small>
-                                        <strong>Username:</strong><br>
-                                        <span id="client-username">-</span>
-                                    </small>
-                                </div>
-                                <div class="col-md-4">
-                                    <small>
-                                        <strong>Package:</strong><br>
-                                        <span id="client-package">-</span>
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <form action="{{ route('due-bill-payments.store') }}" method="POST">
-                            @csrf
-
-                            <!-- Client Selection -->
-                            <div class="form-group mb-3">
-                                <label for="client_id" class="form-label">Client <span class="text-danger">*</span></label>
-                                <select name="client_id" id="client_id" class="form-select @error('client_id') is-invalid @enderror" required onchange="loadClientBills(); loadClientPackagePrice();">
-                                    <option value="">-- Select Client --</option>
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}" @if(request()->has('client_id') && request()->client_id == $client->id) selected @endif>
-                                            {{ $client->name }} ({{ $client->username }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('client_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Bill Selection -->
-                            <div class="form-group mb-3">
-                                <label for="due_bill_id" class="form-label">Due Bill <span class="text-danger">*</span></label>
-                                <select name="due_bill_id" id="due_bill_id" class="form-select @error('due_bill_id') is-invalid @enderror" required onchange="updateBillAmount()">
-                                    <option value="">-- Select Bill --</option>
-                                    @if($bill)
-                                        <option value="{{ $bill->id }}" selected>
-                                            {{ \Carbon\Carbon::createFromDate($bill->year, $bill->month, 1)->format('F Y') }} - ৳ {{ number_format($bill->amount - $bill->paid_amount, 2) }} remaining
-                                        </option>
-                                    @endif
-                                </select>
-                                @error('due_bill_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div id="bill-info" class="alert alert-info" style="display: none;">
-                                <small>
-                                    <strong>Bill Amount:</strong> <span id="bill-amount">-</span> |
-                                    <strong>Already Paid:</strong> <span id="bill-paid">-</span> |
-                                    <strong>Remaining:</strong> <span id="bill-remaining">-</span>
-                                </small>
-                            </div>
-
-                            <!-- Payment Date -->
-                            <div class="form-group mb-3">
-                                <label for="payment_date" class="form-label">Payment Date <span class="text-danger">*</span></label>
-                                <input type="date" name="payment_date" id="payment_date" class="form-control @error('payment_date') is-invalid @enderror" value="{{ date('Y-m-d') }}" required>
-                                @error('payment_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Amount -->
-                            <div class="form-group mb-3">
-                                <label for="amount" class="form-label">Amount (৳) <span class="text-danger">*</span></label>
-                                <input type="number" name="amount" id="amount" class="form-control @error('amount') is-invalid @enderror" placeholder="0.00" step="0.01" min="0.01" required>
-                                @error('amount')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Payment Method -->
-                            <div class="form-group mb-3">
-                                <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
-                                <select name="payment_method" id="payment_method" class="form-select @error('payment_method') is-invalid @enderror" required>
-                                    <option value="cash">Cash</option>
-                                    <option value="bkash">bKash</option>
-                                    <option value="nagad">Nagad</option>
-                                    <option value="bank">Bank Transfer</option>
-                                    <option value="other">Other</option>
-                                </select>
-                                @error('payment_method')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Transaction ID -->
-                            <div class="form-group mb-3">
-                                <label for="transaction_id" class="form-label">Transaction ID</label>
-                                <input type="text" name="transaction_id" id="transaction_id" class="form-control @error('transaction_id') is-invalid @enderror" placeholder="Optional">
-                                @error('transaction_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Notes -->
-                            <div class="form-group mb-3">
-                                <label for="notes" class="form-label">Notes</label>
-                                <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="3" placeholder="Optional notes..."></textarea>
-                                @error('notes')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Submit -->
-                            <div class="form-group">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check"></i> Record Payment
-                                </button>
-                                <a href="{{ route('clients.index') }}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancel
-                                </a>
-                            </div>
-                        </form>
+                </div>
+                <div class="col-md-4">
+                    <div class="client-info-item">
+                        <div class="client-info-label">Username</div>
+                        <div class="client-info-value"><span id="client-username">-</span></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="client-info-item">
+                        <div class="client-info-label">Package</div>
+                        <div class="client-info-value"><span id="client-package">-</span></div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <form action="{{ route('due-bill-payments.store') }}" method="POST">
+            @csrf
+
+            <!-- Section 1: Client & Bill Selection -->
+            <div class="form-section">
+                <!-- Client Selection -->
+                <div class="form-group">
+                    <label for="client_id" class="form-label">Select Client <span class="text-danger">*</span></label>
+                    <select name="client_id" id="client_id" class="form-select @error('client_id') is-invalid @enderror" required onchange="loadClientBills(); loadClientPackagePrice();">
+                        <option value="">-- Choose a Client --</option>
+                        @foreach($clients as $client)
+                            <option value="{{ $client->id }}" @if(request()->has('client_id') && request()->client_id == $client->id) selected @endif>
+                                {{ $client->name }} ({{ $client->username }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('client_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Bill Selection -->
+                <div class="form-group">
+                    <label for="due_bill_id" class="form-label">Select Due Bill <span class="text-danger">*</span></label>
+                    <select name="due_bill_id" id="due_bill_id" class="form-select @error('due_bill_id') is-invalid @enderror" required onchange="updateBillAmount()">
+                        <option value="">-- Choose a Bill --</option>
+                        @if($bill)
+                            <option value="{{ $bill->id }}" selected>
+                                {{ \Carbon\Carbon::createFromDate($bill->year, $bill->month, 1)->format('F Y') }} - ৳ {{ number_format($bill->amount - $bill->paid_amount, 2) }} remaining
+                            </option>
+                        @endif
+                    </select>
+                    @error('due_bill_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Bill Info Alert -->
+                <div id="bill-info" class="bill-info-alert">
+                    <div class="bill-info-item">
+                        <span class="bill-info-label">Total:</span> <span id="bill-amount">-</span>
+                    </div>
+                    <div class="bill-info-item">
+                        <span class="bill-info-label">Paid:</span> <span id="bill-paid">-</span>
+                    </div>
+                    <div class="bill-info-item">
+                        <span class="bill-info-label">Remaining:</span> <span id="bill-remaining">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section-divider"></div>
+
+            <!-- Section 2: Payment Details -->
+            <div class="form-section">
+                <!-- Payment Date -->
+                <div class="form-group">
+                    <label for="payment_date" class="form-label">Payment Date <span class="text-danger">*</span></label>
+                    <input type="date" name="payment_date" id="payment_date" class="form-control @error('payment_date') is-invalid @enderror" value="{{ date('Y-m-d') }}" required>
+                    @error('payment_date')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Amount -->
+                <div class="form-group">
+                    <label for="amount" class="form-label">Amount (৳) <span class="text-danger">*</span></label>
+                    <input type="number" name="amount" id="amount" class="form-control @error('amount') is-invalid @enderror" placeholder="0.00" step="0.01" min="0.01" required>
+                    @error('amount')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Payment Method -->
+                <div class="form-group">
+                    <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                    <select name="payment_method" id="payment_method" class="form-select @error('payment_method') is-invalid @enderror" required>
+                        <option value="">-- Select Method --</option>
+                        <option value="cash">💵 Cash</option>
+                        <option value="bkash">📱 bKash</option>
+                        <option value="nagad">📱 Nagad</option>
+                        <option value="bank">🏦 Bank Transfer</option>
+                        <option value="other">📋 Other</option>
+                    </select>
+                    @error('payment_method')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="form-section-divider"></div>
+
+            <!-- Section 3: Additional Info -->
+            <div class="form-section">
+                <!-- Transaction ID -->
+                <div class="form-group">
+                    <label for="transaction_id" class="form-label">Transaction ID</label>
+                    <input type="text" name="transaction_id" id="transaction_id" class="form-control @error('transaction_id') is-invalid @enderror" placeholder="e.g., TXN123456 (optional)">
+                    @error('transaction_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="3" placeholder="Add any additional notes (optional)"></textarea>
+                    @error('notes')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle"></i> Record Payment
+                </button>
+                <a href="{{ route('clients.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
     </div>
-</section>
+</div>
 
 <script>
     // Bills data loaded from server
@@ -168,10 +403,11 @@
     function loadClientBills() {
         const clientId = document.getElementById('client_id').value;
         const billSelect = document.getElementById('due_bill_id');
+        const clientInfoSection = document.getElementById('client-info-section');
 
         if (!clientId) {
-            billSelect.innerHTML = '<option value="">-- Select Bill --</option>';
-            document.getElementById('client-info-section').style.display = 'none';
+            billSelect.innerHTML = '<option value="">-- Choose a Bill --</option>';
+            clientInfoSection.classList.remove('show');
             return;
         }
 
@@ -181,7 +417,7 @@
             document.getElementById('client-name').textContent = clientInfo.name;
             document.getElementById('client-username').textContent = clientInfo.username;
             document.getElementById('client-package').textContent = clientInfo.package;
-            document.getElementById('client-info-section').style.display = 'block';
+            clientInfoSection.classList.add('show');
             console.log('✓ Client info displayed:', clientInfo);
         }
 
@@ -195,7 +431,7 @@
 
         console.log('Bills found for client:', bills);
 
-        billSelect.innerHTML = '<option value="">-- Select Bill --</option>';
+        billSelect.innerHTML = '<option value="">-- Choose a Bill --</option>';
 
         if (bills.length > 0) {
             // Separate unpaid and paid bills
@@ -283,7 +519,7 @@
         const billInfo = document.getElementById('bill-info');
 
         if (!billId) {
-            billInfo.style.display = 'none';
+            billInfo.classList.remove('show');
             return;
         }
 
@@ -317,7 +553,7 @@
         }
 
         // Show the info section
-        billInfo.style.display = 'block';
+        billInfo.classList.add('show');
     }
 
     // Load bills and package price if client is pre-selected

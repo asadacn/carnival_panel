@@ -791,51 +791,388 @@
         </div>
     </div>
 
+    <!-- Quick Bill Modal -->
     <div class="modal fade" id="quickBillModal" tabindex="-1" aria-labelledby="quickBillModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="quickBillModalLabel">Quick Due Bill - Current Month</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content quick-bill-modal">
+                <div class="quick-bill-header">
+                    <div class="quick-bill-title-section">
+                        <h5 class="quick-bill-title" id="quickBillModalLabel">
+                            <i class="fas fa-receipt"></i> Quick Due Bill
+                        </h5>
+                        <p class="quick-bill-subtitle">{{ now()->format('F Y') }} - Current Month</p>
+                    </div>
+                    <button type="button" class="btn-close-smooth" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="modal-body">
+
+                <div class="quick-bill-body">
                     <form id="quick_bill_form">
                         <input type="hidden" id="quick_client_id">
 
-                        <div class="mb-3">
-                            <label class="form-label"><strong>Client:</strong></label>
-                            <p id="quick_client_name" class="text-muted mb-0"></p>
+                        <!-- Client Information Card -->
+                        <div class="quick-bill-info-card">
+                            <div class="info-item">
+                                <span class="info-icon"><i class="fas fa-user"></i></span>
+                                <div class="info-content">
+                                    <label class="info-label">Client Name</label>
+                                    <p id="quick_client_name" class="info-value"></p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label"><strong>Month/Year:</strong></label>
-                            <p id="quick_month_year" class="text-muted mb-0">{{ now()->format('F Y') }}</p>
+                        <!-- Month/Year Display -->
+                        <div class="month-year-display">
+                            <span class="month-label"><i class="fas fa-calendar"></i> Billing Period:</span>
+                            <span class="month-value" id="quick_month_year">{{ now()->format('F Y') }}</span>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="quick_amount" class="form-label">Amount (৳) <span class="text-danger">*</span></label>
-                            <input type="number" id="quick_amount" class="form-control" placeholder="Enter amount" step="0.01" min="0.01" required>
+                        <!-- Amount Input -->
+                        <div class="quick-bill-form-group">
+                            <label for="quick_amount" class="quick-bill-form-label">Amount (৳) <span class="required-star">*</span></label>
+                            <input type="number" id="quick_amount" class="quick-bill-form-control" placeholder="Enter billing amount" step="0.01" min="0.01" required>
+                            <small class="form-helper-text">e.g., 2500.00</small>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="quick_notes" class="form-label">Notes (Optional)</label>
-                            <textarea id="quick_notes" class="form-control" rows="2" placeholder="Add any notes..."></textarea>
+                        <!-- Notes Input -->
+                        <div class="quick-bill-form-group">
+                            <label for="quick_notes" class="quick-bill-form-label">Notes <span class="optional-label">(Optional)</span></label>
+                            <textarea id="quick_notes" class="quick-bill-form-control" rows="2" placeholder="Add any additional notes..."></textarea>
                         </div>
 
-                        <div class="alert alert-info small">
-                            <i class="fas fa-info-circle"></i> Bill will be created for <strong>{{ now()->format('F Y') }}</strong> with today's date as bill date.
+                        <!-- Info Alert -->
+                        <div class="quick-bill-alert">
+                            <div class="alert-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="alert-content">
+                                <strong>Bill Details:</strong> This bill will be created for <strong>{{ now()->format('F Y') }}</strong> with today's date as the bill date.
+                            </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" onclick="createQuickBill()">
-                        <i class="fas fa-check"></i> Create Bill
+
+                <div class="quick-bill-footer">
+                    <button type="button" class="quick-bill-btn quick-bill-btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="quick-bill-btn quick-bill-btn-create" onclick="createQuickBill()">
+                        <i class="fas fa-check-circle"></i> Create Bill
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        /* ===== QUICK BILL MODAL SMOOTH STYLING ===== */
+        .quick-bill-modal {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .quick-bill-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f1f3 100%);
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .quick-bill-title-section {
+            flex: 1;
+        }
+
+        .quick-bill-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-bill-subtitle {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .btn-close-smooth {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-close-smooth:hover {
+            color: #1f2937;
+            transform: rotate(90deg);
+        }
+
+        .quick-bill-body {
+            padding: 1.75rem;
+            background: white;
+        }
+
+        .quick-bill-info-card {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #d1d5db;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .info-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+            display: block;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0.25rem 0 0 0;
+        }
+
+        .month-year-display {
+            background-color: #f9fafb;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .month-label {
+            font-weight: 500;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .month-value {
+            font-weight: 700;
+            color: #3b82f6;
+            font-size: 1.05rem;
+        }
+
+        .quick-bill-form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .quick-bill-form-label {
+            display: block;
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .required-star {
+            color: #ef4444;
+        }
+
+        .optional-label {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: #9ca3af;
+        }
+
+        .quick-bill-form-control {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.7rem 0.875rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background-color: #fafbfc;
+            font-family: inherit;
+        }
+
+        .quick-bill-form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .quick-bill-form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-helper-text {
+            display: block;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.35rem;
+        }
+
+        .quick-bill-alert {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            border: 1px solid #93c5fd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            color: #1e40af;
+            font-size: 1.1rem;
+            margin-top: 0.1rem;
+        }
+
+        .alert-content {
+            flex: 1;
+            font-size: 0.9rem;
+            color: #1e40af;
+            line-height: 1.5;
+        }
+
+        .quick-bill-footer {
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            padding: 1rem 1.75rem;
+            display: flex;
+            gap: 0.875rem;
+            justify-content: flex-end;
+        }
+
+        .quick-bill-btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .quick-bill-btn-cancel {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .quick-bill-btn-cancel:hover {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+
+        .quick-bill-btn-create {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+
+        .quick-bill-btn-create:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .quick-bill-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Modal backdrop smooth effect */
+        .modal-backdrop.fade {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-backdrop.fade.show {
+            opacity: 0.5;
+        }
+
+        @media (max-width: 576px) {
+            .quick-bill-modal {
+                border-radius: 8px;
+            }
+
+            .quick-bill-header {
+                padding: 1.25rem;
+            }
+
+            .quick-bill-body {
+                padding: 1.25rem;
+            }
+
+            .quick-bill-footer {
+                padding: 1rem 1.25rem;
+                flex-direction: column;
+            }
+
+            .quick-bill-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .month-year-display {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
 
 @endsection
 

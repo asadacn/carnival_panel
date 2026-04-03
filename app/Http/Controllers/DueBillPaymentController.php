@@ -319,4 +319,38 @@ class DueBillPaymentController extends Controller
             'byMethod'
         ));
     }
+
+    /**
+     * Generate and download payment statement PDF for a client
+     */
+    public function paymentStatementPdf($clientId)
+    {
+        try {
+            $client = Client::findOrFail($clientId);
+            $payments = DueBillPayment::where('client_id', $clientId)
+                ->with('dueBill')
+                ->orderBy('payment_date', 'desc')
+                ->get();
+
+            $totalAmount = $payments->sum('amount');
+            $byMethod = $payments->groupBy('payment_method')
+                ->map(fn($items) => $items->sum('amount'));
+
+            // Generate HTML
+            $html = view('due_bill_payments.statement-pdf', compact(
+                'client',
+                'payments',
+                'totalAmount',
+                'byMethod'
+            ))->render();
+
+            // Return as downloadable HTML (print-to-PDF via browser)
+            return response($html, 200, [
+                'Content-Type' => 'text/html; charset=utf-8',
+                'Content-Disposition' => 'inline; filename="payment-statement-' . $client->username . '.html"'
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error generating payment statement: ' . $e->getMessage());
+        }
+    }
 }

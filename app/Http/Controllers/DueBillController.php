@@ -276,4 +276,40 @@ class DueBillController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Generate and download bill statement PDF for a client
+     */
+    public function billStatementPdf($clientId)
+    {
+        try {
+            $client = Client::findOrFail($clientId);
+            $bills = DueBill::where('client_id', $clientId)
+                ->with('payments')
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->get();
+
+            $totalAmount = $bills->sum('amount');
+            $totalPaid = $bills->sum('paid_amount');
+            $totalRemaining = $totalAmount - $totalPaid;
+
+            // Generate HTML
+            $html = view('due_bills.statement-pdf', compact(
+                'client',
+                'bills',
+                'totalAmount',
+                'totalPaid',
+                'totalRemaining'
+            ))->render();
+
+            // Return as downloadable PDF using browser print
+            return response($html, 200, [
+                'Content-Type' => 'text/html; charset=utf-8',
+                'Content-Disposition' => 'inline; filename="bill-statement-' . $client->username . '.html"'
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error generating bill statement: ' . $e->getMessage());
+        }
+    }
 }

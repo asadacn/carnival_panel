@@ -1,50 +1,97 @@
 @extends('layouts.app')
-@section('title') Edit Due Bill @endsection
+
+@section('title')
+    Edit Due Bill
+@endsection
+
+@section('css')
+<style>
+    .form-container { background: #f8f9fa; padding: 2rem 0; min-height: calc(100vh - 300px); }
+    .form-header { margin-bottom: 2.5rem; }
+    .form-header h1 { font-size: 2rem; font-weight: 600; color: #1f2937; margin: 0 0 0.5rem 0; }
+    .form-header p { color: #6b7280; font-size: 0.95rem; }
+    .form-wrapper { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { font-weight: 500; color: #374151; margin-bottom: 0.6rem; display: block; font-size: 0.95rem; }
+    .form-group label span { color: #ef4444; }
+    .form-control, .form-select { border: 1px solid #d1d5db; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.95rem; transition: all 0.2s ease; background: #fafbfc; }
+    .form-control:focus, .form-select:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .form-actions { display: flex; gap: 1rem; margin-top: 2rem; }
+    .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem; }
+    .btn-submit { background: #3b82f6; color: white; flex: 1; }
+    .btn-submit:hover { background: #2563eb; transform: translateY(-2px); }
+    .btn-cancel { background: #e5e7eb; color: #374151; flex: 1; }
+    .btn-cancel:hover { background: #d1d5db; }
+    .form-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #e5e7eb; }
+    .form-section:last-of-type { border-bottom: none; }
+    .form-section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; color: #6b7280; margin-bottom: 1rem; }
+    @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .form-actions { flex-direction: column; } }
+</style>
+@endsection
+
 @section('content')
-<section class="section">
-    <div class="section-header">
-        <h1>Edit Due Bill</h1>
-    </div>
-    <div class="section-body">
-        <div class="row">
-            <div class="col-md-8 offset-md-2">
-                <div class="card">
-                    <div class="card-body">
-                        <form action="{{ route('due-bills.update', $bill->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group mb-3">
-                                <label>Bill Date</label>
-                                <input type="date" name="bill_date" class="form-control" value="{{ $bill->bill_date }}" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Due Date</label>
-                                <input type="date" name="due_date" class="form-control" value="{{ $bill->due_date }}" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Amount (৳)</label>
-                                <input type="number" name="amount" class="form-control" value="{{ $bill->amount }}" step="0.01" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Status</label>
-                                <select name="status" class="form-select" required>
-                                    <option value="unpaid" @if($bill->status == 'unpaid') selected @endif>Unpaid</option>
-                                    <option value="partially_paid" @if($bill->status == 'partially_paid') selected @endif>Partially Paid</option>
-                                    <option value="paid" @if($bill->status == 'paid') selected @endif>Paid</option>
-                                    <option value="overdue" @if($bill->status == 'overdue') selected @endif>Overdue</option>
-                                </select>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Notes</label>
-                                <textarea name="notes" class="form-control" rows="3">{{ $bill->notes }}</textarea>
-                            </div>
-                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Update</button>
-                            <a href="{{ route('due-bills.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
-                        </form>
+<div class="form-container">
+    <div class="container-lg">
+        <div class="form-header">
+            <h1>Edit Due Bill</h1>
+            <p>Update bill information</p>
+        </div>
+
+        <div class="form-wrapper">
+            <form action="{{ route('due-bills.update', $bill->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="form-section">
+                    <div class="form-section-title">Important Dates</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="bill_date">Bill Date <span>*</span></label>
+                            <input type="date" name="bill_date" id="bill_date" class="form-control" value="{{ $bill->bill_date }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="due_date">Due Date <span>*</span></label>
+                            <input type="date" name="due_date" id="due_date" class="form-control" value="{{ $bill->due_date }}" required>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Amount Details</div>
+                    <div class="form-group">
+                        <label for="amount">Amount (৳) <span>*</span></label>
+                        <input type="number" name="amount" id="amount" class="form-control" value="{{ $bill->amount }}" step="0.01" required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Bill Status</div>
+                    <div class="form-group">
+                        <label for="status">Status <span>*</span></label>
+                        <select name="status" id="status" class="form-select" required>
+                            <option value="unpaid" @if($bill->status == 'unpaid') selected @endif>Unpaid</option>
+                            <option value="partially_paid" @if($bill->status == 'partially_paid') selected @endif>Partially Paid</option>
+                            <option value="paid" @if($bill->status == 'paid') selected @endif>Paid</option>
+                            <option value="overdue" @if($bill->status == 'overdue') selected @endif>Overdue</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title">Additional Notes</div>
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea name="notes" id="notes" class="form-control" rows="3">{{ $bill->notes }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit">Update Bill</button>
+                    <a href="{{ route('due-bills.index') }}" class="btn btn-cancel">Cancel</a>
+                </div>
+            </form>
         </div>
     </div>
-</section>
+</div>
 @endsection
