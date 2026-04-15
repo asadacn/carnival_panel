@@ -36,8 +36,23 @@ class DueBillController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
+                ->filterColumn('client_name', function($query, $keyword) {
+                    $query->whereHas('client', function($q) use($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%")
+                          ->orWhere('contact', 'like', "%{$keyword}%")
+                          ->orWhere('secondary_contact', 'like', "%{$keyword}%");
+                    });
+                })
+                ->filterColumn('customer_id', function($query, $keyword) {
+                    $query->whereHas('client', function($q) use($keyword) {
+                        $q->where('username', 'like', "%{$keyword}%");
+                    });
+                })
                 ->addColumn('client_name', function ($row) {
                     return $row->client->name ?? '-';
+                })
+                ->addColumn('customer_id', function ($row) {
+                    return $row->client->username ?? '-';
                 })
                 ->addColumn('month_year', function ($row) {
                     return $row->month_year;
@@ -72,7 +87,17 @@ class DueBillController extends Controller
         $clients = Client::select('id', 'name', 'username')->orderBy('name')->get();
         $statuses = ['unpaid', 'partially_paid', 'paid', 'overdue'];
 
-        return view('due_bills.index', compact('clients', 'statuses'));
+        $totalDue = DueBill::where('status', '!=', 'paid')->sum('amount') -
+                           DueBill::where('status', '!=', 'paid')->sum('paid_amount');
+
+        $unpaidCount = DueBill::unpaid()->count();
+        $overdueCount = DueBill::overdue()->count();
+        $paidThisMonth = DueBill::where('status', 'paid')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('amount');
+
+        return view('due_bills.index', compact('clients', 'statuses', 'totalDue', 'unpaidCount', 'overdueCount', 'paidThisMonth'));
     }
 
     /**
@@ -205,40 +230,7 @@ class DueBillController extends Controller
             ->with('success', 'Bill marked as paid successfully!');
     }
 
-    /**
-     * Get bills summary dashboard
-     */
-    public function dashboard()
-    {
-        $totalDue = DueBill::where('status', '!=', 'paid')->sum('amount') -
-                           DueBill::where('status', '!=', 'paid')->sum('paid_amount');
 
-        $unpaidCount = DueBill::unpaid()->count();
-        $overdueCount = DueBill::overdue()->count();
-        $paidThisMonth = DueBill::where('status', 'paid')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->sum('amount');
-
-        $recentBills = DueBill::with('client')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
-
-        $overdueBills = DueBill::with('client')
-            ->overdue()
-            ->orderBy('due_date')
-            ->get();
-
-        return view('due_bills.dashboard', compact(
-            'totalDue',
-            'unpaidCount',
-            'overdueCount',
-            'paidThisMonth',
-            'recentBills',
-            'overdueBills'
-        ));
-    }
 
     /**
      * Get unpaid bills for a client (API endpoint)

@@ -105,15 +105,14 @@ Route::get('/tickets', TicketManager::class)->name('tickets.live');
 Route::get('/technicians', TechnicianManager::class)->name('technicians');
 
 // Due Bills Management
-Route::resource('due-bills', App\Http\Controllers\DueBillController::class);
-Route::get('due-bills/dashboard', [App\Http\Controllers\DueBillController::class, 'dashboard'])->name('due-bills.dashboard');
 Route::get('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController::class, 'markAsPaid'])->name('due-bills.mark-paid');
+Route::resource('due-bills', App\Http\Controllers\DueBillController::class);
 Route::get('clients/{id}/due-bills', [App\Http\Controllers\DueBillController::class, 'clientBills'])->name('clients.due-bills');
 Route::get('clients/{id}/bills-statement-pdf', [App\Http\Controllers\DueBillController::class, 'billStatementPdf'])->name('clients.bills-statement-pdf');
 
 // Due Bill Payments Management
-Route::resource('due-bill-payments', App\Http\Controllers\DueBillPaymentController::class);
 Route::get('due-bill-payments/report', [App\Http\Controllers\DueBillPaymentController::class, 'report'])->name('due-bill-payments.report');
+Route::resource('due-bill-payments', App\Http\Controllers\DueBillPaymentController::class);
 Route::get('clients/{id}/payment-history', [App\Http\Controllers\DueBillPaymentController::class, 'clientPaymentHistory'])->name('clients.payment-history');
 Route::get('clients/{id}/payments-statement-pdf', [App\Http\Controllers\DueBillPaymentController::class, 'paymentStatementPdf'])->name('clients.payments-statement-pdf');
 
