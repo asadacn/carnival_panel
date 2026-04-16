@@ -31,8 +31,34 @@ class InvestmentController extends AppBaseController
     {
         $investments = $this->investmentRepository->all();
 
+        // Dashboard Metrics
+        $totalInvestment = \App\Models\Investment::sum('amount');
+        
+        $now = \Carbon\Carbon::now();
+        $thisMonthInvestment = \App\Models\Investment::whereYear('created_at', $now->year)
+                                    ->whereMonth('created_at', $now->month)
+                                    ->sum('amount');
+                                    
+        $thisYearInvestment = \App\Models\Investment::whereYear('created_at', $now->year)
+                                    ->sum('amount');
+
+        $investmentsByType = \App\Models\Investment::select('type', \DB::raw('SUM(amount) as total'))
+                                ->groupBy('type')
+                                ->orderBy('total', 'desc')
+                                ->get();
+
+        $investmentsByInvestor = \App\Models\Investment::select('invested_by', \DB::raw('SUM(amount) as total'))
+                                ->groupBy('invested_by')
+                                ->orderBy('total', 'desc')
+                                ->get();
+
         return view('investments.index')
-            ->with('investments', $investments);
+            ->with('investments', $investments)
+            ->with('totalInvestment', $totalInvestment)
+            ->with('thisMonthInvestment', $thisMonthInvestment)
+            ->with('thisYearInvestment', $thisYearInvestment)
+            ->with('investmentsByType', $investmentsByType)
+            ->with('investmentsByInvestor', $investmentsByInvestor);
     }
 
     /**
