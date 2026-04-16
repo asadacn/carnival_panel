@@ -12,7 +12,7 @@ return array (
     'address' => 'Address',
     'package' => 'Package',
     'expiration' => 'Validity',
-    'username' => 'Carnival_ID',
+    'username' => 'Customer ID',
     'password' => 'Password',
     'Onu_mac' => 'Onu Mac',
     'onu_serial' => 'ONU Serial',

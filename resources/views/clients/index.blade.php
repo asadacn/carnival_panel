@@ -1152,7 +1152,12 @@
                                 url = `https://reportpanel.carnival.com.bd/zonecrm/user_details.php?carnivalid=${rowData.username}`;
                             }
 
-                            $(td).html(`<a href="${url}" target="_blank">${cellData}</a>`);
+                            $(td).html(`
+                                <div class="d-flex align-items-center gap-2 justify-content-between">
+                                    <a href="${url}" target="_blank">${cellData}</a>
+                                    <i class="far fa-copy text-secondary copy-id-btn" style="cursor: pointer; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="copyCustomerId('${cellData}')" title="Copy to clipboard"></i>
+                                </div>
+                            `);
                         }
                     },
                     { data: 'name', name: 'name' },
@@ -1802,6 +1807,41 @@
         $(document).on('click', '#quick-bill-btn', function() {
             createQuickBillForSelected();
         });
+
+        // Robust copy to clipboard function
+        function copyCustomerId(text) {
+            // Create a temporary textarea element
+            const $temp = $("<textarea>");
+            $("body").append($temp);
+            $temp.val(text).select();
+            
+            try {
+                // Execute copy command
+                document.execCommand("copy");
+                // Show success toast
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Customer ID copied to clipboard!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            } catch (err) {
+                console.error('Failed to copy', err);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Failed to copy!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            } finally {
+                // Remove the temporary element
+                $temp.remove();
+            }
+        }
     </script>
 
 @endsection
