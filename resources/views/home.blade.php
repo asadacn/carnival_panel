@@ -21,7 +21,7 @@
             @else
                 <p class="text-muted mb-0 small"><i data-lucide="clock" class="me-1" style="width:16px;height:16px"></i> No data recorded yet.</p>
             @endif
-            <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload();">
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.location.href = '?refresh=1';">
                 <i data-lucide="refresh-cw" style="width:14px;height:14px"></i> Refresh
             </button>
         </div>

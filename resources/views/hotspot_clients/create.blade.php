@@ -1,33 +1,58 @@
 @extends('layouts.app')
 @section('title')
-    @lang('crud.add_new') @lang('models/hotspotClients.singular')
+    Add New Hotspot Client
 @endsection
 @section('content')
     <section class="section">
-        <div class="section-header">
-            <h3 class="page__heading m-0">@lang('crud.add_new') @lang('models/hotspotClients.singular')</h3>
-            <div class="filter-container section-header-breadcrumb row justify-content-md-end">
-                <a href="{{ route('hotspotClients.index') }}" class="btn btn-primary">@lang('crud.back')</a>
+        <div class="section-header d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0 text-dark">Add New Hotspot Client</h1>
+            <div class="section-header-breadcrumb m-0">
+                <a href="{{ route('hotspotClients.index') }}" class="btn btn-light shadow-sm rounded-pill px-4 border font-weight-bold">
+                    <i class="fas fa-arrow-left me-2"></i> Back to List
+                </a>
             </div>
         </div>
+        
         <div class="content">
             @include('stisla-templates::common.errors')
             <div class="section-body">
-               <div class="row">
-                   <div class="col-lg-12">
-                       <div class="card">
-                           <div class="card-body ">
-                                {!! Form::open(['route' => 'hotspotClients.store']) !!}
-                                    <div class="row">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card border-0 shadow-sm rounded-4">
+                            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                                <h5 class="text-primary mb-0"><i class="fas fa-user-plus me-2"></i> Client Information</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                {!! Form::open(['route' => 'hotspotClients.store', 'class' => 'needs-validation']) !!}
+                                    <div class="row g-4">
                                         @include('hotspot_clients.fields')
                                     </div>
                                 {!! Form::close() !!}
-                           </div>
-                       </div>
-                   </div>
-               </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-@endsection
 
+    <style>
+        .section-header {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+            border-radius: 10px;
+            padding: 20px 30px;
+            background: #fff;
+        }
+        .btn-light {
+            background-color: #fff;
+            color: #6c757d;
+        }
+        .btn-light:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05) !important;
+            transition: all 0.3s ease;
+        }
+    </style>
+@endsection
