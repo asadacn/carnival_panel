@@ -574,6 +574,53 @@
                     left: auto !important;
                 }
             }
+            /* ===== LATEST COMMENT INLINE CELL ===== */
+            .lc-cell {
+                display: flex;
+                align-items: flex-start;
+                gap: 7px;
+                cursor: pointer;
+                padding: 4px 2px;
+                border-radius: 8px;
+                transition: background 0.15s;
+                max-width: 220px;
+            }
+            .lc-cell:hover {
+                background: #f0f4ff;
+            }
+            .lc-badge {
+                width: 24px;
+                height: 24px;
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.75rem;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+            .lc-content {
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+                min-width: 0;
+            }
+            .lc-body {
+                font-size: 0.78rem;
+                color: #1e293b;
+                font-weight: 500;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 180px;
+                display: block;
+            }
+            .lc-meta {
+                font-size: 0.68rem;
+                color: #94a3b8;
+                white-space: nowrap;
+            }
+
         </style>
 
         <div class="section-body" id="clients-header">
@@ -1098,6 +1145,407 @@
         }
     </style>
 
+    <!-- ============================================================
+         SOCIAL COMMENT MODAL
+    ============================================================= -->
+    <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered comment-modal-dialog">
+            <div class="modal-content comment-modal-content">
+
+                <!-- Header -->
+                <div class="comment-modal-header">
+                    <div class="comment-modal-header-inner">
+                        <div class="comment-modal-avatar-wrap">
+                            <span class="comment-modal-icon"><i class="fas fa-comments"></i></span>
+                        </div>
+                        <div>
+                            <h6 class="comment-modal-title" id="commentModalLabel">Client Notes</h6>
+                            <p class="comment-modal-subtitle" id="commentModalClientName">Loading…</p>
+                        </div>
+                    </div>
+                    <button type="button" class="comment-modal-close" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Feed -->
+                <div class="comment-feed-wrap" id="commentFeed">
+                    <!-- comments injected here -->
+                    <div class="comment-loading" id="commentLoading">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Loading comments…
+                    </div>
+                </div>
+
+                <!-- Compose -->
+                <div class="comment-compose-wrap">
+                    <!-- Type picker -->
+                    <div class="comment-type-row" id="commentTypeRow">
+                        <button type="button" class="ctype-btn active" data-type="note" title="Note">
+                            <i class="fas fa-sticky-note"></i> Note
+                        </button>
+                        <button type="button" class="ctype-btn" data-type="info" title="Info">
+                            <i class="fas fa-info-circle"></i> Info
+                        </button>
+                        <button type="button" class="ctype-btn" data-type="success" title="Done">
+                            <i class="fas fa-check-circle"></i> Done
+                        </button>
+                        <button type="button" class="ctype-btn" data-type="alert" title="Alert">
+                            <i class="fas fa-exclamation-triangle"></i> Alert
+                        </button>
+                    </div>
+
+                    <div class="comment-input-row">
+                        <div class="comment-self-avatar" id="commentSelfAvatar">ME</div>
+                        <div class="comment-input-wrap">
+                            <textarea id="commentBody"
+                                      class="comment-textarea"
+                                      placeholder="Write a note, update or alert…"
+                                      rows="2"
+                                      maxlength="1000"></textarea>
+                            <div class="comment-input-footer">
+                                <span class="comment-char-count" id="commentCharCount">0 / 1000</span>
+                                <button type="button" class="comment-send-btn" id="commentSendBtn"
+                                        onclick="submitComment()">
+                                    <i class="fas fa-paper-plane"></i> Post
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+    /* ===== COMMENT MODAL ===== */
+    .comment-modal-dialog {
+        max-width: 560px;
+    }
+    .comment-modal-content {
+        border: none;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+    }
+    /* Header */
+    .comment-modal-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .comment-modal-header-inner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .comment-modal-icon {
+        width: 42px;
+        height: 42px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.1rem;
+        backdrop-filter: blur(6px);
+    }
+    .comment-modal-title {
+        margin: 0;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+    .comment-modal-subtitle {
+        margin: 3px 0 0;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.8rem;
+    }
+    .comment-modal-close {
+        background: rgba(255,255,255,0.12);
+        border: none;
+        color: #fff;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+    .comment-modal-close:hover {
+        background: rgba(255,255,255,0.25);
+        transform: rotate(90deg);
+    }
+    /* Feed */
+    .comment-feed-wrap {
+        flex: 1;
+        overflow-y: auto;
+        padding: 18px 20px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 200px;
+        max-height: 380px;
+    }
+    .comment-loading {
+        display: flex;
+        align-items: center;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        justify-content: center;
+        padding: 30px 0;
+    }
+    .comment-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #94a3b8;
+    }
+    .comment-empty i {
+        font-size: 2.5rem;
+        color: #cbd5e1;
+        display: block;
+        margin-bottom: 10px;
+    }
+    .comment-empty p { margin: 0; font-size: 0.9rem; }
+    /* Individual comment card */
+    .comment-card {
+        display: flex;
+        gap: 10px;
+        animation: commentSlideIn 0.3s ease;
+    }
+    @keyframes commentSlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .comment-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: #fff;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        box-shadow: 0 2px 8px rgba(59,130,246,0.25);
+    }
+    .comment-bubble {
+        flex: 1;
+        background: #fff;
+        border-radius: 14px 14px 14px 4px;
+        padding: 12px 14px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+        position: relative;
+    }
+    .comment-bubble.mine {
+        border-radius: 14px 14px 4px 14px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-color: #bfdbfe;
+    }
+    .comment-bubble-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .comment-author {
+        font-weight: 700;
+        font-size: 0.82rem;
+        color: #1e3a5f;
+    }
+    .comment-type-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+    .badge-note    { background: #e0e7ff; color: #3730a3; }
+    .badge-info    { background: #dbeafe; color: #1d4ed8; }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-alert   { background: #fee2e2; color: #991b1b; }
+    .comment-time {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-left: auto;
+    }
+    .comment-body-text {
+        font-size: 0.88rem;
+        color: #334155;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 0;
+    }
+    .comment-bubble-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 8px;
+        gap: 6px;
+    }
+    .comment-delete-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-size: 0.72rem;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        opacity: 0.6;
+    }
+    .comment-delete-btn:hover {
+        opacity: 1;
+        background: #fee2e2;
+    }
+    /* Compose area */
+    .comment-compose-wrap {
+        padding: 14px 20px 18px;
+        background: #fff;
+        border-top: 1px solid #e2e8f0;
+        flex-shrink: 0;
+    }
+    .comment-type-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+    .ctype-btn {
+        flex: 1;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 5px 4px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+    .ctype-btn.active, .ctype-btn:hover {
+        border-color: #2563eb;
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+    .ctype-btn[data-type="success"].active, .ctype-btn[data-type="success"]:hover {
+        border-color: #10b981; background: #d1fae5; color: #065f46;
+    }
+    .ctype-btn[data-type="alert"].active, .ctype-btn[data-type="alert"]:hover {
+        border-color: #ef4444; background: #fee2e2; color: #991b1b;
+    }
+    .ctype-btn[data-type="info"].active, .ctype-btn[data-type="info"]:hover {
+        border-color: #0ea5e9; background: #e0f2fe; color: #0369a1;
+    }
+    .comment-input-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .comment-self-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        box-shadow: 0 2px 6px rgba(99,102,241,0.3);
+    }
+    .comment-input-wrap {
+        flex: 1;
+        background: #f1f5f9;
+        border-radius: 14px;
+        border: 1.5px solid #e2e8f0;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+    .comment-input-wrap:focus-within {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        background: #fff;
+    }
+    .comment-textarea {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 10px 14px 6px;
+        font-size: 0.88rem;
+        color: #1e293b;
+        resize: none;
+        outline: none;
+        font-family: inherit;
+        line-height: 1.5;
+    }
+    .comment-textarea::placeholder { color: #94a3b8; }
+    .comment-input-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 10px 8px 14px;
+    }
+    .comment-char-count {
+        font-size: 0.7rem;
+        color: #94a3b8;
+    }
+    .comment-send-btn {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 6px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+    }
+    .comment-send-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+    }
+    .comment-send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    @media (max-width: 576px) {
+        .comment-type-row { flex-wrap: wrap; }
+        .ctype-btn { flex: 1 1 40%; }
+    }
+    </style>
+
 @endsection
 
 
@@ -1179,7 +1627,7 @@
                         searchable: false,
                         orderable: false
                     },
-                    { data: 'comment', name: 'comment' },
+                    { data: 'latest_comment', name: 'latest_comment', searchable: false, orderable: false },
                     { data: 'isp_code', name: 'isp_code' },
                     { data: 'status', name: 'status' },
                     {
@@ -1807,6 +2255,204 @@
         $(document).on('click', '#quick-bill-btn', function() {
             createQuickBillForSelected();
         });
+
+        // ========== SOCIAL COMMENT MODAL ==========
+        let _commentClientId   = null;
+        let _commentClientName = null;
+        let _commentType       = 'note';
+
+        // Colour seeds for avatar gradients per username
+        const _avatarGradients = [
+            ['#6366f1','#4f46e5'], ['#ec4899','#be185d'], ['#f59e0b','#b45309'],
+            ['#10b981','#047857'], ['#0ea5e9','#0369a1'], ['#8b5cf6','#6d28d9'],
+            ['#ef4444','#b91c1c'], ['#14b8a6','#0f766e'],
+        ];
+        function _avatarGrad(name) {
+            let h = 0;
+            for (let c of (name||'?')) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+            const [a,b] = _avatarGradients[h % _avatarGradients.length];
+            return `linear-gradient(135deg,${a},${b})`;
+        }
+
+        // Open comment modal for a client
+        function openCommentModal(clientId, clientName) {
+            _commentClientId   = clientId;
+            _commentClientName = clientName;
+
+            // Reset compose
+            $('#commentBody').val('');
+            $('#commentCharCount').text('0 / 1000');
+
+            // Set header
+            $('#commentModalClientName').text(clientName);
+
+            // Self-avatar initials
+            const selfName = '{{ Auth::user()->name ?? "Me" }}';
+            const selfInits = selfName.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2);
+            $('#commentSelfAvatar').text(selfInits).css('background', _avatarGrad(selfName));
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+            modal.show();
+
+            // Load comments
+            loadComments();
+        }
+
+        function loadComments() {
+            if (!_commentClientId) return;
+            $('#commentFeed').html(`
+                <div class="comment-loading">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                    Loading comments…
+                </div>
+            `);
+
+            $.ajax({
+                url: `/clients/${_commentClientId}/comments`,
+                type: 'GET',
+                success: function(res) {
+                    renderComments(res.comments);
+                },
+                error: function() {
+                    $('#commentFeed').html('<div class="comment-loading text-danger"><i class="fas fa-exclamation-circle me-2"></i>Failed to load comments</div>');
+                }
+            });
+        }
+
+        function renderComments(comments) {
+            const feed = $('#commentFeed');
+            if (!comments || comments.length === 0) {
+                feed.html(`
+                    <div class="comment-empty">
+                        <i class="fas fa-comments"></i>
+                        <p>No notes yet. Be the first to add one!</p>
+                    </div>
+                `);
+                return;
+            }
+
+            const typeMeta = {
+                note:    { label: 'Note',  cls: 'badge-note',    icon: 'fa-sticky-note' },
+                info:    { label: 'Info',  cls: 'badge-info',    icon: 'fa-info-circle' },
+                success: { label: 'Done',  cls: 'badge-success', icon: 'fa-check-circle' },
+                alert:   { label: 'Alert', cls: 'badge-alert',   icon: 'fa-exclamation-triangle' },
+            };
+
+            let html = '';
+            comments.forEach(function(c) {
+                const meta  = typeMeta[c.type] || typeMeta.note;
+                const mineClass = c.is_mine ? 'mine' : '';
+                const grad  = _avatarGrad(c.author_name);
+                const del   = c.is_mine
+                    ? `<button class="comment-delete-btn" onclick="deleteComment(${c.id})" title="Delete"><i class="fas fa-trash-alt"></i> Delete</button>`
+                    : '';
+
+                html += `
+                <div class="comment-card" id="cc-${c.id}">
+                    <div class="comment-avatar" style="background:${grad}">${c.author_initials}</div>
+                    <div class="comment-bubble ${mineClass}">
+                        <div class="comment-bubble-top">
+                            <span class="comment-author">${_esc(c.author_name)}</span>
+                            <span class="comment-type-badge ${meta.cls}"><i class="fas ${meta.icon}"></i> ${meta.label}</span>
+                            <span class="comment-time" title="${_esc(c.created_at)}">${_esc(c.time_ago)}</span>
+                        </div>
+                        <p class="comment-body-text">${_esc(c.body)}</p>
+                        <div class="comment-bubble-actions">${del}</div>
+                    </div>
+                </div>`;
+            });
+
+            feed.html(html);
+        }
+
+        function _esc(str) {
+            const d = document.createElement('div');
+            d.appendChild(document.createTextNode(str || ''));
+            return d.innerHTML;
+        }
+
+        function submitComment() {
+            const body = $('#commentBody').val().trim();
+            if (!body) {
+                $('#commentBody').focus();
+                return;
+            }
+
+            const btn = $('#commentSendBtn');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Posting…');
+
+            $.ajax({
+                url: `/clients/${_commentClientId}/comments`,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    body:   body,
+                    type:   _commentType,
+                },
+                success: function(res) {
+                    if (res.success) {
+                        $('#commentBody').val('');
+                        $('#commentCharCount').text('0 / 1000');
+                        loadComments(); // reload list
+                        // Reload DataTable row to update count badge
+                        $('#clients').DataTable().ajax.reload(null, false);
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to post comment';
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: msg, showConfirmButton: false, timer: 2500 });
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="fas fa-paper-plane"></i> Post');
+                }
+            });
+        }
+
+        function deleteComment(commentId) {
+            Swal.fire({
+                title: 'Delete this note?',
+                text: 'This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel',
+            }).then(result => {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: `/client-comments/${commentId}`,
+                    type: 'DELETE',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function(res) {
+                        if (res.success) {
+                            $(`#cc-${commentId}`).fadeOut(300, function() { $(this).remove(); });
+                            $('#clients').DataTable().ajax.reload(null, false);
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({ toast: true, position:'top-end', icon:'error', title:'Could not delete', showConfirmButton:false, timer:2000 });
+                    }
+                });
+            });
+        }
+
+        // Type pill selection
+        $(document).on('click', '.ctype-btn', function() {
+            $('.ctype-btn').removeClass('active');
+            $(this).addClass('active');
+            _commentType = $(this).data('type');
+        });
+
+        // Char counter + Ctrl+Enter submit
+        $(document).on('input', '#commentBody', function() {
+            const len = $(this).val().length;
+            $('#commentCharCount').text(`${len} / 1000`);
+        });
+        $(document).on('keydown', '#commentBody', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') submitComment();
+        });
+        // ========== END SOCIAL COMMENT MODAL ==========
 
         // Robust copy to clipboard function
         function copyCustomerId(text) {

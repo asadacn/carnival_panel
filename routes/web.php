@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientCommentController;
 use App\Http\Controllers\CardSellerController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\HotspotZoneController;
@@ -51,6 +52,11 @@ Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.e
 
 // Get client package price
 Route::get('clients/{clientId}/package-price', [ClientController::class, 'getPackagePrice'])->name('clients.package-price');
+
+// Client Comments (social-media style)
+Route::get('clients/{clientId}/comments', [ClientCommentController::class, 'index'])->name('clients.comments.index');
+Route::post('clients/{clientId}/comments', [ClientCommentController::class, 'store'])->name('clients.comments.store');
+Route::delete('client-comments/{commentId}', [ClientCommentController::class, 'destroy'])->name('clients.comments.destroy');
 
 //Hotspot Import Export
 Route::get('hotspot/export/', [HotspotZoneController::class, 'export'])->name('hotspots.export');

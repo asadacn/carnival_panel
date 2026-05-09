@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ClientComment;
 
 class Client extends Model
 {
@@ -149,6 +150,16 @@ class Client extends Model
         return $this->expiration
             && !$this->expiration->isPast()
             && $this->expiration->diffInDays(now()) <= 7;
+    }
+
+    // ── Comment Relationships ─────────────────────────────────────────────────
+
+    /**
+     * Client has many social-style comments
+     */
+    public function comments()
+    {
+        return $this->hasMany(ClientComment::class)->orderBy('created_at', 'desc');
     }
 
     // ── Billing Relationships ─────────────────────────────────────────────────

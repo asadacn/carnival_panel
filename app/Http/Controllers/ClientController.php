@@ -38,7 +38,11 @@ class ClientController extends AppBaseController
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Client::query();
+            $data = Client::query()
+                ->withCount('comments')
+                ->with(['comments' => function ($q) {
+                    $q->with('author')->orderBy('created_at', 'desc')->limit(1);
+                }]);
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -61,17 +65,26 @@ class ClientController extends AppBaseController
                 ->addColumn('action', function ($client) {
                     $name    = addslashes($client->name);
                     $contact = addslashes($client->contact);
+                    $commentCount = $client->comments_count ?? 0;
 
-                    $viewUrl = route('clients.show', $client->id);
-                    $editUrl = route('clients.edit', $client->id);
-                    $billsUrl = route('clients.due-bills', $client->id);
+                    $viewUrl       = route('clients.show', $client->id);
+                    $editUrl       = route('clients.edit', $client->id);
+                    $billsUrl      = route('clients.due-bills', $client->id);
                     $addPaymentUrl = route('due-bill-payments.create', ['client_id' => $client->id]);
+
+                    $commentBadge = $commentCount > 0
+                        ? "<span class=\"badge bg-primary\" style=\"font-size:0.7rem;\">$commentCount</span>"
+                        : '';
 
                     $btn = <<<EOT
                     <div class="btn-group">
                         <a href="{$editUrl}" class="btn btn-warning btn-sm" title="Edit">
                             <i class="fa fa-edit"></i>
                         </a>
+                        <button type="button" class="btn btn-sm btn-info" title="Comments"
+                            onclick="openCommentModal({$client->id}, '{$name}')">
+                            <i class="fa fa-comment"></i> {$commentBadge}
+                        </button>
                         <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
@@ -109,6 +122,12 @@ class ClientController extends AppBaseController
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
+                                <a class="dropdown-item" href="#" onclick="openCommentModal({$client->id}, '{$name}')">
+                                    <i class="fas fa-comments me-2"></i> Comments {$commentBadge}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
                                 <a class="dropdown-item text-danger" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}">
                                     <i class="fa fa-trash me-2"></i> Delete
                                 </a>
@@ -118,7 +137,33 @@ class ClientController extends AppBaseController
 EOT;
                     return $btn;
                 })
-                ->rawColumns(['action', 'total_due'])
+                ->addColumn('latest_comment', function ($client) {
+                    $latest = $client->comments->first();
+                    if (!$latest) return '<span class="text-muted" style="font-size:0.78rem;">—</span>';
+
+                    $typeColors = [
+                        'note'    => ['bg' => '#e0e7ff', 'color' => '#3730a3', 'icon' => '📝'],
+                        'info'    => ['bg' => '#dbeafe', 'color' => '#1d4ed8', 'icon' => 'ℹ️'],
+                        'success' => ['bg' => '#d1fae5', 'color' => '#065f46', 'icon' => '✅'],
+                        'alert'   => ['bg' => '#fee2e2', 'color' => '#991b1b', 'icon' => '⚠️'],
+                    ];
+                    $tc       = $typeColors[$latest->type] ?? $typeColors['note'];
+                    $body     = e(mb_strimwidth($latest->body, 0, 55, '…'));
+                    $author   = e($latest->author_name);
+                    $timeAgo  = e($latest->time_ago);
+                    $clientId = $client->id;
+                    $clientName = addslashes($client->name);
+
+                    return "
+                        <div class='lc-cell' onclick=\"openCommentModal({$clientId}, '{$clientName}')\" title=\"Click to view all comments\">
+                            <div class='lc-badge' style='background:{$tc['bg']};color:{$tc['color']};'>{$tc['icon']}</div>
+                            <div class='lc-content'>
+                                <span class='lc-body'>{$body}</span>
+                                <span class='lc-meta'>{$author} · {$timeAgo}</span>
+                            </div>
+                        </div>";
+                })
+                ->rawColumns(['action', 'total_due', 'latest_comment'])
                 ->editColumn('expiration', function ($row) {
                     if (empty($row->expiration)) return '-';
 
