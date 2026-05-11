@@ -40,9 +40,7 @@ class ClientController extends AppBaseController
         if ($request->ajax()) {
             $data = Client::query()
                 ->withCount('comments')
-                ->with(['comments' => function ($q) {
-                    $q->with('author')->orderBy('created_at', 'desc')->limit(1);
-                }]);
+                ->with('latestComment');
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -138,7 +136,7 @@ EOT;
                     return $btn;
                 })
                 ->addColumn('latest_comment', function ($client) {
-                    $latest = $client->comments->first();
+                    $latest = $client->latestComment;
                     if (!$latest) return '<span class="text-muted" style="font-size:0.78rem;">—</span>';
 
                     $typeColors = [

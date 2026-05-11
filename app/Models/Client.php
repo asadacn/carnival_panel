@@ -162,6 +162,14 @@ class Client extends Model
         return $this->hasMany(ClientComment::class)->orderBy('created_at', 'desc');
     }
 
+    /**
+     * Eager-loadable latest comment (one per client via subquery — no limit(1) bug)
+     */
+    public function latestComment()
+    {
+        return $this->hasOne(ClientComment::class)->with('author')->latestOfMany();
+    }
+
     // ── Billing Relationships ─────────────────────────────────────────────────
 
     /**
