@@ -174,6 +174,9 @@
                 Due Bills Management
             </h1>
             <div class="header-actions">
+                <a href="{{ route('due-bills.report') }}" class="btn btn-outline-primary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 600; text-decoration: none; padding: 0.6rem 1.2rem;">
+                    <i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i> View Report
+                </a>
                 <a href="{{ route('due-bills.create') }}" class="btn-create">
                     <i data-lucide="plus" style="width:18px;height:18px;"></i> Create Bill
                 </a>
@@ -270,6 +273,7 @@
             processing: true,
             serverSide: true,
             responsive: true,
+            order: [],
             ajax: "{{ route('due-bills.index') }}",
             language: {
                 search: "",

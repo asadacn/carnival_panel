@@ -111,6 +111,7 @@ Route::get('/tickets', TicketManager::class)->name('tickets.live');
 Route::get('/technicians', TechnicianManager::class)->name('technicians');
 
 // Due Bills Management
+Route::get('due-bills/report', [App\Http\Controllers\DueBillController::class, 'report'])->name('due-bills.report');
 Route::get('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController::class, 'markAsPaid'])->name('due-bills.mark-paid');
 Route::resource('due-bills', App\Http\Controllers\DueBillController::class);
 Route::get('clients/{id}/due-bills', [App\Http\Controllers\DueBillController::class, 'clientBills'])->name('clients.due-bills');

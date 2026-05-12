@@ -16,7 +16,10 @@ class DueBillController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = DueBill::query();
+            $query = DueBill::query()
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->orderByRaw('(amount - paid_amount) DESC');
 
             // Filter by client if provided
             if ($request->filled('client_id')) {
@@ -303,5 +306,88 @@ class DueBillController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error generating bill statement: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Show report of due bills with advanced filtering
+     */
+    public function report(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = DueBill::with('client')
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->orderByRaw('(amount - paid_amount) DESC');
+
+            // Apply Filters
+            if ($request->filled('client_id')) {
+                $query->where('client_id', $request->client_id);
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('month')) {
+                $query->where('month', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->where('year', $request->year);
+            }
+
+            // For summary calculations (independent of pagination)
+            $summaryQuery = clone $query;
+            $totalAmount = $summaryQuery->sum('amount');
+            $totalPaid = $summaryQuery->sum('paid_amount');
+            $totalDue = $totalAmount - $totalPaid;
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('client_name', function ($row) {
+                    return $row->client->name ?? '-';
+                })
+                ->addColumn('customer_id', function ($row) {
+                    return $row->client->username ?? '-';
+                })
+                ->addColumn('contact', function ($row) {
+                    return $row->client->contact ?? '-';
+                })
+                ->addColumn('address', function ($row) {
+                    return $row->client->address ?? '-';
+                })
+                ->addColumn('month_year', function ($row) {
+                    return $row->month_year;
+                })
+                ->addColumn('remaining', function ($row) {
+                    return $row->remaining_balance;
+                })
+                ->addColumn('status_badge', function ($row) {
+                    $colors = [
+                        'unpaid' => 'danger',
+                        'partially_paid' => 'warning',
+                        'paid' => 'success',
+                        'overdue' => 'secondary'
+                    ];
+                    $color = $colors[$row->status] ?? 'secondary';
+                    return "<span class='badge bg-{$color}'>" . ucfirst(str_replace('_', ' ', $row->status)) . "</span>";
+                })
+                ->with([
+                    'totalAmount' => number_format($totalAmount, 2),
+                    'totalPaid' => number_format($totalPaid, 2),
+                    'totalDue' => number_format($totalDue, 2),
+                ])
+                ->rawColumns(['status_badge'])
+                ->make(true);
+        }
+
+        $clients = Client::select('id', 'name', 'username')->orderBy('name')->get();
+        $years = DueBill::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $months[$m] = date('F', mktime(0, 0, 0, $m, 1));
+        }
+
+        return view('due_bills.report', compact('clients', 'years', 'months'));
     }
 }
