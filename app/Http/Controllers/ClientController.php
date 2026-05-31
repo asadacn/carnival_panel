@@ -63,6 +63,7 @@ class ClientController extends AppBaseController
                 ->addColumn('action', function ($client) {
                     $name    = addslashes($client->name);
                     $contact = addslashes($client->contact);
+                    $address = addslashes($client->address ?? '');
                     $commentCount = $client->comments_count ?? 0;
 
                     $viewUrl       = route('clients.show', $client->id);
@@ -104,7 +105,7 @@ class ClientController extends AppBaseController
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="#" onclick="showQuickBillModal({$client->id}, '{$name}')">
+                                <a class="dropdown-item" href="#" onclick="showQuickBillModal({$client->id}, '{$name}', '{$contact}', '{$address}')">
                                     <i class="fas fa-receipt me-2"></i> Quick Bill
                                 </a>
                             </li>

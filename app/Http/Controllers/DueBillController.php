@@ -108,7 +108,7 @@ class DueBillController extends Controller
      */
     public function create()
     {
-        $clients = Client::where('status', 'Active')->select('id', 'name', 'username')->orderBy('name')->get();
+        $clients = Client::select('id', 'name', 'username', 'status')->orderBy('name')->get();
         return view('due_bills.create', compact('clients'));
     }
 
@@ -389,5 +389,35 @@ class DueBillController extends Controller
         }
 
         return view('due_bills.report', compact('clients', 'years', 'months'));
+    }
+
+    /**
+     * Send bill details to Telegram
+     */
+    public function sendTelegramNotification(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string'
+        ]);
+
+        try {
+            // Replace <br> or HTML tags with appropriate newlines or tags for Telegram
+            $msg = $request->message;
+            $msg = str_replace(['<br>', '<br/>', '<br />'], "\n", $msg);
+            
+            // Strip any unsupported HTML tags but leave bold/code/italic/a tags supported by Telegram HTML parse_mode
+            $msg = strip_tags($msg, '<b><strong><i><em><u><ins><s><strike><del><code><pre><a>');
+
+            // Use dedicated billing channel ID if configured in env, else fallback to standard chat ID
+            $channelId = env('TELEGRAM_BILLING_CHANNEL_ID') ?? env('TELEGRAM_CHAT_ID');
+
+            $status = sendTelegram($msg, $channelId);
+            if ($status) {
+                return response()->json(['success' => true, 'message' => 'Message sent to Telegram Channel!']);
+            }
+            return response()->json(['success' => false, 'message' => 'Failed to send message.'], 500);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

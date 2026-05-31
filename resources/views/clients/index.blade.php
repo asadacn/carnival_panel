@@ -2050,11 +2050,19 @@
         // ========== QUICK DUE BILL FUNCTIONALITY ==========
 
         // Show quick bill modal for a client
-        function showQuickBillModal(clientId, clientName) {
+        // Store client details globally for copy feature
+        var _qbClientContact = '';
+        var _qbClientAddress = '';
+
+        function showQuickBillModal(clientId, clientName, clientContact, clientAddress) {
             document.getElementById('quick_client_id').value = clientId;
             document.getElementById('quick_client_name').innerText = clientName;
             document.getElementById('quick_amount').value = '';
             document.getElementById('quick_notes').value = '';
+
+            // Store contact & address for copy feature
+            _qbClientContact = clientContact || '';
+            _qbClientAddress = clientAddress || '';
 
             // Fetch package price for this client
             $.ajax({
@@ -2111,15 +2119,71 @@
                 },
                 success: function(response) {
                     Swal.hideLoading();
+
+                    // Hide modal and reload table IMMEDIATELY so due status updates
+                    var qbModalEl = document.getElementById('quickBillModal');
+                    var qbModalInstance = bootstrap.Modal.getInstance(qbModalEl);
+                    if (qbModalInstance) qbModalInstance.hide();
+                    $('#clients').DataTable().ajax.reload(null, false);
+
+                    var clientName = document.getElementById('quick_client_name').innerText;
+                    var billAmount = document.getElementById('quick_amount').value;
+                    var currentMonthYear = document.getElementById('quick_month_year').innerText;
+
+                    // Formatted plain text for clipboard/sharing
+                    window._qbCurrentCopyText = '🔔 *DUE BILL CREATED* 🔔\n' +
+                        '-----------------------------\n' +
+                        '👤 *Client:* ' + clientName + '\n' +
+                        '📞 *Contact:* ' + (_qbClientContact || 'N/A') + '\n' +
+                        '📍 *Address:* ' + (_qbClientAddress || 'N/A') + '\n' +
+                        '📅 *Period:* ' + currentMonthYear + '\n' +
+                        '💰 *Amount:* ৳' + parseFloat(billAmount).toLocaleString() + '\n' +
+                        '-----------------------------';
+
+                    // HTML version for Telegram with HTML parse mode
+                    window._qbCurrentTelegramText = '🔔 <b>DUE BILL CREATED</b> 🔔\n' +
+                        '-----------------------------\n' +
+                        '👤 <b>Client:</b> ' + clientName + '\n' +
+                        '📞 <b>Contact:</b> ' + (_qbClientContact || 'N/A') + '\n' +
+                        '📍 <b>Address:</b> ' + (_qbClientAddress || 'N/A') + '\n' +
+                        '📅 <b>Period:</b> ' + currentMonthYear + '\n' +
+                        '💰 <b>Amount:</b> ৳' + parseFloat(billAmount).toLocaleString() + '\n' +
+                        '-----------------------------';
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Bill Created!',
-                        text: `Due bill for current month created successfully.`,
-                        confirmButtonText: 'OK'
-                    }).then((result) => {
-                        bootstrap.Modal.getInstance(document.getElementById('quickBillModal')).hide();
-                        // Reload the table
-                        $('#clients').DataTable().ajax.reload();
+                        html: `
+                            <p style="margin-bottom: 12px; color: #6b7280; font-size: 0.9rem;">Due bill for current month created successfully.</p>
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; text-align: left; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; color: #166534; font-size: 0.85rem;">
+                                    <i class="fas fa-user-circle"></i> ${clientName}
+                                </div>
+                                <div style="font-size: 0.82rem; color: #374151; line-height: 1.7;">
+                                    <div><i class="fas fa-phone-alt" style="width: 16px; color: #6b7280;"></i> ${_qbClientContact || 'N/A'}</div>
+                                    <div><i class="fas fa-map-marker-alt" style="width: 16px; color: #6b7280;"></i> ${_qbClientAddress || 'N/A'}</div>
+                                    <div><i class="fas fa-money-bill-wave" style="width: 16px; color: #6b7280;"></i> ৳${parseFloat(billAmount).toLocaleString()}</div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <button onclick="qbCopyDetails()" class="btn btn-primary w-100" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px; border-radius: 8px; background-color: #3b82f6; border-color: #3b82f6; color: white;">
+                                    <i class="fas fa-copy"></i> Copy Bill Details
+                                </button>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <button onclick="qbSendWhatsApp()" class="btn btn-success" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; padding: 10px; border-radius: 8px; background-color: #25d366; border-color: #25d366; color: white;">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp Group
+                                    </button>
+                                    <button id="tg-share-btn" onclick="qbSendTelegram()" class="btn btn-info" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 600; padding: 10px; border-radius: 8px; background-color: #0088cc; border-color: #0088cc; color: white;">
+                                        <i class="fab fa-telegram-plane"></i> Telegram Channel
+                                    </button>
+                                </div>
+                            </div>
+                        `,
+                        showConfirmButton: false,
+                        showCancelButton: true,
+                        cancelButtonText: 'Close',
+                        cancelButtonColor: '#6b7280',
                     });
                 },
                 error: function(xhr) {
@@ -2132,6 +2196,78 @@
                 }
             });
         }
+
+        // Global sharing helpers for Quick Bill Success Dialog
+        window.qbCopyDetails = function() {
+            var copyText = window._qbCurrentCopyText || '';
+            var ta = document.createElement('textarea');
+            ta.value = copyText;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            ta.style.top = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                document.execCommand('copy');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'Bill details copied to clipboard.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+            document.body.removeChild(ta);
+        };
+
+        window.qbSendWhatsApp = function() {
+            var shareText = window._qbCurrentCopyText || '';
+            var waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(shareText);
+            window.open(waUrl, '_blank');
+        };
+
+        window.qbSendTelegram = function() {
+            var shareText = window._qbCurrentTelegramText || '';
+            var $btn = $('#tg-share-btn');
+            var originalHtml = $btn.html();
+
+            // Loading state
+            $btn.html('<i class="fas fa-spinner fa-spin"></i> Sending...').prop('disabled', true);
+
+            $.ajax({
+                url: '{{ route("due-bills.send-telegram") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    message: shareText
+                },
+                success: function(response) {
+                    $btn.html(originalHtml).prop('disabled', false);
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sent!',
+                            text: 'Bill details posted to Telegram Channel.',
+                            timer: 2000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    } else {
+                        Swal.fire('Error', 'Failed to send to Telegram.', 'error');
+                    }
+                },
+                error: function(err) {
+                    $btn.html(originalHtml).prop('disabled', false);
+                    Swal.fire('Error', 'An error occurred while sending to Telegram.', 'error');
+                }
+            });
+        };
 
         // Add quick bill button to action cells
         function addQuickBillOption(rowIndex, clientId, clientName) {
@@ -2160,7 +2296,7 @@
             }
 
             if (selectedData.length === 1) {
-                showQuickBillModal(selectedData[0].id, selectedData[0].name);
+                showQuickBillModal(selectedData[0].id, selectedData[0].name, selectedData[0].contact || '', selectedData[0].address || '');
             } else {
                 Swal.fire({
                     title: 'Create Bills for Multiple Clients?',

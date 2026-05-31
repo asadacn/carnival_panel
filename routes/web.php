@@ -113,6 +113,7 @@ Route::get('/technicians', TechnicianManager::class)->name('technicians');
 // Due Bills Management
 Route::get('due-bills/report', [App\Http\Controllers\DueBillController::class, 'report'])->name('due-bills.report');
 Route::get('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController::class, 'markAsPaid'])->name('due-bills.mark-paid');
+Route::post('due-bills/send-telegram', [App\Http\Controllers\DueBillController::class, 'sendTelegramNotification'])->name('due-bills.send-telegram');
 Route::resource('due-bills', App\Http\Controllers\DueBillController::class);
 Route::get('clients/{id}/due-bills', [App\Http\Controllers\DueBillController::class, 'clientBills'])->name('clients.due-bills');
 Route::get('clients/{id}/bills-statement-pdf', [App\Http\Controllers\DueBillController::class, 'billStatementPdf'])->name('clients.bills-statement-pdf');
