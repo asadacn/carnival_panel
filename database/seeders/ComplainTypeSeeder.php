@@ -10,6 +10,17 @@ class ComplainTypeSeeder extends Seeder
     public function run(): void
     {
         DB::table('complain_types')->insert([
+            ['name' => 'টিভি সেটিং সমস্যা / TV Setting Issue', 'description' => 'Customer facing TV or Android box setting issue', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'লাল বাতি জ্বলে / LOS Red Light', 'description' => 'LOS light blinking red (ONU signal loss)', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'অনু বন্ধ / ONU Offline (Power issue)', 'description' => 'ONU is turned off or has power issues', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'স্লো ইন্টারনেট / Slow Speed', 'description' => 'Internet speed is slow', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'লাইন কাটা / Cable Cut', 'description' => 'Physical cable damage or cut', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'রাউটার রিসেট / Router Configuration', 'description' => 'Router reset or needs re-configuration', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'কানেকশন ড্রপ / Connection Drop', 'description' => 'Internet connection dropping frequently', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'ওয়াইফাই পাসওয়ার্ড পরিবর্তন / Wifi Password Change', 'description' => 'Customer wants to change wifi password', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'বিলিং বা পেমেন্ট সমস্যা / Billing & Payment', 'description' => 'Invoice or payment issues', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'PPPoE লগইন সমস্যা / PPPoE Login Fail', 'description' => 'Unable to connect to PPPoE server', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'নতুন কানেকশন অনুরোধ / New Connection Request', 'description' => 'Request for new internet link', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Slow Internet', 'description' => 'Customer facing slow speed issue.', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Connection Drop', 'description' => 'Frequent disconnection problem.', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Billing Issue', 'description' => 'Invoice or payment related problem.', 'created_at' => now(), 'updated_at' => now()],

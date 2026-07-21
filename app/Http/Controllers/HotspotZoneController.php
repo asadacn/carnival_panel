@@ -41,14 +41,19 @@ class HotspotZoneController extends AppBaseController
 
             return DataTables::of($data)->addIndexColumn()
                 ->addColumn('action', function ($zone) {
+                    $viewUrl   = route('hotspotZones.show',    [$zone->id]);
+                    $editUrl   = route('hotspotZones.edit',    [$zone->id]);
+                    $deleteUrl = route('hotspotZones.destroy', [$zone->id]);
 
-                    $btn = '<div class="btn-group btn-group-toggle" data-toggle="buttons" >';
-                    // $btn = $btn . '<a href="#" data-toggle="modal" onclick="setSmsId(' . $zone->id . ')" data-target="#smsModal" class="btn btn-primary action-btn"><i class="fa fa-envelope"></i></a>';
-                    $btn = $btn . '<a href="' . route('hotspotZones.show', [$zone->id]) . '" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
-                    $btn = $btn . '<a href="' . route('hotspotZones.edit', [$zone->id]) . '" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
-                    $btn = $btn . ' <a href="' . route('hotspotZones.destroy', [$zone->id]) . '" onclick="return confirm(\'Are you sure?\')"   data-id="' . $zone->id . '" data-original-title="Delete" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
-                    $btn = $btn . '</div>';
+                    $btn  = '<div class="btn-group btn-group-toggle">';
+                    $btn .= '<a href="' . $viewUrl   . '" class="btn btn-light action-btn"><i class="fa fa-eye"></i></a>';
+                    $btn .= '<a href="' . $editUrl   . '" class="btn btn-warning action-btn edit-btn"><i class="fa fa-edit"></i></a>';
+                    $btn .= '<a href="' . $deleteUrl . '" data-id="' . $zone->id . '" class="btn btn-danger btn-sm deleteClient"><i class="fa fa-trash"></i></a>';
+                    $btn .= '</div>';
                     return $btn;
+                })
+                ->addColumn('has_ups', function ($zone) {
+                    return $zone->has_ups;
                 })
                 ->rawColumns(['action'])
                 ->make(true);

@@ -150,21 +150,9 @@
         </div>
     @endif
 
-    {{-- Top Controls / Dashboard Header --}}
     <div class="d-flex gap-3 mb-4 align-items-center p-3 rounded">
         <h4 class="mb-0 fw-bold text-dark">Ticket Management Dashboard 🚀</h4>
-
-        <div class="ms-auto d-flex gap-3 align-items-center">
-             <span class="muted-small">Notifications:</span>
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" wire:model.live="send_sms" id="smsSwitch" style="font-size:1.2rem;">
-                <label class="form-check-label muted-small" for="smsSwitch" title="Toggle SMS Notifications">SMS</label>
-            </div>
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" wire:model.live="send_telegram" id="tgSwitch" style="font-size:1.2rem;">
-                <label class="form-check-label muted-small" for="tgSwitch" title="Toggle Telegram Notifications">Telegram</label>
-            </div>
-        </div>
+        <a href="{{ route('tickets.analytics') }}" class="btn btn-outline-primary btn-sm rounded-pill ms-3 shadow-sm"><i class="fas fa-chart-pie me-1"></i> View Analytics 📊</a>
     </div>
 
     {{-- TICKET STATUS DASHBOARD COUNTERS --}}
@@ -216,6 +204,35 @@
         </div>
     </div>
     {{-- END TICKET STATUS DASHBOARD COUNTERS --}}
+
+    {{-- ============================================================ --}}
+    {{--  TICKET ANALYTICS CHARTS                                      --}}
+    {{-- ============================================================ --}}
+    <div class="row g-4 mb-5" id="ticketChartsSection">
+
+        {{-- Category / Complain-Type Bar Chart (full width) --}}
+        <div class="col-12">
+            <div class="card card-modern p-4" style="background: linear-gradient(135deg,#0f172a,#1e293b); color:#fff;">
+                <div class="d-flex align-items-center mb-3">
+                    <span style="font-size:1.4rem; margin-right:.5rem;">📊</span>
+                    <h6 class="mb-0 fw-bold" style="color:#e2e8f0; letter-spacing:.03em;">Tickets by Category</h6>
+                    <span class="ms-auto badge rounded-pill" style="background:#3b82f6; font-size:.7rem;">Complain Types</span>
+                </div>
+                <div style="position:relative; height:260px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {{-- ============================================================ --}}
+    {{-- END TICKET ANALYTICS CHARTS                                   --}}
+    {{-- ============================================================ --}}
+
+    {{-- Pass PHP chart data to JS --}}
+    <script>
+        window._ticketCategoryData = @json($complainTypeStats);
+    </script>
 
     {{-- Create Ticket Card --}}
     <div class="card card-modern mb-5">
@@ -328,7 +345,7 @@
             </div>
 
             {{-- Description Field --}}
-            <div class="form-floating mb-4">
+            <div class="form-floating mb-3">
                 <textarea
                     wire:model="description"
                     class="form-control"
@@ -336,8 +353,23 @@
                     id="ticketDescription"
                     style="height:110px; border-radius:1rem"
                     aria-label="Ticket details"></textarea>
-                <label for="ticketDescription">বিস্তারিত (Description)</label>
+                <label for="ticketDescription">বিস্তারিত (Description - Optional)</label>
                 @error('description') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- Form Notifications Settings --}}
+            <div class="card bg-light border-0 p-3 mb-4" style="border-radius: 1rem;">
+                <div class="d-flex gap-4 align-items-center flex-wrap">
+                    <span class="fw-semibold small text-muted"><i class="bi bi-bell-fill me-1"></i> Send Notifications:</span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" wire:model.live="send_sms" id="smsSwitch" style="font-size:1.1rem; cursor:pointer;">
+                        <label class="form-check-label small text-dark fw-medium" for="smsSwitch" style="cursor:pointer;">SMS Notification</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" wire:model.live="send_telegram" id="tgSwitch" style="font-size:1.1rem; cursor:pointer;">
+                        <label class="form-check-label small text-dark fw-medium" for="tgSwitch" style="cursor:pointer;">Telegram Notification</label>
+                    </div>
+                </div>
             </div>
 
             <button wire:click="submitTicket" wire:loading.attr="disabled" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
@@ -562,4 +594,189 @@
             {{-- END Pagination Links --}}
         </div>
     </div>
+
+    {{-- Chart.js + Initialization --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script>
+    (function () {
+        const CAT_COLORS = [
+            '#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444',
+            '#06b6d4','#ec4899','#a3e635','#f97316','#14b8a6',
+        ];
+
+        let catChart = null;
+
+        function renderCharts() {
+            const catData   = window._ticketCategoryData || [];
+            const catLabels = catData.map(d => d.label);
+            const catCounts = catData.map(d => d.count);
+            const catColors = catLabels.map((_, i) => CAT_COLORS[i % CAT_COLORS.length]);
+
+            const catCanvas = document.getElementById('categoryChart');
+            if (catCanvas) {
+                if (catChart) catChart.destroy();
+                catChart = new Chart(catCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: catLabels,
+                        datasets: [{
+                            label: 'Tickets',
+                            data: catCounts,
+                            backgroundColor: catColors,
+                            borderColor: catColors.map(c => c + 'cc'),
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ` ${ctx.parsed.x} ticket${ctx.parsed.x !== 1 ? 's' : ''}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.06)' },
+                                ticks: { color: '#94a3b8', font: { size: 11 } },
+                                beginAtZero: true,
+                                precision: 0,
+                            },
+                            y: {
+                                grid: { display: false },
+                                ticks: { color: '#cbd5e1', font: { size: 11 } },
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderCharts);
+
+        document.addEventListener('livewire:load', function () {
+            Livewire.hook('message.processed', () => {
+                setTimeout(renderCharts, 50);
+            });
+        });
+
+        // Ticket Created: Show share popup (Livewire v2)
+        document.addEventListener('livewire:load', function () {
+            Livewire.on('ticket-created', function (id, clientName, clientId, contact, address, complainType, priority, description) {
+                const d = { id, clientName, clientId, contact, address, complainType, priority, description };
+
+                window._ticketShareText = '🔔 *নতুন টিকেট তৈরি হয়েছে* 🔔\n' +
+                    '-----------------------------\n' +
+                    '🎫 *Ticket ID:* #' + d.id + '\n' +
+                    '👤 *Client:* ' + d.clientName + ' (' + d.clientId + ')\n' +
+                    '📞 *Contact:* ' + (d.contact || 'N/A') + '\n' +
+                    '🏠 *Address:* ' + (d.address || 'N/A') + '\n' +
+                    '⚙️ *Type:* ' + d.complainType + '\n' +
+                    '🔥 *Priority:* ' + d.priority + '\n' +
+                    '📝 *Description:* ' + (d.description || 'N/A') + '\n' +
+                    '-----------------------------';
+
+                window._ticketShareTelegramText = '🔔 <b>নতুন টিকেট তৈরি হয়েছে</b> 🔔\n' +
+                    '-----------------------------\n' +
+                    '🎫 <b>Ticket ID:</b> #' + d.id + '\n' +
+                    '👤 <b>Client:</b> ' + d.clientName + ' (' + d.clientId + ')\n' +
+                    '📞 <b>Contact:</b> ' + (d.contact || 'N/A') + '\n' +
+                    '🏠 <b>Address:</b> ' + (d.address || 'N/A') + '\n' +
+                    '⚙️ <b>Type:</b> ' + d.complainType + '\n' +
+                    '🔥 <b>Priority:</b> ' + d.priority + '\n' +
+                    '📝 <b>Description:</b> ' + (d.description || 'N/A') + '\n' +
+                    '-----------------------------';
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '✅ Ticket Created!',
+                    html: `
+                        <p style="margin-bottom:12px;color:#6b7280;font-size:.9rem;">টিকেট সফলভাবে তৈরি হয়েছে। নিচের অপশন থেকে শেয়ার করুন।</p>
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;text-align:left;margin-bottom:16px;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-weight:600;color:#166534;font-size:.85rem;">
+                                <i class="bi bi-ticket-perforated-fill"></i> #${d.id} — ${d.clientName}
+                            </div>
+                            <div style="font-size:.82rem;color:#374151;line-height:1.8;">
+                                <div><i class="fas fa-phone-alt" style="width:16px;color:#6b7280;"></i> ${d.contact || 'N/A'}</div>
+                                <div><i class="fas fa-map-marker-alt" style="width:16px;color:#6b7280;"></i> ${d.address || 'N/A'}</div>
+                                <div><i class="fas fa-tag" style="width:16px;color:#6b7280;"></i> ${d.complainType} — ${d.priority} Priority</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                            <button onclick="ticketCopyDetails()" class="btn btn-primary w-100" style="display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;padding:10px;border-radius:8px;background-color:#3b82f6;border-color:#3b82f6;color:white;">
+                                <i class="fas fa-copy"></i> Copy Ticket Details
+                            </button>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <button onclick="ticketSendWhatsApp()" class="btn btn-success" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;padding:10px;border-radius:8px;background-color:#25d366;border-color:#25d366;color:white;">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button id="ticket-tg-share-btn" onclick="ticketSendTelegram()" class="btn btn-info" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;padding:10px;border-radius:8px;background-color:#0088cc;border-color:#0088cc;color:white;">
+                                    <i class="fab fa-telegram-plane"></i> Telegram
+                                </button>
+                            </div>
+                        </div>
+                    `,
+                    showConfirmButton: false,
+                    showCancelButton: true,
+                    cancelButtonText: 'Close',
+                    cancelButtonColor: '#6b7280',
+                });
+            });
+        });
+    })();
+    </script>
+
+    <script>
+    // --- Ticket Share Helpers ---
+    window.ticketCopyDetails = function () {
+        var text = window._ticketShareText || '';
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.left = '-9999px'; ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        try {
+            document.execCommand('copy');
+            Swal.fire({ icon:'success', title:'Copied!', text:'Ticket details copied to clipboard.', timer:1500, showConfirmButton:false, toast:true, position:'top-end' });
+        } catch(e) { console.error('Copy failed', e); }
+        document.body.removeChild(ta);
+    };
+
+    window.ticketSendWhatsApp = function () {
+        var waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(window._ticketShareText || '');
+        window.open(waUrl, '_blank');
+    };
+
+    window.ticketSendTelegram = function () {
+        var shareText = window._ticketShareTelegramText || '';
+        var $btn = document.getElementById('ticket-tg-share-btn');
+        var origHtml = $btn ? $btn.innerHTML : '';
+        if ($btn) { $btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...'; $btn.disabled = true; }
+
+        fetch('{{ route("tickets.send-telegram") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
+            body: JSON.stringify({ message: shareText })
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if ($btn) { $btn.innerHTML = origHtml; $btn.disabled = false; }
+            if (resp.success) {
+                Swal.fire({ icon:'success', title:'Sent!', text:'Ticket details posted to Telegram Channel.', timer:2000, showConfirmButton:false, toast:true, position:'top-end' });
+            } else {
+                Swal.fire('Error', 'Failed to send to Telegram.', 'error');
+            }
+        })
+        .catch(() => {
+            if ($btn) { $btn.innerHTML = origHtml; $btn.disabled = false; }
+            Swal.fire('Error', 'An error occurred while sending to Telegram.', 'error');
+        });
+    };
+    </script>
 </div>

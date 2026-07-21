@@ -39,6 +39,10 @@ class TicketManager extends Component
     public $filterStatus = 'all'; // Default to 'all'
     // ------------------------------------------------
 
+    // --- CHART DATA ---
+    public $complainTypeStats = [];
+    // ------------------
+
     public function mount()
     {
         $this->complain_types = ComplainType::all();
@@ -86,7 +90,7 @@ class TicketManager extends Component
         $this->validate([
             'selectedClient' => 'required',
             'complain_type_id' => 'required',
-            'description' => 'nullable|string|min:5',
+            'description' => 'nullable|string',
         ]);
 
         $client = Client::find($this->selectedClient);
@@ -99,7 +103,7 @@ class TicketManager extends Component
         $ticket = Ticket::create([
             'client_id' => $client->id,
             'complain_type_id' => $this->complain_type_id,
-            'description' => $this->description,
+            'description' => $this->description ?? '',
             'priority' => $this->priority,
             'status' => 'pending',
         ]);
@@ -109,7 +113,7 @@ class TicketManager extends Component
             'ticket_id' => $ticket->id,
             'action' => 'Ticket Created',
             'performed_by' => auth()->check() ? auth()->user()->name : 'Manager',
-            'note' => Str::limit($this->description, 200),
+            'note' => $this->description ? Str::limit($this->description, 200) : 'No details provided',
         ]);
 
         // 2. Send SMS to client
@@ -127,6 +131,19 @@ class TicketManager extends Component
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
         session()->flash('success', 'Ticket created successfully!');
         $this->resetPage();
+
+        // Dispatch event with ticket details for the share popup (Livewire v2: emit with named args)
+        $complainType = ComplainType::find($ticket->complain_type_id)->name ?? 'N/A';
+        $this->emit('ticket-created',
+            $ticket->id,
+            $client->name,
+            $client->username,
+            $client->contact,
+            $client->address,
+            $complainType,
+            ucfirst($ticket->priority),
+            Str::limit($ticket->description, 120)
+        );
     }
 
     // Assign technician
@@ -340,6 +357,14 @@ class TicketManager extends Component
         // Progress includes 'open', 'assigned', and 'in_progress'
         $this->ticketCounts['progress'] = Ticket::whereIn('status', ['open', 'assigned', 'in_progress'])->count();
 
+        // --- CHART DATA ---
+        // Tickets grouped by Complain Type (Category)
+        $this->complainTypeStats = ComplainType::withCount('tickets')
+            ->orderByDesc('tickets_count')
+            ->get()
+            ->map(fn($t) => ['label' => $t->name, 'count' => $t->tickets_count])
+            ->toArray();
+        // -------------------
 
         // 2. Start Query
         $query = Ticket::with(['client', 'technician', 'complainType']);

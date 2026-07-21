@@ -17,8 +17,16 @@
             <a href="{{ route('clients.index') }}"><i class="fa fa-users"></i><span>@lang('models/clients.plural')</span></a>
         </li>
 
-        <li class="{{ Request::is('tickets*') ? 'active' : '' }}">
-            <a href="{{ route('tickets.live') }}"><i class="fa fa-ticket-alt"></i><span>Tickets</span></a>
+        <li class="dropdown {{ Request::is('tickets*') ? 'active' : '' }}">
+            <a href="#" class="nav-link has-dropdown"><i class="fa fa-ticket-alt"></i><span>Tickets</span></a>
+            <ul class="dropdown-menu">
+                <li class="{{ Request::is('tickets') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('tickets.live') }}"><i class="fa fa-list"></i><span>Active Tickets</span></a>
+                </li>
+                <li class="{{ Request::is('tickets/analytics') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('tickets.analytics') }}"><i class="fa fa-chart-pie"></i><span>Ticket Analytics</span></a>
+                </li>
+            </ul>
         </li>
 
         <li class="{{ Request::is('investments*') ? 'active' : '' }}">
