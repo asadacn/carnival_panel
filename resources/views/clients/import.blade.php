@@ -32,11 +32,11 @@
 .import-loader-overlay {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 999999 !important;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(15, 23, 42, 0.75);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     animation: overlayFadeIn 0.3s ease;
@@ -447,10 +447,18 @@
 </div>
 @endsection
 
-@push('scripts')
+@section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    initImportForm();
+});
 
+// Fallback in case DOMContentLoaded fired before script tag parsed
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    initImportForm();
+}
+
+function initImportForm() {
     const form            = document.getElementById('importForm');
     const fileInput       = document.getElementById('clients_file');
     const importBtn       = document.getElementById('importBtn');
@@ -463,24 +471,31 @@ document.addEventListener('DOMContentLoaded', function () {
     const progressStatus  = document.getElementById('progressStatus');
     const progressTime    = document.getElementById('progressTime');
 
+    if (!form || form.dataset.initialized) return;
+    form.dataset.initialized = 'true';
+
     let timerInterval = null;
     let startTime     = null;
 
     // ── File selected preview ──────────────────────────────────
-    fileInput.addEventListener('change', function () {
-        const file = this.files[0];
-        if (!file) { fileInfo.classList.add('d-none'); return; }
-        document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileSize').textContent = '(' + formatBytes(file.size) + ')';
-        fileInfo.classList.remove('d-none');
-    });
+    if (fileInput) {
+        fileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) { if (fileInfo) fileInfo.classList.add('d-none'); return; }
+            const fn = document.getElementById('fileName');
+            const fs = document.getElementById('fileSize');
+            if (fn) fn.textContent = file.name;
+            if (fs) fs.textContent = '(' + formatBytes(file.size) + ')';
+            if (fileInfo) fileInfo.classList.remove('d-none');
+        });
+    }
 
     // ── Form submit — XHR upload with real progress ────────────
     form.addEventListener('submit', function (e) {
         e.preventDefault(); // stop default submit
 
-        const ispCode = document.getElementById('isp_code').value;
-        const file    = fileInput.files[0];
+        const ispCode = document.getElementById('isp_code') ? document.getElementById('isp_code').value : '';
+        const file    = fileInput && fileInput.files ? fileInput.files[0] : null;
 
         if (!ispCode || !file) {
             alert('Please select an ISP and a file.');
@@ -488,26 +503,41 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Show progress UI
-        progressWrapper.classList.remove('d-none');
-        importBtn.disabled = true;
-        importBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Importing...';
+        if (progressWrapper) progressWrapper.classList.remove('d-none');
+        if (importBtn) {
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Importing...';
+        }
 
         // Show fullscreen loader
         const overlay = document.getElementById('importLoaderOverlay');
-        overlay.classList.remove('d-none');
+        if (overlay) {
+            overlay.classList.remove('d-none');
+            overlay.style.display = 'flex';
+        }
+
+        // Optional SweetAlert loader as backup visual
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Importing Clients...',
+                text: 'Uploading & processing Excel/CSV rows. Please wait...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        }
 
         startTime = Date.now();
 
         // Elapsed timer
         timerInterval = setInterval(function () {
             const s = Math.floor((Date.now() - startTime) / 1000);
-            progressTime.textContent = s + 's';
+            if (progressTime) progressTime.textContent = s + 's';
         }, 500);
 
         // Build FormData
         const formData = new FormData(form);
-
-        // XHR — gives us real upload progress
         const xhr = new XMLHttpRequest();
 
         // ── Phase 1: Upload progress (0 → 60%) ────────────────
@@ -530,43 +560,60 @@ document.addEventListener('DOMContentLoaded', function () {
             clearInterval(timerInterval);
 
             if (xhr.status === 200) {
-                // Check if server redirected to same page (302 → 200)
                 setProgress(100, 'Import complete!', '#198754');
-                progressLabel.innerHTML =
-                    '<i class="fa fa-check-circle me-1" style="color:#198754;"></i>' +
-                    '<span style="color:#198754;">Import Complete!</span>';
-                progressStatus.textContent = 'Done';
+                if (progressLabel) {
+                    progressLabel.innerHTML =
+                        '<i class="fa fa-check-circle me-1" style="color:#198754;"></i>' +
+                        '<span style="color:#198754;">Import Complete!</span>';
+                }
+                if (progressStatus) progressStatus.textContent = 'Done';
                 updateLoader(100, 'Import complete!');
 
-                importBtn.classList.add('d-none');
-                resetBtn.classList.remove('d-none');
+                if (importBtn) importBtn.classList.add('d-none');
+                if (resetBtn) resetBtn.classList.remove('d-none');
 
-                // Reload page to show session results
                 setTimeout(() => {
                     hideLoader();
-                    window.location.href = xhr.responseURL || window.location.href;
-                }, 800);
+                    if (typeof Swal !== 'undefined') Swal.close();
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                }, 500);
 
             } else {
                 setProgress(100, 'Import failed!', '#dc3545');
-                progressLabel.innerHTML =
-                    '<i class="fa fa-times-circle me-1" style="color:#dc3545;"></i>' +
-                    '<span style="color:#dc3545;">Import Failed</span>';
-                importBtn.disabled = false;
-                importBtn.innerHTML = '<i class="fa fa-upload me-1"></i> Retry';
+                if (progressLabel) {
+                    progressLabel.innerHTML =
+                        '<i class="fa fa-times-circle me-1" style="color:#dc3545;"></i>' +
+                        '<span style="color:#dc3545;">Import Failed</span>';
+                }
+                if (importBtn) {
+                    importBtn.disabled = false;
+                    importBtn.innerHTML = '<i class="fa fa-upload me-1"></i> Retry';
+                }
                 hideLoader();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Import Failed', 'An error occurred during import.', 'error');
+                }
             }
         });
 
         xhr.addEventListener('error', function () {
             clearInterval(timerInterval);
             setProgress(100, 'Network error!', '#dc3545');
-            progressLabel.innerHTML =
-                '<i class="fa fa-times-circle me-1" style="color:#dc3545;"></i>' +
-                '<span style="color:#dc3545;">Network Error</span>';
-            importBtn.disabled = false;
-            importBtn.innerHTML = '<i class="fa fa-upload me-1"></i> Retry';
+            if (progressLabel) {
+                progressLabel.innerHTML =
+                    '<i class="fa fa-times-circle me-1" style="color:#dc3545;"></i>' +
+                    '<span style="color:#dc3545;">Network Error</span>';
+            }
+            if (importBtn) {
+                importBtn.disabled = false;
+                importBtn.innerHTML = '<i class="fa fa-upload me-1"></i> Retry';
+            }
             hideLoader();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire('Network Error', 'Could not connect to server.', 'error');
+            }
         });
 
         xhr.open('POST', form.action);
@@ -574,17 +621,16 @@ document.addEventListener('DOMContentLoaded', function () {
         xhr.send(formData);
     });
 
-    // ── Helpers ───────────────────────────────────────────────
-
     function setProgress(percent, statusText, color) {
-        progressBar.style.width           = percent + '%';
-        progressBar.style.backgroundColor = color;
-        progressBar.setAttribute('aria-valuenow', percent);
-        progressPercent.textContent       = percent + '%';
-        if (statusText) progressStatus.textContent = statusText;
+        if (progressBar) {
+            progressBar.style.width           = percent + '%';
+            progressBar.style.backgroundColor = color;
+            progressBar.setAttribute('aria-valuenow', percent);
+        }
+        if (progressPercent) progressPercent.textContent = percent + '%';
+        if (statusText && progressStatus) progressStatus.textContent = statusText;
     }
 
-    // Smooth animation between two percentages over a duration
     function animateTo(target, from, duration, statusText, color) {
         const startVal = from;
         const startTs  = performance.now();
@@ -607,60 +653,80 @@ document.addEventListener('DOMContentLoaded', function () {
         return (bytes / 1048576).toFixed(1) + ' MB';
     }
 
-    // ── Loader overlay helpers ────────────────────────────────
     function updateLoader(percent, statusText) {
-        document.getElementById('loaderPercent').textContent = percent + '%';
-        document.getElementById('loaderProgressFill').style.width = percent + '%';
-        if (statusText) document.getElementById('loaderStatusText').textContent = statusText;
-        if (startTime) {
+        const lp = document.getElementById('loaderPercent');
+        const pf = document.getElementById('loaderProgressFill');
+        const st = document.getElementById('loaderStatusText');
+        const le = document.getElementById('loaderElapsed');
+
+        if (lp) lp.textContent = percent + '%';
+        if (pf) pf.style.width = percent + '%';
+        if (statusText && st) st.textContent = statusText;
+        if (startTime && le) {
             const s = Math.floor((Date.now() - startTime) / 1000);
-            document.getElementById('loaderElapsed').textContent = s + 's';
+            le.textContent = s + 's';
         }
     }
 
     function hideLoader() {
         const overlay = document.getElementById('importLoaderOverlay');
+        if (!overlay) return;
         overlay.style.animation = 'overlayFadeIn 0.3s ease reverse';
         setTimeout(() => {
             overlay.classList.add('d-none');
+            overlay.style.display = 'none';
             overlay.style.animation = '';
         }, 300);
     }
 
     // ── If page loaded with results — show complete state ─────
     @if(session('import_new') !== null || session('import_changes') !== null || session('import_errors') !== null)
-        progressWrapper.classList.remove('d-none');
+        if (progressWrapper) progressWrapper.classList.remove('d-none');
         setProgress(100, 'Done', '#198754');
-        progressLabel.innerHTML =
-            '<i class="fa fa-check-circle me-1" style="color:#198754;"></i>' +
-            '<span style="color:#198754;">Import Complete!</span>';
-        progressPercent.textContent = '100%';
-        progressTime.textContent    = 'Done';
-        importBtn.classList.add('d-none');
-        resetBtn.classList.remove('d-none');
+        if (progressLabel) {
+            progressLabel.innerHTML =
+                '<i class="fa fa-check-circle me-1" style="color:#198754;"></i>' +
+                '<span style="color:#198754;">Import Complete!</span>';
+        }
+        if (progressPercent) progressPercent.textContent = '100%';
+        if (progressTime) progressTime.textContent    = 'Done';
+        if (importBtn) importBtn.classList.add('d-none');
+        if (resetBtn) resetBtn.classList.remove('d-none');
     @endif
-});
+}
 
 function resetImport() {
-    document.getElementById('importForm').reset();
-    document.getElementById('fileInfo').classList.add('d-none');
-    document.getElementById('progressWrapper').classList.add('d-none');
+    const form = document.getElementById('importForm');
+    if (form) form.reset();
+    const fi = document.getElementById('fileInfo');
+    const pw = document.getElementById('progressWrapper');
+    if (fi) fi.classList.add('d-none');
+    if (pw) pw.classList.add('d-none');
 
     const bar = document.getElementById('progressBar');
-    bar.style.width           = '0%';
-    bar.style.backgroundColor = '#0d6efd';
-    bar.setAttribute('aria-valuenow', 0);
+    if (bar) {
+        bar.style.width           = '0%';
+        bar.style.backgroundColor = '#0d6efd';
+        bar.setAttribute('aria-valuenow', 0);
+    }
 
-    document.getElementById('progressPercent').textContent = '0%';
-    document.getElementById('progressStatus').textContent  = 'Preparing...';
-    document.getElementById('progressTime').textContent    = '0s';
-    document.getElementById('progressLabel').innerHTML =
-        '<i class="fa fa-spinner fa-spin me-1"></i> Uploading file...';
+    const pp = document.getElementById('progressPercent');
+    const ps = document.getElementById('progressStatus');
+    const pt = document.getElementById('progressTime');
+    const pl = document.getElementById('progressLabel');
+    if (pp) pp.textContent = '0%';
+    if (ps) ps.textContent = 'Preparing...';
+    if (pt) pt.textContent = '0s';
+    if (pl) pl.innerHTML   = '<i class="fa fa-spinner fa-spin me-1"></i> Uploading file...';
 
-    document.getElementById('importBtn').disabled = false;
-    document.getElementById('importBtn').innerHTML = '<i class="fa fa-upload me-1"></i> Import';
-    document.getElementById('importBtn').classList.remove('d-none');
-    document.getElementById('resetBtn').classList.add('d-none');
+    const ib = document.getElementById('importBtn');
+    const rb = document.getElementById('resetBtn');
+    if (ib) {
+        ib.disabled = false;
+        ib.innerHTML = '<i class="fa fa-upload me-1"></i> Import';
+        ib.classList.remove('d-none');
+    }
+    if (rb) rb.classList.add('d-none');
 }
 </script>
-@endpush
+@endsection

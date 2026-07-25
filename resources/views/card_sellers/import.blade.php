@@ -40,9 +40,17 @@
 
 @section('scripts')
 <script>
-$('#import').on('click',function(){
-    Swal.showLoading();
-})
+$('form').on('submit', function() {
+    Swal.fire({
+        title: 'Importing Card Sellers...',
+        text: 'Please wait while file is being processed.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+});
 </script>
 @endsection
 

@@ -84,6 +84,7 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
 @yield('page_js')
 @yield('scripts')
+@stack('scripts')
 <script>
     let loggedInUser =@json(\Illuminate\Support\Facades\Auth::user());
     let loginUrl = '{{ route('login') }}';
