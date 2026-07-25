@@ -162,9 +162,11 @@ EOT;
                             </div>
                         </div>";
                 })
-                ->rawColumns(['action', 'total_due', 'latest_comment'])
+                ->rawColumns(['action', 'total_due', 'latest_comment', 'expiration'])
                 ->editColumn('expiration', function ($row) {
-                    if (empty($row->expiration)) return '-';
+                    if (empty($row->expiration)) {
+                        return '<span class="badge bg-secondary text-white px-2 py-1" style="font-weight:500; font-size:0.75rem;">N/A</span>';
+                    }
 
                     try {
                         // Ensure it's a Carbon instance
@@ -174,9 +176,12 @@ EOT;
 
                         // Convert to Asia/Dhaka timezone
                         $dt = $dt->copy()->setTimezone('Asia/Dhaka');
-                        return $dt->format('d-m-Y') . ' / ' . $dt->diffForHumans();
+                        $dateStr = $dt->format('d-m-Y');
+                        $human   = $dt->diffForHumans();
+
+                        return '<span class="fw-semibold text-dark">' . $dateStr . '</span> <small class="text-muted text-nowrap">/ ' . $human . '</small>';
                     } catch (\Exception $e) {
-                        return '-';
+                        return '<span class="badge bg-secondary text-white px-2 py-1" style="font-weight:500; font-size:0.75rem;">N/A</span>';
                     }
                 })
                 ->editColumn('isp_code', function ($row) {

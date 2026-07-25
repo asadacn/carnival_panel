@@ -24,7 +24,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             'heading_row'     => 1,
             'username_keys'   => ['carnival_id'],
             'contact_keys'    => ['mobile'],
-            'expiration_keys' => ['expiration'],
+            'expiration_keys' => ['expiration', 'exp_date', 'expiration_date', 'expire_date', 'validity', 'validity_date', 'expiry', 'exp_time'],
             'status_key'      => 'status',
             'name_key'        => 'name',
             'email_key'       => 'email',
@@ -37,7 +37,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             'heading_row'     => 2,
             'username_keys'   => ['username', 'cust_id'],
             'contact_keys'    => ['mobile'],
-            'expiration_keys' => ['exp_date'],
+            'expiration_keys' => ['exp_date', 'expiration', 'expiration_date', 'expire_date', 'validity', 'validity_date', 'expiry', 'exp_time'],
             'status_key'      => 'status',
             'name_key'        => 'name',
             'email_key'       => 'email',
@@ -50,7 +50,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             'heading_row'     => 2,
             'username_keys'   => ['username', 'cust_id'],
             'contact_keys'    => ['mobile'],
-            'expiration_keys' => ['exp_date'],
+            'expiration_keys' => ['exp_date', 'expiration', 'expiration_date', 'expire_date', 'validity', 'validity_date', 'expiry', 'exp_time'],
             'status_key'      => 'status',
             'name_key'        => 'name',
             'email_key'       => 'email',
@@ -231,14 +231,17 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
 
         // Trim whitespace
         $value = is_string($value) ? trim($value) : $value;
-        if (empty($value)) return null;
+        if (empty($value) || in_array(strtolower((string)$value), ['-', 'n/a', 'null', '0000-00-00', '0000-00-00 00:00:00'])) {
+            return null;
+        }
 
         try {
             if (is_numeric($value)) {
                 // Excel numeric date format
                 return Date::excelToDateTimeObject($value);
             } elseif (is_string($value)) {
-                // Try various date formats
+                // Normalize dots/slashes to hyphens for standard format checking
+                $normalized = str_replace(['/', '.'], '-', $value);
                 $parsed = null;
 
                 // Try common formats
@@ -246,25 +249,27 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
                     'Y-m-d',
                     'd-m-Y',
                     'm-d-Y',
-                    'Y/m/d',
-                    'd/m/Y',
-                    'm/d/Y',
                     'Y-m-d H:i:s',
                     'd-m-Y H:i:s',
                     'm-d-Y H:i:s',
+                    'd/m/Y',
+                    'm/d/Y',
+                    'Y/m/d',
                 ];
 
-                foreach ($formats as $format) {
-                    try {
-                        $parsed = \DateTime::createFromFormat($format, $value);
-                        if ($parsed) break;
-                    } catch (\Exception) {
-                        continue;
+                foreach ([$value, $normalized] as $valToTest) {
+                    foreach ($formats as $format) {
+                        try {
+                            $parsed = \DateTime::createFromFormat($format, $valToTest);
+                            if ($parsed && $parsed->format('Y') > 1970) break 2;
+                        } catch (\Exception) {
+                            continue;
+                        }
                     }
                 }
 
                 // Fallback to Carbon::parse if specific formats didn't work
-                if (!$parsed) {
+                if (!$parsed || $parsed->format('Y') <= 1970) {
                     $parsed = Carbon::parse($value);
                 }
 
