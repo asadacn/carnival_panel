@@ -229,17 +229,28 @@ class SmsController extends Controller
 
         // 5. Send the voice campaign
         try {
+            $sender = preg_replace('/\D/', '', $request->sender);
             $result = sendVoiceCampaign(
                 $finalTitle, // Use the final unique, cleaned title
                 (int)$request->broadcast_id,
-                $request->sender,
+                $sender,
                 $numbers // Use the normalized numbers
             );
 
             if ($result['success']) {
                 $count = count($numbers);
                 $ispLabel = !empty($ispCode) ? " (ISP: " . ucfirst($ispCode) . ")" : "";
-                Flash::success("Voice Campaign '{$finalTitle}' successfully started for {$count} clients{$ispLabel}!");
+                $campIdInfo = is_array($result['data']['campaign_id']) 
+                    ? implode(', ', $result['data']['campaign_id']) 
+                    : $result['data']['campaign_id'];
+
+                $primaryCampaignId = is_array($result['data']['campaign_id']) 
+                    ? $result['data']['campaign_id'][0] 
+                    : $result['data']['campaign_id'];
+
+                session()->flash('voice_campaign_id', $primaryCampaignId);
+
+                Flash::success("Voice Campaign '{$finalTitle}' (ID: {$campIdInfo}) successfully started for {$count} clients{$ispLabel}!");
             } else {
                 $errorMessage = isset($result['error']['detail']) ? $result['error']['detail'] : json_encode($result['error']);
                 Flash::error("Voice Campaign sending failed! Error: " . $errorMessage);
@@ -249,6 +260,26 @@ class SmsController extends Controller
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * Get real-time status of a voice campaign using Elit Call API
+     */
+    public function get_voice_campaign_status($campaignId)
+    {
+        $result = getVoiceCampaignDetails($campaignId);
+
+        if ($result['success']) {
+            return response()->json([
+                'success' => true,
+                'data'    => $result['data'],
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'error'   => $result['error'] ?? 'Failed to retrieve campaign details.',
+        ], 400);
     }
 
     /**

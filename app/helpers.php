@@ -156,34 +156,69 @@ if (!function_exists('sendVoiceCampaign')) {
     function sendVoiceCampaign($title, $broadcastId, $sender, array $numbers)
     {
         try {
-            $apiKey = config('services.elitcall.key') ?? env('ELITCALL_API_KEY');
+            $apiKey  = config('services.elitcall.key') ?? env('ELITCALL_API_KEY');
+            $baseUrl = rtrim(config('services.elitcall.base_url') ?? env('ELITCALL_BASE_URL', 'https://call.mram.com.bd'), '/');
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type'  => 'application/json',
-            ])->post('https://call.mram.com.bd/api/send-broadcast-campaign', [
-                'title'         => $title,
-                'broadcast_id'  => $broadcastId,
-                'sender'        => $sender,
-                'numbers'       => $numbers,
-            ]);
-
-            if ($response->successful()) {
+            if (empty($apiKey)) {
                 return [
-                    'success' => true,
-                    'data' => $response->json(),
+                    'success' => false,
+                    'error'   => ['detail' => 'ELITCALL_API_KEY is not configured in .env or services config.'],
                 ];
             }
 
+            // Maximum numbers per request according to Elit Call API is 1000
+            $chunks = array_chunk($numbers, 1000);
+            $totalChunks = count($chunks);
+            $createdCampaigns = [];
+            $totalCallsScheduled = 0;
+
+            foreach ($chunks as $index => $chunkNumbers) {
+                // If chunked into multiple requests, append part suffix to title
+                $chunkTitle = $totalChunks > 1 ? "{$title} (Part " . ($index + 1) . ")" : $title;
+
+                // Truncate title to 100 characters max
+                $chunkTitle = mb_substr($chunkTitle, 0, 100);
+
+                // Use Http retry for 503 / transient network errors
+                $response = Http::retry(3, 200, function ($exception) {
+                    return $exception instanceof \Illuminate\Http\Client\RequestException
+                        && optional($exception->response)->status() === 503;
+                })->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type'  => 'application/json',
+                ])->post("{$baseUrl}/api/send-broadcast-campaign", [
+                    'title'        => $chunkTitle,
+                    'broadcast_id' => (int)$broadcastId,
+                    'sender'       => (string)$sender,
+                    'numbers'      => array_values($chunkNumbers),
+                ]);
+
+                if ($response->successful() && $response->status() === 201) {
+                    $json = $response->json();
+                    $createdCampaigns[] = $json['campaign_id'] ?? null;
+                    $totalCallsScheduled += $json['total_calls'] ?? count($chunkNumbers);
+                } else {
+                    return [
+                        'success' => false,
+                        'error'   => $response->json() ?? ['detail' => 'HTTP error code: ' . $response->status()],
+                        'partial_campaigns' => $createdCampaigns,
+                    ];
+                }
+            }
+
             return [
-                'success' => false,
-                'error' => $response->json(),
+                'success'       => true,
+                'data'          => [
+                    'campaign_id' => count($createdCampaigns) === 1 ? $createdCampaigns[0] : $createdCampaigns,
+                    'status'      => 'processing',
+                    'total_calls' => $totalCallsScheduled,
+                ],
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error'   => ['detail' => $e->getMessage()],
             ];
         }
     }
@@ -199,28 +234,36 @@ if (!function_exists('getVoiceCampaignDetails')) {
     function getVoiceCampaignDetails($campaignId)
     {
         try {
-            $apiKey = config('services.elitcall.key') ?? env('ELITCALL_API_KEY');
+            $apiKey  = config('services.elitcall.key') ?? env('ELITCALL_API_KEY');
+            $baseUrl = rtrim(config('services.elitcall.base_url') ?? env('ELITCALL_BASE_URL', 'https://call.mram.com.bd'), '/');
 
-            $response = Http::withHeaders([
+            if (empty($apiKey)) {
+                return [
+                    'success' => false,
+                    'error'   => ['detail' => 'ELITCALL_API_KEY is not configured in .env or services config.'],
+                ];
+            }
+
+            $response = Http::retry(3, 200)->withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
-            ])->get("https://call.mram.com.bd/api/campaign/{$campaignId}");
+            ])->get("{$baseUrl}/api/campaign/{$campaignId}");
 
             if ($response->successful()) {
                 return [
                     'success' => true,
-                    'data' => $response->json(),
+                    'data'    => $response->json(),
                 ];
             }
 
             return [
                 'success' => false,
-                'error' => $response->json(),
+                'error'   => $response->json() ?? ['detail' => 'HTTP error code: ' . $response->status()],
             ];
 
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error'   => ['detail' => $e->getMessage()],
             ];
         }
     }
