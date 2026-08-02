@@ -48,7 +48,14 @@ class SmsController extends Controller
 
         $clients = collect();
 
-        // 2. Get clients contacts based on the selected status
+        // 2. Build base query — optionally filter by ISP
+        $ispCode = $request->isp_code;
+        $baseQuery = Client::query();
+        if (!empty($ispCode)) {
+            $baseQuery->where('isp_code', strtolower($ispCode));
+        }
+
+        // 3. Get clients contacts based on the selected status
         if ($request->client_status === 'custom') {
             $request->validate(['custom_contacts' => 'required|string']);
 
@@ -67,19 +74,19 @@ class SmsController extends Controller
             // Existing logic for database groups
             switch ($request->client_status) {
                 case "expiring":
-                    $clients = Client::where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
+                    $clients = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
                     break;
                 case "registered":
-                    $clients = Client::where('status','registered')->pluck('contact');
+                    $clients = (clone $baseQuery)->where('status','registered')->pluck('contact');
                     break;
                 case "expired":
-                    $clients = Client::where('status','expired')->pluck('contact');
+                    $clients = (clone $baseQuery)->where('status','expired')->pluck('contact');
                     break;
                 case "expired_today":
-                    $clients = Client::where('expiration',Carbon::today('Asia/Dhaka'))->pluck('contact');
+                    $clients = (clone $baseQuery)->where('expiration',Carbon::today('Asia/Dhaka'))->pluck('contact');
                     break;
                 case "expired_this_month":
-                    $clients = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
+                    $clients = (clone $baseQuery)->where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
                     break;
 
                 default:
@@ -109,7 +116,7 @@ class SmsController extends Controller
             return redirect()->back();
         }
 
-        Flash::success("Bulk SMS successfully initiated to " . $clients->count() . " contacts!");
+        Flash::success("Bulk SMS successfully initiated to " . $clients->count() . " contacts" . (!empty($ispCode) ? " (ISP: " . ucfirst($ispCode) . ")" : "") . "!");
         return redirect()->back();
     }
 
@@ -130,7 +137,14 @@ class SmsController extends Controller
 
         $clients = collect();
 
-        // 2. Get clients contacts based on the selected status
+        // 2. Build base query — optionally filter by ISP
+        $ispCode = $request->isp_code;
+        $baseQuery = Client::query();
+        if (!empty($ispCode)) {
+            $baseQuery->where('isp_code', strtolower($ispCode));
+        }
+
+        // 3. Get clients contacts based on the selected status
         if ($request->client_status === 'custom') {
             $request->validate(['custom_contacts' => 'required|string']);
 
@@ -149,19 +163,19 @@ class SmsController extends Controller
             // Existing logic for database groups
             switch ($request->client_status) {
                 case "expiring":
-                    $clients = Client::where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
+                    $clients = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
                     break;
                 case "registered":
-                    $clients = Client::where('status', 'registered')->pluck('contact');
+                    $clients = (clone $baseQuery)->where('status', 'registered')->pluck('contact');
                     break;
                 case "expired":
-                    $clients = Client::where('status', 'expired')->pluck('contact');
+                    $clients = (clone $baseQuery)->where('status', 'expired')->pluck('contact');
                     break;
                 case "expired_today":
-                    $clients = Client::where('expiration', Carbon::today('Asia/Dhaka'))->pluck('contact');
+                    $clients = (clone $baseQuery)->where('expiration', Carbon::today('Asia/Dhaka'))->pluck('contact');
                     break;
                 case "expired_this_month":
-                    $clients = Client::where('status', 'expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
+                    $clients = (clone $baseQuery)->where('status', 'expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
                     break;
                 default:
                     Flash::error("Invalid clients group selected!");
@@ -224,7 +238,8 @@ class SmsController extends Controller
 
             if ($result['success']) {
                 $count = count($numbers);
-                Flash::success("Voice Campaign '{$finalTitle}' successfully started for {$count} clients!");
+                $ispLabel = !empty($ispCode) ? " (ISP: " . ucfirst($ispCode) . ")" : "";
+                Flash::success("Voice Campaign '{$finalTitle}' successfully started for {$count} clients{$ispLabel}!");
             } else {
                 $errorMessage = isset($result['error']['detail']) ? $result['error']['detail'] : json_encode($result['error']);
                 Flash::error("Voice Campaign sending failed! Error: " . $errorMessage);
@@ -234,6 +249,68 @@ class SmsController extends Controller
         }
 
         return redirect()->back();
+    }
+
+    /**
+     * DRY RUN: Return how many contacts would receive the message
+     * based on the selected client_status + optional isp_code filter.
+     * No message is ever sent.
+     */
+    public function preview_bulk_contacts(Request $request)
+    {
+        $status  = $request->input('client_status', '');
+        $ispCode = $request->input('isp_code', '');
+
+        if (empty($status)) {
+            return response()->json(['count' => 0, 'label' => '—', 'error' => 'No group selected.']);
+        }
+
+        // Custom numbers: just count the lines
+        if ($status === 'custom') {
+            $raw = $request->input('custom_contacts', '');
+            $lines = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw)));
+            return response()->json([
+                'count' => count($lines),
+                'label' => 'Custom Numbers',
+                'isp'   => $ispCode ?: 'All ISPs',
+            ]);
+        }
+
+        // Build base query with optional ISP filter
+        $query = Client::query();
+        if (!empty($ispCode)) {
+            $query->where('isp_code', strtolower($ispCode));
+        }
+
+        $count = match ($status) {
+            'expiring'          => (clone $query)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->count(),
+            'registered'        => (clone $query)->where('status', 'registered')->count(),
+            'expired'           => (clone $query)->where('status', 'expired')->count(),
+            'expired_today'     => (clone $query)->where('expiration', Carbon::today('Asia/Dhaka'))->count(),
+            'expired_this_month'=> (clone $query)->where('status', 'expired')
+                                        ->whereYear('expiration', date('Y'))
+                                        ->whereMonth('expiration', date('m'))
+                                        ->count(),
+            default             => null,
+        };
+
+        if (is_null($count)) {
+            return response()->json(['count' => 0, 'error' => 'Invalid group.']);
+        }
+
+        $groupLabels = [
+            'expiring'           => 'Expiring Tomorrow',
+            'registered'         => 'Registered',
+            'expired'            => 'Expired',
+            'expired_today'      => 'Expired Today',
+            'expired_this_month' => 'Expired This Month',
+        ];
+
+        return response()->json([
+            'count' => $count,
+            'label' => $groupLabels[$status] ?? $status,
+            'isp'   => !empty($ispCode) ? ucfirst($ispCode) : 'All ISPs',
+        ]);
     }
 
     public function sms_log()

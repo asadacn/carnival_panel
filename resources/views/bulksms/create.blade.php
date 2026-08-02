@@ -46,10 +46,19 @@
                                                     <option value="custom">Custom Numbers</option>
 
                                                     <option value="expired">Expired</option>
-                                                    <option value="registered">Registered</option>
                                                     <option value="expired_this_month">Expired This Month - {{ $expired_this_month }} Clients</option>
                                                     <option value="expired_today">Expired Today - {{ $expired_today }} Clients</option>
                                                     <option value="expiring">Expiring Tomorrow - {{ $expiring_soon }} Clients</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="sms_isp_code">Filter by ISP:</label>
+                                                <select name="isp_code" id="sms_isp_code" class="border border-info form-control mb-3">
+                                                    <option value="">🌐 All ISPs</option>
+                                                    <option value="carnival">🎪 Carnival</option>
+                                                    <option value="bijoy">⚡ Bijoy</option>
+                                                    <option value="icc">📡 ICC</option>
                                                 </select>
                                             </div>
 
@@ -83,8 +92,12 @@
                                                     placeholder="Write your message here..." required></textarea>
                                             </div>
 
-                                            <div class="modal-footer d-flex justify-content-start p-0 pt-3">
+                                            <div class="modal-footer d-flex justify-content-start align-items-center p-0 pt-3 flex-wrap gap-2">
                                                 <button type="button" onclick="resetText()" class="btn btn-warning m-1">Reset</button>
+                                                <button type="button" onclick="previewContacts('sms')" class="btn btn-secondary m-1">
+                                                    🔍 Preview Contacts
+                                                </button>
+                                                <span id="sms_preview_result" class="badge badge-light border" style="font-size:0.95rem;display:none;"></span>
                                                 <button type="submit" onclick="Swal.showLoading();" class="btn btn-success m-1">Send Bulk SMS</button>
                                             </div>
                                         </form>
@@ -107,6 +120,16 @@
                                                     <option value="expired_this_month">Expired This Month - {{ $expired_this_month }} Clients</option>
                                                     <option value="expired_today">Expired Today - {{ $expired_today }} Clients</option>
                                                     <option value="expiring">Expiring Tomorrow - {{ $expiring_soon }} Clients</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="voice_isp_code">Filter by ISP:</label>
+                                                <select name="isp_code" id="voice_isp_code" class="border border-info form-control mb-3">
+                                                    <option value="">🌐 All ISPs</option>
+                                                    <option value="carnival">🎪 Carnival</option>
+                                                    <option value="bijoy">⚡ Bijoy</option>
+                                                    <option value="icc">📡 ICC</option>
                                                 </select>
                                             </div>
 
@@ -145,8 +168,12 @@
                                                 <small class="form-text text-muted">This is your dedicated Elit Call sender number.</small>
                                             </div>
 
-                                            <div class="modal-footer d-flex justify-content-start p-0 pt-3">
+                                            <div class="modal-footer d-flex justify-content-start align-items-center p-0 pt-3 flex-wrap gap-2">
                                                 <button type="reset" class="btn btn-warning m-1">Reset Form</button>
+                                                <button type="button" onclick="previewContacts('voice')" class="btn btn-secondary m-1">
+                                                    🔍 Preview Contacts
+                                                </button>
+                                                <span id="voice_preview_result" class="badge badge-light border" style="font-size:0.95rem;display:none;"></span>
                                                 <button type="submit" onclick="Swal.showLoading();" class="btn btn-info m-1">Start Voice Campaign</button>
                                             </div>
                                         </form>
@@ -227,6 +254,55 @@
         e.preventDefault();
         $(this).tab('show');
     });
+    // PREVIEW: dry-run contact count (no message sent)
+    function previewContacts(tab) {
+        var clientStatus, ispCode, customContacts, resultBadge;
+
+        if (tab === 'sms') {
+            clientStatus   = $('#sms_client_status').val();
+            ispCode        = $('#sms_isp_code').val();
+            customContacts = $('#sms_custom_numbers').val();
+            resultBadge    = $('#sms_preview_result');
+        } else {
+            clientStatus   = $('#voice_client_status').val();
+            ispCode        = $('#voice_isp_code').val();
+            customContacts = $('#voice_custom_numbers').val();
+            resultBadge    = $('#voice_preview_result');
+        }
+
+        if (!clientStatus) {
+            Swal.fire('Select a group first', 'Please choose a clients group before previewing.', 'warning');
+            return;
+        }
+
+        resultBadge.text('Loading...').removeClass().addClass('badge badge-secondary').show();
+
+        $.ajax({
+            url: '{{ route("bulk_sms.preview") }}',
+            method: 'GET',
+            data: {
+                client_status:   clientStatus,
+                isp_code:        ispCode,
+                custom_contacts: customContacts,
+                _token:          '{{ csrf_token() }}'
+            },
+            success: function(res) {
+                if (res.error) {
+                    resultBadge.text('Error: ' + res.error).removeClass().addClass('badge badge-danger').show();
+                    return;
+                }
+                var label = res.isp + ' — ' + res.label;
+                if (res.count === 0) {
+                    resultBadge.text('⚠️ 0 contacts matched').removeClass().addClass('badge badge-warning').show();
+                } else {
+                    resultBadge.text('✅ ' + res.count + ' contact(s) — ' + label).removeClass().addClass('badge badge-success').show();
+                }
+            },
+            error: function() {
+                resultBadge.text('❌ Request failed').removeClass().addClass('badge badge-danger').show();
+            }
+        });
+    }
 
 </script>
 @endsection
