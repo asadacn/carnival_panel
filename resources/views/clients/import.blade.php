@@ -1,183 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- ── Fullscreen Spinning Loader Overlay ── --}}
-<div id="importLoaderOverlay" class="import-loader-overlay d-none">
-    <div class="import-loader-content">
-        <div class="import-spinner">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring spinner-ring-2"></div>
-            <div class="spinner-ring spinner-ring-3"></div>
-            <i class="fa fa-file-excel spinner-icon"></i>
-        </div>
-        <h4 class="import-loader-title">Importing Clients</h4>
-        <p class="import-loader-subtitle" id="loaderStatusText">Uploading file...</p>
-        <div class="import-loader-stats">
-            <div class="loader-stat">
-                <span class="loader-stat-value" id="loaderPercent">0%</span>
-                <span class="loader-stat-label">Progress</span>
-            </div>
-            <div class="loader-stat">
-                <span class="loader-stat-value" id="loaderElapsed">0s</span>
-                <span class="loader-stat-label">Elapsed</span>
-            </div>
-        </div>
-        <div class="loader-progress-track">
-            <div class="loader-progress-fill" id="loaderProgressFill"></div>
-        </div>
-    </div>
-</div>
-
-<style>
-.import-loader-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 999999 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: overlayFadeIn 0.3s ease;
-}
-.import-loader-overlay.d-none { display: none !important; }
-
-@keyframes overlayFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-.import-loader-content {
-    text-align: center;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 20px;
-    padding: 48px 56px;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
-    min-width: 340px;
-}
-
-/* Triple-ring spinner */
-.import-spinner {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin: 0 auto 28px;
-}
-
-.spinner-ring {
-    position: absolute;
-    inset: 0;
-    border: 3px solid transparent;
-    border-top-color: #3b82f6;
-    border-radius: 50%;
-    animation: spinRing 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-}
-.spinner-ring-2 {
-    inset: 10px;
-    border-top-color: #06b6d4;
-    animation-delay: -0.15s;
-    animation-duration: 1.6s;
-}
-.spinner-ring-3 {
-    inset: 20px;
-    border-top-color: #8b5cf6;
-    animation-delay: -0.3s;
-    animation-duration: 2s;
-}
-
-@keyframes spinRing {
-    to { transform: rotate(360deg); }
-}
-
-.spinner-icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-    color: #22c55e;
-    animation: iconPulse 2s ease-in-out infinite;
-}
-
-@keyframes iconPulse {
-    0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
-    50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.15); }
-}
-
-.import-loader-title {
-    color: #f1f5f9;
-    font-weight: 700;
-    font-size: 1.35rem;
-    margin-bottom: 6px;
-    letter-spacing: -0.02em;
-}
-
-.import-loader-subtitle {
-    color: #94a3b8;
-    font-size: 0.9rem;
-    margin-bottom: 24px;
-    animation: subtitlePulse 2s ease-in-out infinite;
-}
-
-@keyframes subtitlePulse {
-    0%, 100% { opacity: 0.7; }
-    50%      { opacity: 1; }
-}
-
-.import-loader-stats {
-    display: flex;
-    gap: 32px;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.loader-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.loader-stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #e2e8f0;
-    font-variant-numeric: tabular-nums;
-}
-
-.loader-stat-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #64748b;
-    margin-top: 2px;
-}
-
-.loader-progress-track {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.loader-progress-fill {
-    height: 100%;
-    width: 0%;
-    border-radius: 4px;
-    background: linear-gradient(90deg, #3b82f6, #06b6d4, #8b5cf6);
-    background-size: 200% 100%;
-    animation: gradientShift 2s ease infinite;
-    transition: width 0.4s ease;
-}
-
-@keyframes gradientShift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-</style>
 
 <div class="container-fluid">
     <div class="row justify-content-center">
@@ -509,25 +332,6 @@ function initImportForm() {
             importBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i> Importing...';
         }
 
-        // Show fullscreen loader
-        const overlay = document.getElementById('importLoaderOverlay');
-        if (overlay) {
-            overlay.classList.remove('d-none');
-            overlay.style.display = 'flex';
-        }
-
-        // Optional SweetAlert loader as backup visual
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Importing Clients...',
-                text: 'Uploading & processing Excel/CSV rows. Please wait...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => { Swal.showLoading(); }
-            });
-        }
-
         startTime = Date.now();
 
         // Elapsed timer
@@ -545,14 +349,12 @@ function initImportForm() {
             if (!e.lengthComputable) return;
             const uploadPct = Math.round((e.loaded / e.total) * 60); // 0-60%
             setProgress(uploadPct, 'Uploading file...', '#0d6efd');
-            updateLoader(uploadPct, 'Uploading file...');
         });
 
         // ── Phase 2: Upload done, server processing (60 → 90%) ─
         xhr.upload.addEventListener('load', function () {
             setProgress(60, 'Processing rows...', '#0dcaf0');
             animateTo(90, 60, 2000, 'Processing rows...', '#0dcaf0');
-            updateLoader(60, 'Processing rows...');
         });
 
         // ── Phase 3: Response received (90 → 100%) ─────────────
@@ -567,14 +369,11 @@ function initImportForm() {
                         '<span style="color:#198754;">Import Complete!</span>';
                 }
                 if (progressStatus) progressStatus.textContent = 'Done';
-                updateLoader(100, 'Import complete!');
 
                 if (importBtn) importBtn.classList.add('d-none');
                 if (resetBtn) resetBtn.classList.remove('d-none');
 
                 setTimeout(() => {
-                    hideLoader();
-                    if (typeof Swal !== 'undefined') Swal.close();
                     document.open();
                     document.write(xhr.responseText);
                     document.close();
@@ -591,7 +390,6 @@ function initImportForm() {
                     importBtn.disabled = false;
                     importBtn.innerHTML = '<i class="fa fa-upload me-1"></i> Retry';
                 }
-                hideLoader();
                 if (typeof Swal !== 'undefined') {
                     Swal.fire('Import Failed', 'An error occurred during import.', 'error');
                 }
@@ -610,7 +408,6 @@ function initImportForm() {
                 importBtn.disabled = false;
                 importBtn.innerHTML = '<i class="fa fa-upload me-1"></i> Retry';
             }
-            hideLoader();
             if (typeof Swal !== 'undefined') {
                 Swal.fire('Network Error', 'Could not connect to server.', 'error');
             }
@@ -640,7 +437,6 @@ function initImportForm() {
             const progress = Math.min(elapsed / duration, 1);
             const current  = Math.round(startVal + (target - startVal) * progress);
             setProgress(current, statusText, color);
-            updateLoader(current, statusText);
             if (progress < 1) requestAnimationFrame(step);
         }
 
@@ -651,32 +447,6 @@ function initImportForm() {
         if (bytes < 1024)    return bytes + ' B';
         if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / 1048576).toFixed(1) + ' MB';
-    }
-
-    function updateLoader(percent, statusText) {
-        const lp = document.getElementById('loaderPercent');
-        const pf = document.getElementById('loaderProgressFill');
-        const st = document.getElementById('loaderStatusText');
-        const le = document.getElementById('loaderElapsed');
-
-        if (lp) lp.textContent = percent + '%';
-        if (pf) pf.style.width = percent + '%';
-        if (statusText && st) st.textContent = statusText;
-        if (startTime && le) {
-            const s = Math.floor((Date.now() - startTime) / 1000);
-            le.textContent = s + 's';
-        }
-    }
-
-    function hideLoader() {
-        const overlay = document.getElementById('importLoaderOverlay');
-        if (!overlay) return;
-        overlay.style.animation = 'overlayFadeIn 0.3s ease reverse';
-        setTimeout(() => {
-            overlay.classList.add('d-none');
-            overlay.style.display = 'none';
-            overlay.style.animation = '';
-        }, 300);
     }
 
     // ── If page loaded with results — show complete state ─────
