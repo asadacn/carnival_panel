@@ -31,6 +31,36 @@
 
     @livewireStyles
 
+    <style>
+        body {
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            animation: pageFadeIn 0.22s ease-out;
+            transform-origin: top;
+        }
+
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .main-sidebar .sidebar-menu li a {
+            transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .main-sidebar .sidebar-menu li a:hover {
+            transform: translateX(2px);
+        }
+    </style>
+
 </head>
 <body>
 
@@ -99,6 +129,28 @@
             }
         };
     }(jQuery));
-</script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const content = document.querySelector('.main-content');
+        if (!content) return;
+
+        const applySubtleTransition = () => {
+            content.style.transition = 'opacity 0.14s ease, transform 0.14s ease';
+            content.style.opacity = '0.96';
+            content.style.transform = 'translateY(1px)';
+            setTimeout(() => {
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0)';
+            }, 50);
+        };
+
+        document.querySelectorAll('.main-sidebar .sidebar-menu a').forEach(function (link) {
+            link.addEventListener('click', function (event) {
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#')) return;
+                if (href.startsWith('http')) return;
+                applySubtleTransition();
+            });
+        });
+    });</script>
 
 </html>

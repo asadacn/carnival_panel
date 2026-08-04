@@ -62,28 +62,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Number of overdue bills">
-                        <div class="card-icon bg-secondary mini-icon"><i class="fas fa-exclamation-triangle"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Overdue Bills</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $overdueBillsCount }}</span></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Manage bills and payments">
-                        <div class="card-icon bg-info mini-icon"><i class="fas fa-receipt"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Manage Bills</h4></div>
-                            <div class="card-body">
-                                <a href="{{ route('due-bills.index') }}" class="btn btn-xs btn-info w-100" style="font-size:0.75rem;padding:3px 6px;">
-                                    <i class="fas fa-arrow-right"></i> View All
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- ISP-wise Active Clients Section -->
@@ -2165,7 +2143,7 @@
                                     <div><i class="fas fa-money-bill-wave" style="width: 16px; color: #6b7280;"></i> ৳${parseFloat(billAmount).toLocaleString()}</div>
                                 </div>
                             </div>
-                            
+
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 <button onclick="qbCopyDetails()" class="btn btn-primary w-100" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px; border-radius: 8px; background-color: #3b82f6; border-color: #3b82f6; color: white;">
                                     <i class="fas fa-copy"></i> Copy Bill Details
@@ -2596,7 +2574,7 @@
             const $temp = $("<textarea>");
             $("body").append($temp);
             $temp.val(text).select();
-            
+
             try {
                 // Execute copy command
                 document.execCommand("copy");
