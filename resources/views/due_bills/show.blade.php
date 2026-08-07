@@ -586,12 +586,38 @@
 
     function deleteBill(billId) {
         if(!confirm('Are you sure you want to delete this bill? This action cannot be undone.')) return;
-        // AJAX delete would go here
+        $.ajax({
+            url: "{{ route('due-bills.destroy', ':id') }}".replace(':id', billId),
+            type: 'DELETE',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                alert('Bill deleted successfully.');
+                window.location.href = "{{ route('due-bills.index') }}";
+            },
+            error: function(xhr) {
+                alert('Something went wrong. Could not delete the bill.');
+            }
+        });
     }
 
     function deletePayment(paymentId) {
         if(!confirm('Delete this payment record?')) return;
-        // AJAX delete would go here
+        $.ajax({
+            url: "{{ route('due-bill-payments.destroy', ':id') }}".replace(':id', paymentId),
+            type: 'DELETE',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                alert('Payment deleted successfully.');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Something went wrong. Could not delete the payment.');
+            }
+        });
     }
 </script>
 @endsection
