@@ -14,23 +14,27 @@ class SmsController extends Controller
 {
     public function send_sms(Request $request)
     {
+        $request->validate([
+            'client_id' => 'required|integer|exists:clients,id',
+            'sms'       => 'required|string|max:500',
+        ]);
+
         $client = Client::findOrFail($request->client_id);
 
         $smslog = new SMSLOG();
-
         $smslog->client_id = $client->username;
-        $smslog->contact = $client->contact;
-        $smslog->sms = $request->sms;
+        $smslog->contact   = $client->contact;
+        $smslog->sms       = $request->sms;
 
         if (sms($client->contact, $request->sms)) {
             $smslog->status = true;
             $smslog->save();
-            return true;
-        }else{
+            return response()->json(['success' => true, 'message' => 'SMS sent successfully.']);
+        } else {
             $smslog->status = false;
             $smslog->save();
-            return false;
-        } ;
+            return response()->json(['success' => false, 'message' => 'SMS sending failed. Please check the API or contact number.'], 200);
+        }
     }
 
     public function bulk_sms(Request $request)

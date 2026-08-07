@@ -1738,102 +1738,83 @@
         }
 
         function sendSMS() {
-            Swal.showLoading();
-
             var table = $('#clients').DataTable();
-            var selectedData = table.rows({
-                selected: true
-            }).data().toArray();
+            var selectedData = table.rows({ selected: true }).data().toArray();
 
             var clientsData = $.map(selectedData, function(val) {
-                return {
-                    username: val.username,
-                    contact: val.contact
-                };
-            })
+                return { username: val.username, contact: val.contact };
+            });
 
-            if (selectedData.length > 0 && selectedData.length <= 50) { //Bulk sms
+            // Validate message is not empty before showing loader
+            var smsText = $('#sms-body').val().trim();
+            if (!smsText) {
+                Swal.fire({ icon: 'warning', title: 'Empty Message', text: 'Please write a message before sending.' });
+                return;
+            }
 
-                $.ajax({
-                    type: 'POST', // UX/Security FIX: Use POST
-                    url: '{{ route('bulk_sms') }}',
-                    data: {
-                        _token: '{{ csrf_token() }}', // UX/Security FIX: Add CSRF token
-                        clients: clientsData,
-                        sms: $('#sms-body').val()
-                    },
-                    success: function(data) {
-                        Swal.hideLoading();
-
-                        if (data == true) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'SMS SENT',
-                                showConfirmButton: false,
-                                timer: 1500,
-
-                            });
-
-                            resetText();
-                            $('#smsModal').modal('hide');
-                        } else {
-                            Swal.hideLoading();
-
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'SMS SENDING FAILED!',
-                                showConfirmButton: true,
-                            })
-                        }
-                    }
-                });
-
-            } else if (selectedData.length > 51) {
-                Swal.hideLoading();
-                // UX FIX: Improved error message
+            if (selectedData.length > 50) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Too Many Clients Selected',
                     text: `You have selected ${selectedData.length} clients. Please select 50 or fewer to send a bulk SMS.`,
-                    showConfirmButton: true,
-                })
-
-            } else {
-                //single sms
-                Swal.hideLoading();
-                $.ajax({
-                    type: 'POST', // UX/Security FIX: Use POST
-                    url: '{{ route('solo_sms') }}',
-                    data: {
-                        _token: '{{ csrf_token() }}', // UX/Security FIX: Add CSRF token
-                        client_id: $('#client_id').val(),
-                        sms: $('#sms-body').val()
-                    },
-                    success: function(data) {
-
-                        if (data == true) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'SMS SENT',
-                                showConfirmButton: false,
-                                timer: 1500,
-
-                            })
-
-                            resetText()
-                            $('#smsModal').modal('hide')
-                        } else {
-
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'SMS SENDING FAILED!',
-                                showConfirmButton: true,
-                            })
-                        }
-                    }
                 });
-
+                return;
             }
+
+            // Show proper loading dialog (must be fired first, THEN showLoading attaches to it)
+            Swal.fire({
+                title: 'Sending SMS...',
+                text: selectedData.length > 0
+                    ? `Sending to ${selectedData.length} client(s)...`
+                    : 'Sending message...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            var ajaxUrl    = selectedData.length > 0 ? '{{ route('bulk_sms') }}' : '{{ route('solo_sms') }}';
+            var ajaxData   = {
+                _token: '{{ csrf_token() }}',
+                sms:    smsText,
+            };
+            if (selectedData.length > 0) {
+                ajaxData.clients = clientsData;
+            } else {
+                ajaxData.client_id = $('#client_id').val();
+            }
+
+            $.ajax({
+                type: 'POST',
+                url:  ajaxUrl,
+                data: ajaxData,
+                success: function(data) {
+                    var ok = (data === true) || (data && data.success === true);
+                    if (ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'SMS Sent!',
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
+                        resetText();
+                        $('#smsModal').modal('hide');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'SMS Sending Failed!',
+                            text: (data && data.message) ? data.message : 'Unknown error from API.',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    var msg = 'Server error. Please check logs.';
+                    if (xhr.status === 405) msg = 'Route method mismatch (405). Please contact admin.';
+                    if (xhr.status === 419) msg = 'Session expired. Please reload the page.';
+                    if (xhr.status === 422) msg = 'Validation error: ' + (xhr.responseJSON?.message || 'Invalid data.');
+                    Swal.fire({ icon: 'error', title: 'SMS Sending Failed!', text: msg });
+                }
+            });
         }
 
         function showQr(id, name, contact) {

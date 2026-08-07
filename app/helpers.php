@@ -2,6 +2,7 @@
 //REPORT HEADER
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 if (!function_exists('report_header')) {
     function report_header($title)
@@ -53,13 +54,19 @@ function sms($contacts, $message, $type = 'unicode')
         $body = $response->body();
 
         // যদি API তে কোনো Error থাকে
-        if (strpos($body, 'Error') !== false) {
+        if (strpos($body, 'Error') !== false || !$response->successful()) {
+            Log::error('SMS API failed', [
+                'contacts' => $contacts,
+                'status'   => $response->status(),
+                'response' => $body,
+            ]);
             return false;
         }
 
         return true;
 
     } catch (\Exception $e) {
+        Log::error('SMS exception: ' . $e->getMessage(), ['contacts' => $contacts]);
         return false;
     }
 }}

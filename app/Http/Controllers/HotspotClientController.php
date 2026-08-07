@@ -160,9 +160,14 @@ class HotspotClientController extends AppBaseController
         $message = "আপনার Hotspot প্যাকেজ " . ($client->expires_at ? $client->expires_at->format('d M, y') : 'N/A') . " তারিখে শেষ হবে। দয়া করে রিচার্জ করুন।";
 
         // MRAM SMS API Call
-        sms($client->contact, $message);
+        $sent = sms($client->contact, $message);
 
-        Flash::success("SMS sent to {$client->name} ({$client->contact})");
+        if ($sent) {
+            Flash::success("SMS sent to {$client->name} ({$client->contact})");
+        } else {
+            Flash::error("SMS sending failed for {$client->name} ({$client->contact}). Please check the SMS API or contact number.");
+        }
+
         return redirect()->back();
     }
 }
