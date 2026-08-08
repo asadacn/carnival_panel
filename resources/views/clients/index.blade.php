@@ -1571,7 +1571,7 @@
                             let url = '';
 
                             // ISP অনুযায়ী লিংকের কন্ডিশন
-                            if (rowData.isp_code === 'bijoy') {
+                            if (String(rowData.isp_code).toLowerCase() === 'bijoy') {
                                 url = `https://selfcare.bijoy.net/pay/${rowData.username}`;
                             } else {
                                 // ডিফল্ট অথবা Carnival-এর জন্য আগের লিংক
