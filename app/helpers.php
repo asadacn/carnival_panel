@@ -16,8 +16,8 @@ if (!function_exists('report_header')) {
 if (!function_exists('sms')) {
 function sms($contacts, $message, $type = 'unicode')
 {
-    $api_key  = env('MRAM_API_KEY');
-    $senderid = env('MRAM_SENDER_ID');
+    $api_key  = trim((string) env('MRAM_API_KEY'));
+    $senderid = trim((string) env('MRAM_SENDER_ID'));
 
     // -----------------------------
     // Number normalization
@@ -31,10 +31,26 @@ function sms($contacts, $message, $type = 'unicode')
     }
 
     // প্রতিটি নাম্বারের আগে 88 যোগ করা
-    $contacts = array_map(function ($number) {
-        $number = preg_replace('/\D/', '', $number); // শুধু digits রাখবে
-        return str_starts_with($number, '88') ? $number : '88' . $number;
-    }, $contacts);
+    $contacts = array_values(array_filter(array_map(function ($number) {
+        $number = preg_replace('/\D/', '', (string) $number);
+
+        if (str_starts_with($number, '01')) {
+            $number = '88' . $number;
+        } elseif (str_starts_with($number, '1')) {
+            $number = '880' . $number;
+        }
+
+        return preg_match('/^8801\d{9}$/', $number) ? $number : null;
+    }, $contacts)));
+
+    if (!$api_key || !$senderid || !$contacts) {
+        Log::error('SMS request rejected before API call', [
+            'has_api_key' => (bool) $api_key,
+            'has_senderid' => (bool) $senderid,
+            'contact_count' => count($contacts),
+        ]);
+        return false;
+    }
 
     // একসাথে join করা MRAM API অনুযায়ী
     $contacts = implode('+', $contacts);
@@ -43,7 +59,7 @@ function sms($contacts, $message, $type = 'unicode')
     // API call
     // -----------------------------
     try {
-        $response = Http::asForm()->post("https://sms.mram.com.bd/smsapi", [
+        $response = Http::timeout(20)->asForm()->post("https://sms.mram.com.bd/smsapi", [
             "api_key"  => $api_key,
             "type"     => $type,
             "contacts" => $contacts,
@@ -53,8 +69,14 @@ function sms($contacts, $message, $type = 'unicode')
 
         $body = $response->body();
 
-        // যদি API তে কোনো Error থাকে
-        if (strpos($body, 'Error') !== false || !$response->successful()) {
+        Log::info('SMS API response', [
+            'contacts' => $contacts,
+            'status' => $response->status(),
+            'response' => $body,
+        ]);
+
+        // The provider returns a plain-text error instead of a reliable HTTP error code.
+        if (stripos($body, 'error') !== false || stripos($body, 'failed') !== false || !$response->successful()) {
             Log::error('SMS API failed', [
                 'contacts' => $contacts,
                 'status'   => $response->status(),

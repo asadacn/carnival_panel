@@ -134,6 +134,14 @@ class DueBillPaymentController extends Controller
 
         $bill = DueBill::findOrFail($validated['due_bill_id']);
 
+        if ((int) $bill->client_id !== (int) $validated['client_id']) {
+            return back()->withErrors(['client_id' => 'The selected client does not own this bill.'])->withInput();
+        }
+
+        if ((float) $validated['amount'] > (float) $bill->remaining_balance) {
+            return back()->withErrors(['amount' => 'Payment cannot exceed the remaining balance of ৳' . number_format($bill->remaining_balance, 2)])->withInput();
+        }
+
         // Create payment
         $payment = DueBillPayment::create($validated);
 
@@ -157,9 +165,18 @@ class DueBillPaymentController extends Controller
             $remainingAmount = $bill->amount - $bill->paid_amount;
 
             if ($remainingAmount <= 0) {
-                $message = "Payment confirmed: ৳" . number_format($validated['amount']) . " received for {$monthName}. Bill is now fully paid. Thank you!";
+                $message = "প্রিয় {$client->name}, পেমেন্ট নিশ্চিত হয়েছে।\n"
+                    . "কাস্টমার আইডি: {$client->username}\n"
+                    . "{$monthName} মাসের বিল: ৳" . number_format($validated['amount'], 2)
+                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($client->isp_code);
             } else {
-                $message = "Payment confirmed: ৳" . number_format($validated['amount']) . " received for {$monthName}. Remaining balance: ৳" . number_format($remainingAmount);
+                $message = "প্রিয় {$client->name}, আংশিক পেমেন্ট নিশ্চিত হয়েছে।\n"
+                    . "কাস্টমার আইডি: {$client->username}\n"
+                    . "{$monthName} মাসে জমা: ৳" . number_format($validated['amount'], 2)
+                    . "\nঅবশিষ্ট বকেয়া: ৳" . number_format($remainingAmount, 2)
+                    . "\n" . config('sms.payment_instruction') . "\n"
+                    . config('sms.payment_methods') . ': ' . config('sms.payment_number')
+                    . "\n- " . ucfirst($client->isp_code);
             }
 
             if ($client->contact) {
@@ -198,8 +215,6 @@ class DueBillPaymentController extends Controller
     public function update(Request $request, $id)
     {
         $payment = DueBillPayment::findOrFail($id);
-        $oldAmount = $payment->amount;
-
         $validated = $request->validate([
             'payment_date' => 'required|date',
             'amount' => 'required|numeric|min:0.01',
@@ -207,6 +222,13 @@ class DueBillPaymentController extends Controller
             'transaction_id' => 'nullable|string',
             'notes' => 'nullable|string'
         ]);
+
+        $remainingBeforePayment = (float) $payment->dueBill->amount
+            - (float) $payment->dueBill->paid_amount
+            + (float) $payment->amount;
+        if ((float) $validated['amount'] > $remainingBeforePayment) {
+            return back()->withErrors(['amount' => 'Payment cannot exceed the remaining balance of ৳' . number_format($remainingBeforePayment, 2)])->withInput();
+        }
 
         $payment->update($validated);
 

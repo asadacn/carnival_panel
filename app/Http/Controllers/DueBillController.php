@@ -143,7 +143,12 @@ class DueBillController extends Controller
         try {
             $client = Client::findOrFail($validated['client_id']);
             $monthName = \Carbon\Carbon::createFromDate($validated['year'], $validated['month'], 1)->format('F Y');
-            $message = "Bill notification: A bill of ৳" . number_format($validated['amount']) . " has been created for {$monthName}. Due date: " . $validated['due_date'];
+            $message = "প্রিয় {$client->name},\n"
+                . "গ্রাহক আইডি: {$client->username}\n"
+                . "{$monthName} মাসের নতুন বিল: ৳" . number_format($validated['amount'], 2) . "\n"
+                . config('sms.payment_instruction') . "\n"
+                . config('sms.payment_methods') . ': ' . config('sms.payment_number')
+                . "\n- " . ucfirst($client->isp_code);
 
             if ($client->contact) {
                 sms($client->contact, $message);
@@ -223,14 +228,84 @@ class DueBillController extends Controller
      */
     public function markAsPaid($id)
     {
-        $bill = DueBill::findOrFail($id);
+        $bill = DueBill::with('client')->findOrFail($id);
+
+        if ($bill->remaining_balance <= 0) {
+            return redirect()->back()->with('error', 'This bill has no outstanding balance.');
+        }
+
         $bill->update([
             'status' => 'paid',
             'paid_amount' => $bill->amount
         ]);
 
+        if ($bill->client && $bill->client->contact) {
+            $message = "প্রিয় {$bill->client->name},\n"
+                . "গ্রাহক আইডি: {$bill->client->username}\n"
+                . $bill->month_year . ' মাসের বিল: ৳' . number_format($bill->amount, 2)
+                . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($bill->client->isp_code);
+            sms($bill->client->contact, $message);
+        }
+
         return redirect()->route('due-bills.show', $bill->id)
             ->with('success', 'Bill marked as paid successfully!');
+    }
+
+    /**
+     * Send a manual SMS reminder for an unpaid bill.
+     */
+    public function sendReminder($id)
+    {
+        $bill = DueBill::with('client')->findOrFail($id);
+
+        if ($bill->sendReminder()) {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Payment reminder sent successfully.']);
+            }
+
+            return redirect()->back()->with('success', 'Payment reminder sent successfully.');
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reminder was not sent. It may already have been sent today, or the client has no contact number.'
+            ], 422);
+        }
+
+        return redirect()->back()->with('error', 'Reminder was not sent. The bill may be paid, already reminded today, or have no contact number.');
+    }
+
+    /**
+     * Send reminders for multiple selected bills.
+     */
+    public function sendBulkReminders(Request $request)
+    {
+        $validated = $request->validate([
+            'bill_ids' => 'required|array|min:1',
+            'bill_ids.*' => 'integer|distinct|exists:due_bills,id',
+        ]);
+
+        $sent = 0;
+        $skipped = 0;
+
+        DueBill::with('client')
+            ->whereIn('id', $validated['bill_ids'])
+            ->get()
+            ->each(function (DueBill $bill) use (&$sent, &$skipped) {
+                if ($bill->sendReminder()) {
+                    $sent++;
+                } else {
+                    $skipped++;
+                }
+            });
+
+        return response()->json([
+            'success' => $sent > 0,
+            'sent' => $sent,
+            'skipped' => $skipped,
+            'message' => "{$sent} reminder(s) sent. {$skipped} skipped."
+        ], $sent > 0 ? 200 : 422);
     }
 
 
@@ -404,7 +479,7 @@ class DueBillController extends Controller
             // Replace <br> or HTML tags with appropriate newlines or tags for Telegram
             $msg = $request->message;
             $msg = str_replace(['<br>', '<br/>', '<br />'], "\n", $msg);
-            
+
             // Strip any unsupported HTML tags but leave bold/code/italic/a tags supported by Telegram HTML parse_mode
             $msg = strip_tags($msg, '<b><strong><i><em><u><ins><s><strike><del><code><pre><a>');
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class DueBill extends Model
@@ -21,7 +22,8 @@ class DueBill extends Model
         'amount',
         'paid_amount',
         'status',
-        'notes'
+        'notes',
+        'reminder_sent_at'
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class DueBill extends Model
         'due_date' => 'date',
         'amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'reminder_sent_at' => 'datetime',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────
@@ -83,6 +86,36 @@ class DueBill extends Model
     public function getMonthYearAttribute()
     {
         return Carbon::createFromDate($this->year, $this->month, 1)->format('F Y');
+    }
+
+    /**
+     * Send one reminder per bill per calendar day.
+     */
+    public function sendReminder(): bool
+    {
+        if ($this->status === 'paid' || $this->remaining_balance <= 0 || !$this->client || !$this->client->contact) {
+            return false;
+        }
+
+        if ($this->reminder_sent_at && $this->reminder_sent_at->isToday()) {
+            return false;
+        }
+
+        $message = "প্রিয় {$this->client->name},\n"
+            . "গ্রাহক আইডি: {$this->client->username}\n"
+            . $this->month_year . ' মাসের বকেয়া: ৳'
+            . number_format($this->remaining_balance, 2)
+            . "\n" . config('sms.payment_instruction') . "\n"
+            . config('sms.payment_methods') . ': ' . config('sms.payment_number')
+            . "\n- " . ucfirst($this->client->isp_code);
+
+        if (!sms($this->client->contact, $message)) {
+            Log::warning('Due bill reminder SMS failed', ['due_bill_id' => $this->id]);
+            return false;
+        }
+
+        $this->forceFill(['reminder_sent_at' => now()])->save();
+        return true;
     }
 
     // ── Scopes ───────────────────────────────────────────────────────────────

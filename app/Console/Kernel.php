@@ -23,6 +23,7 @@ class Kernel extends ConsoleKernel
     {
         // প্রতিদিন সকাল ৯টায় রান করাতে চাইলে
         $schedule->command('clients:notify-expired')->dailyAt('11:00');
+        $schedule->command('due-bills:send-reminders')->dailyAt('09:00');
     }
 
     /**

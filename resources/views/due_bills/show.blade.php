@@ -566,9 +566,19 @@
                     <a href="{{ route('due-bill-payments.create', ['bill_id' => $bill->id, 'client_id' => $bill->client_id]) }}" class="action-button btn-success">
                         <i class="fas fa-plus-circle"></i> Add Payment
                     </a>
+                    @if($bill->status !== 'paid')
+                    <form method="POST" action="{{ route('due-bills.send-reminder', $bill->id) }}">
+                        @csrf
+                        <button type="submit" class="action-button btn-primary">
+                            <i class="fas fa-sms"></i> Send SMS Reminder
+                        </button>
+                    </form>
+                    @endif
+                    @if($bill->remaining_balance > 0)
                     <button onclick="markAsPaid({{ $bill->id }})" class="action-button btn-primary">
                         <i class="fas fa-check-double"></i> Mark as Paid
                     </button>
+                    @endif
                     <button onclick="deleteBill({{ $bill->id }})" class="action-button btn-danger">
                         <i class="fas fa-trash-alt"></i> Delete Bill
                     </button>

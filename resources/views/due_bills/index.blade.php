@@ -7,7 +7,7 @@
 @section('css')
 <style>
     .bills-container { padding: 2rem 0; }
-    
+
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -25,12 +25,12 @@
         align-items: center;
         gap: 0.75rem;
     }
-    
+
     .header-actions {
         display: flex;
         gap: 1rem;
     }
-    
+
     .metric-card {
         border-radius: 1rem;
         border: none;
@@ -107,23 +107,23 @@
         padding: 1.5rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
-    
+
     /* DataTable Stylings */
     table.dataTable { border-collapse: collapse !important; border-spacing: 0 !important; }
     .bills-table thead { background: #f8fafc; border-radius: 8px; }
-    .bills-table thead th { 
-        padding: 1rem 1.25rem !important; 
-        font-weight: 600; 
-        color: #64748b; 
-        border-bottom: 2px solid #e2e8f0 !important; 
-        font-size: 0.75rem; 
-        text-transform: uppercase; 
+    .bills-table thead th {
+        padding: 1rem 1.25rem !important;
+        font-weight: 600;
+        color: #64748b;
+        border-bottom: 2px solid #e2e8f0 !important;
+        font-size: 0.75rem;
+        text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     .bills-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: all 0.2s ease; }
     .bills-table tbody tr:hover { background-color: #f8fafc; }
     .bills-table td { padding: 1rem 1.25rem; color: #334155; font-size: 0.95rem; vertical-align: middle; }
-    
+
     /* Status Badges */
     .badge {
         padding: 0.45rem 0.8rem;
@@ -142,32 +142,45 @@
         display: flex;
         gap: 0.4rem;
     }
-    .action-btn { 
+    .action-btn {
         width: 32px;
         height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: none; 
-        border-radius: 6px; 
-        cursor: pointer; 
-        transition: all 0.2s ease; 
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
     .btn-view { background: #eff6ff; color: #3b82f6; }
     .btn-view:hover { background: #dbeafe; color: #2563eb; }
-    
+
     .btn-edit { background: #fffbeb; color: #d97706; }
     .btn-edit:hover { background: #fef3c7; color: #b45309; }
-    
+
     .btn-delete { background: #fef2f2; color: #ef4444; }
     .btn-delete:hover { background: #fee2e2; color: #dc2626; }
+    .btn-reminder { background: #fff7ed; color: #ea580c; }
+    .btn-reminder:hover { background: #ffedd5; color: #c2410c; }
+    .bulk-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem 1rem;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 8px;
+    }
+    .bulk-actions .selection-count { color: #9a3412; font-weight: 600; }
 </style>
 @endsection
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="bills-container">
-        
+
         <div class="page-header">
             <h1 class="page-title">
                 <i data-lucide="receipt" style="width:32px; height:32px; color:#3b82f6;"></i>
@@ -182,7 +195,7 @@
                 </a>
             </div>
         </div>
-        
+
         <!-- Dashboard Metrics Row -->
         <div class="row g-4 mb-4">
             <div class="col-sm-6 col-xl-3">
@@ -240,10 +253,18 @@
         </div>
 
         <div class="bills-table-wrapper">
+            <div class="bulk-actions" id="bulk-actions" style="display:none;">
+                <span class="selection-count"><span id="selected-count">0</span> client selected</span>
+                <button type="button" class="btn btn-sm btn-warning" onclick="sendBulkReminders()">
+                    <i data-lucide="bell-ring" style="width:16px;height:16px;"></i> Send Reminder to Selected
+                </button>
+                <button type="button" class="btn btn-sm btn-light" onclick="clearBillSelection()">Clear</button>
+            </div>
             <div class="table-responsive">
                 <table class="table bills-table" id="bills-table" width="100%">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="select-all-bills" title="Select all visible unpaid bills"></th>
                             <th>#</th>
                             <th>Client</th>
                             <th>Customer ID</th>
@@ -258,7 +279,7 @@
                 </table>
             </div>
         </div>
-        
+
     </div>
 </div>
 @endsection
@@ -268,6 +289,11 @@
 <script>
     $(document).ready(function() {
         lucide.createIcons();
+
+        $('#select-all-bills').on('change', function() {
+            $('.bill-checkbox').prop('checked', this.checked);
+            updateBillSelection();
+        });
 
         var table = $('#bills-table').DataTable({
             processing: true,
@@ -280,6 +306,11 @@
                 searchPlaceholder: "Search bills..."
             },
             columns: [
+                { data: null, name: 'selection', orderable: false, searchable: false, render: function(data, type, row) {
+                    return row.status !== 'paid'
+                        ? `<input type="checkbox" class="bill-checkbox" value="${row.id}" onchange="updateBillSelection()">`
+                        : '';
+                }},
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                 { data: 'client_name', name: 'client_name', render: function(data, type, row) {
                     return `<div class="fw-bold text-dark">${data}</div>`;
@@ -295,15 +326,16 @@
                 { data: 'month_year', name: 'month_year', searchable: false },
                 { data: 'amount', name: 'amount', render: function(data) { return `৳ ${data}`; } },
                 { data: 'paid_amount', name: 'paid_amount', searchable: false, render: function(data) { return `৳ ${data}`; } },
-                { data: 'remaining', name: 'remaining', searchable: false, render: function(data) { 
-                    return `<span class="fw-bold ${data > 0 ? 'text-danger' : 'text-success'}">৳ ${data}</span>`; 
+                { data: 'remaining', name: 'remaining', searchable: false, render: function(data) {
+                    return `<span class="fw-bold ${data > 0 ? 'text-danger' : 'text-success'}">৳ ${data}</span>`;
                 }},
                 { data: 'status_badge', name: 'status', orderable: false, searchable: false },
                 { data: 'action', name: 'action', orderable: false, searchable: false, render: function(data, type, row) {
                     return `
                         <div class="dt-action-btns">
                             <button class="action-btn btn-view" onclick="viewBill(${row.id})" title="View"><i data-lucide="eye" style="width:16px;height:16px;"></i></button>
-                            <button class="action-btn" onclick="payBill(${row.id})" title="Pay Now" style="background:#10b981;color:white;"><i data-lucide="banknote" style="width:16px;height:16px;"></i></button>
+                            ${Number(row.remaining) > 0 ? `<button class="action-btn" onclick="payBill(${row.id})" title="Pay Now" style="background:#10b981;color:white;"><i data-lucide="banknote" style="width:16px;height:16px;"></i></button>` : ''}
+                            ${row.status !== 'paid' ? `<button class="action-btn btn-reminder" onclick="sendReminder(${row.id}, this)" title="Send SMS Reminder"><i data-lucide="bell-ring" style="width:16px;height:16px;"></i></button>` : ''}
                             <button class="action-btn btn-edit" onclick="editBill(${row.id})" title="Edit"><i data-lucide="edit-2" style="width:16px;height:16px;"></i></button>
                             <button class="action-btn btn-delete" onclick="deleteBill(${row.id})" title="Delete"><i data-lucide="trash-2" style="width:16px;height:16px;"></i></button>
                         </div>
@@ -320,6 +352,74 @@
         $('.dataTables_filter input').addClass('form-control').css({'border-radius': '6px', 'padding': '0.5rem'});
         $('.dataTables_length select').addClass('form-select').css('border-radius', '6px');
     });
+
+    function updateBillSelection() {
+        var selectedCount = $('.bill-checkbox:checked').length;
+        $('#selected-count').text(selectedCount);
+        $('#bulk-actions').toggle(selectedCount > 0);
+
+        var totalVisible = $('.bill-checkbox').length;
+        $('#select-all-bills').prop('checked', totalVisible > 0 && selectedCount === totalVisible);
+    }
+
+    function clearBillSelection() {
+        $('.bill-checkbox, #select-all-bills').prop('checked', false);
+        updateBillSelection();
+    }
+
+    function sendBulkReminders() {
+        var billIds = $('.bill-checkbox:checked').map(function() {
+            return this.value;
+        }).get();
+
+        if (!billIds.length) return;
+
+        Swal.fire({
+            title: 'Send reminders?',
+            text: 'SMS reminders will be sent to ' + billIds.length + ' selected client(s).',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ea580c',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Send All Reminders'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            var button = $('#bulk-actions button.btn-warning');
+            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+
+            $.ajax({
+                url: "{{ route('due-bills.send-bulk-reminders') }}",
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    bill_ids: billIds
+                },
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reminders processed',
+                        text: response.message,
+                        confirmButtonColor: '#ea580c'
+                    });
+                    clearBillSelection();
+                },
+                error: function(xhr) {
+                    var response = xhr.responseJSON || {};
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No reminders sent',
+                        text: response.message || 'The selected clients could not be reminded.',
+                        confirmButtonColor: '#ea580c'
+                    });
+                },
+                complete: function() {
+                    button.prop('disabled', false).html('<i data-lucide="bell-ring" style="width:16px;height:16px;"></i> Send Reminder to Selected');
+                    lucide.createIcons();
+                }
+            });
+        });
+    }
 
     function copyToClipboard(text) {
         if (navigator.clipboard) {
@@ -365,7 +465,7 @@
     function viewBill(billId) {
         window.location.href = "{{ route('due-bills.show', ':id') }}".replace(':id', billId);
     }
-    
+
     function payBill(billId) {
         Swal.fire({
             title: 'Mark as Paid?',
@@ -384,6 +484,56 @@
 
     function editBill(billId) {
         window.location.href = "{{ route('due-bills.edit', ':id') }}".replace(':id', billId);
+    }
+
+    function sendReminder(billId, button) {
+        Swal.fire({
+            title: 'Send SMS reminder?',
+            text: 'A payment reminder will be sent to the client.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ea580c',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Send Reminder'
+        }).then(function(result) {
+            if (!result.isConfirmed) return;
+
+            var originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            $.ajax({
+                url: "{{ route('due-bills.send-reminder', ':id') }}".replace(':id', billId),
+                type: 'POST',
+                data: { _token: '{{ csrf_token() }}' },
+                success: function() {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Reminder sent successfully',
+                        showConfirmButton: false,
+                        timer: 2200
+                    });
+                },
+                error: function(xhr) {
+                    var message = xhr.responseJSON && xhr.responseJSON.message
+                        ? xhr.responseJSON.message
+                        : 'Reminder could not be sent.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Unable to send reminder',
+                        text: message,
+                        confirmButtonColor: '#ea580c'
+                    });
+                },
+                complete: function() {
+                    button.disabled = false;
+                    button.innerHTML = originalHtml;
+                    lucide.createIcons();
+                }
+            });
+        });
     }
 
     function deleteBill(billId) {
