@@ -1741,8 +1741,8 @@
             var table = $('#clients').DataTable();
             var selectedData = table.rows({ selected: true }).data().toArray();
 
-            var clientsData = $.map(selectedData, function(val) {
-                return { username: val.username, contact: val.contact };
+            var clientIds = $.map(selectedData, function(val) {
+                return val.id;
             });
 
             // Validate message is not empty before showing loader
@@ -1779,7 +1779,7 @@
                 sms:    smsText,
             };
             if (selectedData.length > 0) {
-                ajaxData.clients = clientsData;
+                ajaxData.clients = clientIds;
             } else {
                 ajaxData.client_id = $('#client_id').val();
             }
@@ -2274,20 +2274,55 @@
 
         // Create bills for multiple clients
         function createMultipleQuickBills(clientsData) {
+            const priceRequests = clientsData.map(function(client) {
+                return $.get('{{ url("clients") }}/' + client.id + '/package-price')
+                    .then(function(response) {
+                        return response.success ? response.price : '';
+                    })
+                    .catch(function() {
+                        return '';
+                    });
+            });
+
             Swal.fire({
-                title: 'Enter Amount for All Clients',
-                input: 'number',
-                inputLabel: 'Amount (৳)',
-                inputPlaceholder: 'Enter amount',
-                inputAttributes: {
-                    step: '0.01',
-                    min: '0.01'
-                },
+                title: 'Enter Amounts for Clients',
+                html: '<div id="bulk-bill-amounts" style="max-height: 320px; overflow-y: auto; text-align: left;"></div>' +
+                    '<small class="text-muted">Each client can have a different bill amount.</small>',
                 showCancelButton: true,
-                confirmButtonText: 'Create Bills'
-            }).then((result) => {
-                if (result.isConfirmed && result.value) {
-                    Swal.showLoading();
+                confirmButtonText: 'Create Bills',
+                showLoaderOnConfirm: true,
+                allowOutsideClick: () => !Swal.isLoading(),
+                didOpen: function() {
+                    Swal.disableConfirmButton();
+                    Promise.all(priceRequests).then(function(prices) {
+                        const container = document.getElementById('bulk-bill-amounts');
+                        clientsData.forEach(function(client, index) {
+                            const row = document.createElement('div');
+                            row.className = 'mb-2';
+                            row.innerHTML = '<label class="form-label mb-1">' +
+                                $('<div>').text(client.name || client.username).html() +
+                                '</label><input type="number" class="form-control bulk-bill-amount" data-client-id="' +
+                                client.id + '" step="0.01" min="0.01" value="' + (prices[index] || '') + '" required>';
+                            container.appendChild(row);
+                        });
+                        Swal.enableConfirmButton();
+                    });
+                },
+                preConfirm: function() {
+                    const amounts = {};
+                    let invalid = false;
+                    $('.bulk-bill-amount').each(function() {
+                        const amount = parseFloat($(this).val());
+                        if (!amount || amount <= 0) {
+                            invalid = true;
+                        }
+                        amounts[$(this).data('client-id')] = amount;
+                    });
+
+                    if (invalid || Object.keys(amounts).length !== clientsData.length) {
+                        Swal.showValidationMessage('Enter a valid amount for every client.');
+                        return false;
+                    }
 
                     const today = new Date();
                     const billDate = today.toISOString().split('T')[0];
@@ -2295,11 +2330,8 @@
                     const currentMonth = today.getMonth() + 1;
                     const currentYear = today.getFullYear();
 
-                    let completed = 0;
-                    let failed = 0;
-
-                    clientsData.forEach(function(client) {
-                        $.ajax({
+                    return Promise.all(clientsData.map(function(client) {
+                        return $.ajax({
                             url: '{{ route("due-bills.store") }}',
                             type: 'POST',
                             data: {
@@ -2309,36 +2341,37 @@
                                 year: currentYear,
                                 bill_date: billDate,
                                 due_date: dueDate,
-                                amount: result.value,
+                                amount: amounts[client.id],
                                 notes: `Bulk created on ${new Date().toLocaleDateString()}`
-                            },
-                            success: function(response) {
-                                completed++;
-                                checkBillCreationComplete(clientsData.length, completed, failed);
-                            },
-                            error: function(xhr) {
-                                failed++;
-                                checkBillCreationComplete(clientsData.length, completed, failed);
                             }
+                        }).then(function() {
+                            return { success: true };
+                        }).catch(function(xhr) {
+                            return {
+                                success: false,
+                                client: client.name || client.username,
+                                message: xhr.responseJSON?.message || 'Could not create bill.'
+                            };
                         });
-                    });
+                    }));
                 }
-            });
-        }
+            }).then(function(result) {
+                if (!result.isConfirmed || !result.value) {
+                    return;
+                }
 
-        // Check if all bulk bill creations are complete
-        function checkBillCreationComplete(total, completed, failed) {
-            if ((completed + failed) === total) {
-                Swal.hideLoading();
+                const failed = result.value.filter(function(item) { return !item.success; });
                 Swal.fire({
-                    icon: failed === 0 ? 'success' : 'warning',
-                    title: 'Bills Created',
-                    text: `Successfully created ${completed} bills${failed > 0 ? `. Failed: ${failed}` : ''}`,
+                    icon: failed.length === 0 ? 'success' : 'warning',
+                    title: failed.length === 0 ? 'Bills Created' : 'Bills Partially Created',
+                    text: failed.length === 0
+                        ? `Successfully created ${clientsData.length} bills.`
+                        : `Successfully created ${clientsData.length - failed.length} bills. Failed: ${failed.length}.`,
                     confirmButtonText: 'OK'
-                }).then(() => {
-                    $('#clients').DataTable().ajax.reload();
+                }).then(function() {
+                    $('#clients').DataTable().ajax.reload(null, false);
                 });
-            }
+            });
         }
 
         // Update count on table selection/deselection

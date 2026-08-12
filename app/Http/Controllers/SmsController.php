@@ -39,6 +39,38 @@ class SmsController extends Controller
 
     public function bulk_sms(Request $request)
     {
+        if ($request->has('clients')) {
+            $request->validate([
+                'sms'       => 'required|string|max:500',
+                'clients'   => 'required|array|min:1|max:50',
+                'clients.*' => 'integer|distinct|exists:clients,id',
+            ]);
+
+            $clients = Client::whereIn('id', $request->input('clients'))
+                ->pluck('contact')
+                ->filter()
+                ->values();
+
+            if ($clients->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid contact numbers found for the selected clients.',
+                ], 422);
+            }
+
+            if (!sms($clients, $request->input('sms'), 'unicode')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'SMS sending failed. Please check the API or contact numbers.',
+                ], 502);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'SMS sent successfully to ' . $clients->count() . ' client(s).',
+            ]);
+        }
+
         // 1. Initial Validation
         if (!isset($request->client_status)) {
             Flash::error("Select a clients group please!");
@@ -244,12 +276,12 @@ class SmsController extends Controller
             if ($result['success']) {
                 $count = count($numbers);
                 $ispLabel = !empty($ispCode) ? " (ISP: " . ucfirst($ispCode) . ")" : "";
-                $campIdInfo = is_array($result['data']['campaign_id']) 
-                    ? implode(', ', $result['data']['campaign_id']) 
+                $campIdInfo = is_array($result['data']['campaign_id'])
+                    ? implode(', ', $result['data']['campaign_id'])
                     : $result['data']['campaign_id'];
 
-                $primaryCampaignId = is_array($result['data']['campaign_id']) 
-                    ? $result['data']['campaign_id'][0] 
+                $primaryCampaignId = is_array($result['data']['campaign_id'])
+                    ? $result['data']['campaign_id'][0]
                     : $result['data']['campaign_id'];
 
                 session()->flash('voice_campaign_id', $primaryCampaignId);

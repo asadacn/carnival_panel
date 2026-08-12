@@ -32,9 +32,12 @@ class DueBillController extends Controller
             }
 
             // Filter by month/year if provided
-            if ($request->filled('month') && $request->filled('year')) {
-                $query->where('month', $request->month)
-                      ->where('year', $request->year);
+            if ($request->filled('month')) {
+                $query->where('month', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->where('year', $request->year);
             }
 
             return DataTables::of($query)
@@ -90,6 +93,12 @@ class DueBillController extends Controller
         $clients = Client::select('id', 'name', 'username')->orderBy('name')->get();
         $statuses = ['unpaid', 'partially_paid', 'paid', 'overdue'];
 
+        $years = DueBill::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
+        $months = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $months[$m] = date('F', mktime(0, 0, 0, $m, 1));
+        }
+
         $totalDue = DueBill::where('status', '!=', 'paid')->sum('amount') -
                            DueBill::where('status', '!=', 'paid')->sum('paid_amount');
 
@@ -100,7 +109,16 @@ class DueBillController extends Controller
             ->whereYear('created_at', now()->year)
             ->sum('amount');
 
-        return view('due_bills.index', compact('clients', 'statuses', 'totalDue', 'unpaidCount', 'overdueCount', 'paidThisMonth'));
+        return view('due_bills.index', compact(
+            'clients',
+            'statuses',
+            'years',
+            'months',
+            'totalDue',
+            'unpaidCount',
+            'overdueCount',
+            'paidThisMonth'
+        ));
     }
 
     /**
@@ -134,6 +152,13 @@ class DueBillController extends Controller
             ->first();
 
         if ($existing) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bill already exists for this client in the specified month.',
+                ], 422);
+            }
+
             return back()->withErrors(['message' => 'Bill already exists for this client in the specified month']);
         }
 
@@ -155,6 +180,14 @@ class DueBillController extends Controller
             }
         } catch (\Exception $e) {
             // Log error but don't fail the bill creation
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Due bill created successfully.',
+                'bill_id' => $bill->id,
+            ]);
         }
 
         return redirect()->route('due-bills.index')

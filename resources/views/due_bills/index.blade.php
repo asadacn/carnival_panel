@@ -196,6 +196,55 @@
             </div>
         </div>
 
+        <div class="filter-card mb-4">
+            <form id="management-filter-form" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Client</label>
+                    <select id="filter_client_id" class="form-select">
+                        <option value="">All Clients</option>
+                        @foreach($clients as $client)
+                            <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }} ({{ $client->username }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Status</label>
+                    <select id="filter_status" class="form-select">
+                        <option value="">All Statuses</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>{{ ucfirst(str_replace('_', ' ', $status)) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Month</label>
+                    <select id="filter_month" class="form-select">
+                        <option value="">All Months</option>
+                        @foreach($months as $num => $name)
+                            <option value="{{ $num }}" {{ request('month') == $num ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Year</label>
+                    <select id="filter_year" class="form-select">
+                        <option value="">All Years</option>
+                        @foreach($years as $year)
+                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="button" id="btn-apply-filters" class="btn btn-primary w-100" style="border-radius: 8px; font-weight: 600; padding: 0.6rem;">
+                        <i data-lucide="search" style="width:18px;height:18px;margin-right:5px;"></i> Filter
+                    </button>
+                    <button type="button" id="btn-reset-filters" class="btn btn-light w-100" style="border-radius: 8px; padding: 0.6rem;">
+                        <i data-lucide="refresh-cw" style="width:18px;height:18px;"></i> Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <!-- Dashboard Metrics Row -->
         <div class="row g-4 mb-4">
             <div class="col-sm-6 col-xl-3">
@@ -300,7 +349,15 @@
             serverSide: true,
             responsive: true,
             order: [],
-            ajax: "{{ route('due-bills.index') }}",
+            ajax: {
+                url: "{{ route('due-bills.index') }}",
+                data: function(d) {
+                    d.client_id = $('#filter_client_id').val();
+                    d.status = $('#filter_status').val();
+                    d.month = $('#filter_month').val();
+                    d.year = $('#filter_year').val();
+                }
+            },
             language: {
                 search: "",
                 searchPlaceholder: "Search bills..."
@@ -351,6 +408,18 @@
         // Add some Bootstrap styling classes to Datatable wrapper elements
         $('.dataTables_filter input').addClass('form-control').css({'border-radius': '6px', 'padding': '0.5rem'});
         $('.dataTables_length select').addClass('form-select').css('border-radius', '6px');
+
+        $('#btn-apply-filters').on('click', function() {
+            table.ajax.reload();
+        });
+
+        $('#btn-reset-filters').on('click', function() {
+            $('#filter_client_id').val('');
+            $('#filter_status').val('');
+            $('#filter_month').val('');
+            $('#filter_year').val('');
+            table.ajax.reload();
+        });
     });
 
     function updateBillSelection() {
