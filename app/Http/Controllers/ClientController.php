@@ -42,6 +42,50 @@ class ClientController extends AppBaseController
                 ->withCount('comments')
                 ->with('latestComment');
 
+            if ($request->filled('status_filter')) {
+                $status = $request->status_filter;
+                if ($status === 'Expired') {
+                    $data->where(function($q) {
+                        $q->where('status', 'Expired')
+                          ->orWhere(function($sub) {
+                              $sub->whereNotNull('expiration')->where('expiration', '<', now());
+                          });
+                    });
+                } else {
+                    $data->where('status', $status);
+                }
+            }
+
+            if ($request->filled('isp_filter')) {
+                $data->where('isp_code', strtolower($request->isp_filter));
+            }
+
+            if ($request->filled('due_filter')) {
+                if ($request->due_filter === 'has_due') {
+                    $data->whereIn('id', function($q) {
+                        $q->select('client_id')
+                          ->from('due_bills')
+                          ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                          ->whereRaw('(amount - paid_amount) > 0');
+                    });
+                } elseif ($request->due_filter === 'no_due') {
+                    $data->whereNotIn('id', function($q) {
+                        $q->select('client_id')
+                          ->from('due_bills')
+                          ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                          ->whereRaw('(amount - paid_amount) > 0');
+                    });
+                }
+            }
+
+            if ($request->filled('onu_filter') && $request->onu_filter === 'free') {
+                $data->where('onu_free', 1);
+            }
+
+            if ($request->filled('cable_filter') && $request->cable_filter === 'returned') {
+                $data->where('cable_returned', 1);
+            }
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('total_due', function ($client) {
@@ -72,63 +116,61 @@ class ClientController extends AppBaseController
                     $addPaymentUrl = route('due-bill-payments.create', ['client_id' => $client->id]);
 
                     $commentBadge = $commentCount > 0
-                        ? "<span class=\"badge bg-primary\" style=\"font-size:0.7rem;\">$commentCount</span>"
+                        ? "<span class=\"badge rounded-pill bg-primary\" style=\"font-size:0.68rem; padding: 2px 6px;\">$commentCount</span>"
                         : '';
 
                     $btn = <<<EOT
-                    <div class="btn-group">
-                        <a href="{$editUrl}" class="btn btn-warning btn-sm" title="Edit">
+                    <div class="btn-group btn-group-sm" role="group" style="position: relative;">
+                        <a href="{$editUrl}" class="btn btn-sm border-0 px-2" title="Edit Client" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background:#fffbebf0; color:#d97706; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbebf0'">
                             <i class="fa fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-info" title="Comments"
-                            onclick="openCommentModal({$client->id}, '{$name}')">
+                        <button type="button" class="btn btn-sm border-0 px-2 d-inline-flex align-items-center gap-1" title="Comments & Notes" onclick="openCommentModal({$client->id}, '{$name}')" style="border-radius:0; background:#f0f9fff0; color:#0284c7; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='#f0f9fff0'">
                             <i class="fa fa-comment"></i> {$commentBadge}
                         </button>
-                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="visually-hidden">Toggle Dropdown</span>
+                        <button type="button" class="btn btn-sm border-0 px-2 dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px; background:#f8fafcf0; color:#64748b; border:1px solid #cbd5e1 !important;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafcf0'" title="More Options">
+                            <span class="visually-hidden">Toggle Options</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:10px; font-size:0.85rem; min-width: 175px; z-index: 1050;">
                             <li>
-                                <a class="dropdown-item" href="{$viewUrl}">
-                                    <i class="fa fa-eye me-2"></i> View
+                                <a class="dropdown-item py-2" href="{$viewUrl}">
+                                    <i class="fa fa-eye text-primary me-2"></i> View Profile
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#" onclick="showQr({$client->id}, '{$name}', '{$contact}')">
-                                    <i class="fas fa-qrcode me-2"></i> Show QR
+                                <a class="dropdown-item py-2" href="#" onclick="showQuickBillModal({$client->id}, '{$name}', '{$contact}', '{$address}')">
+                                    <i class="fas fa-receipt text-warning me-2"></i> Quick Bill
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" onclick="setSmsId({$client->id})" data-bs-target="#smsModal">
-                                    <i class="fa fa-envelope me-2"></i> Send SMS
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="showQuickBillModal({$client->id}, '{$name}', '{$contact}', '{$address}')">
-                                    <i class="fas fa-receipt me-2"></i> Quick Bill
+                                <a class="dropdown-item py-2" href="{$addPaymentUrl}">
+                                    <i class="fas fa-money-bill-wave text-success me-2"></i> Add Payment
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{$billsUrl}">
-                                    <i class="fas fa-receipt me-2"></i> View Bills
+                                <a class="dropdown-item py-2" href="{$billsUrl}">
+                                    <i class="fas fa-file-invoice text-info me-2"></i> View Due Bills
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item py-2" href="#" onclick="showQr({$client->id}, '{$name}', '{$contact}')">
+                                    <i class="fas fa-qrcode text-dark me-2"></i> Show QR Code
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="{$addPaymentUrl}">
-                                    <i class="fas fa-money-bill-wave me-2"></i> Add Payment
+                                <a class="dropdown-item py-2" href="#" data-bs-toggle="modal" onclick="setSmsId({$client->id})" data-bs-target="#smsModal">
+                                    <i class="fa fa-paper-plane me-2" style="color:#6366f1;"></i> Send SMS
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="#" onclick="openCommentModal({$client->id}, '{$name}')">
-                                    <i class="fas fa-comments me-2"></i> Comments {$commentBadge}
+                                <a class="dropdown-item py-2" href="#" onclick="openCommentModal({$client->id}, '{$name}')">
+                                    <i class="fas fa-comments me-2" style="color:#06b6d4;"></i> Client Notes {$commentBadge}
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><hr class="dropdown-divider my-1"></li>
                             <li>
-                                <a class="dropdown-item text-danger" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}">
-                                    <i class="fa fa-trash me-2"></i> Delete
+                                <a class="dropdown-item py-2 text-danger fw-semibold" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}">
+                                    <i class="fa fa-trash me-2"></i> Delete Client
                                 </a>
                             </li>
                         </ul>
@@ -270,6 +312,57 @@ EOT;
                 'success' => false,
                 'message' => 'Package not found'
             ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get bulk bill info (package rates & current month bill status) for selected clients
+     */
+    public function getBulkBillInfo(Request $request)
+    {
+        try {
+            $clientIds = $request->input('client_ids', []);
+            if (empty($clientIds)) {
+                return response()->json(['success' => false, 'message' => 'No clients selected'], 400);
+            }
+
+            $currentMonth = now()->month;
+            $currentYear  = now()->year;
+
+            $clients = Client::whereIn('id', $clientIds)->get();
+            $packages = Package::all()->keyBy('title');
+
+            $existingBillClientIds = DB::table('due_bills')
+                ->whereIn('client_id', $clientIds)
+                ->where('month', $currentMonth)
+                ->where('year', $currentYear)
+                ->pluck('client_id')
+                ->toArray();
+
+            $result = [];
+            foreach ($clients as $client) {
+                $pkg = $packages->get($client->package);
+                $result[] = [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'username' => $client->username,
+                    'contact' => $client->contact ?? '',
+                    'package_name' => $client->package ?? 'N/A',
+                    'price' => $pkg ? (float)$pkg->price : 0,
+                    'has_existing_bill' => in_array($client->id, $existingBillClientIds),
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'clients' => $result,
+                'current_month_name' => now()->format('F Y'),
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

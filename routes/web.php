@@ -52,6 +52,7 @@ Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.e
 
 // Get client package price
 Route::get('clients/{clientId}/package-price', [ClientController::class, 'getPackagePrice'])->name('clients.package-price');
+Route::post('clients/bulk-bill-info', [ClientController::class, 'getBulkBillInfo'])->name('clients.bulk-bill-info');
 
 // Client Comments (social-media style)
 Route::get('clients/{clientId}/comments', [ClientCommentController::class, 'index'])->name('clients.comments.index');

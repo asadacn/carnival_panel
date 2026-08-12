@@ -4,8 +4,60 @@
 @endsection
 @section('content')
     <section class="section">
-        <!-- Dashboard Section -->
-        <div id="dashboard-section" class="dashboard-section">
+        <!-- Top Workspace Header -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+            <div>
+                <h4 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-users text-primary"></i> Client Workspace
+                </h4>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge font-weight-bold" style="background:#e0edff; color:#1e40af; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
+                        <i class="fas fa-user-check me-1"></i> {{ $ActiveClientsCount }} Active
+                    </span>
+                    <span class="badge font-weight-bold" style="background:#fde8e8; color:#991b1b; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
+                        <i class="fas fa-user-clock me-1"></i> {{ $expiredClientsCount }} Expired
+                    </span>
+                    @if($unpaidBillsCount > 0)
+                        <span class="badge font-weight-bold" style="background:#fff3cd; color:#856404; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
+                            <i class="fas fa-exclamation-circle me-1"></i> {{ $unpaidBillsCount }} Unpaid Bills (৳{{ number_format($totalDueAmount, 0) }})
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="{{ route('clients.create') }}" class="btn font-weight-bold shadow-sm d-inline-flex align-items-center gap-2 btn-cta-primary">
+                    <i class="fas fa-plus-circle"></i> <span>Add New Client</span>
+                </a>
+
+                <a href="#" id="bulk_btn" style="display: none" data-bs-toggle="modal" data-bs-target="#smsModal"
+                   class="btn font-weight-bold shadow-sm d-inline-flex align-items-center gap-2 btn-cta-warning">
+                    <i class="fas fa-paper-plane"></i> <span>Bulk SMS</span> <span id="bulk_count" class="badge bg-white text-dark rounded-pill ms-1"></span>
+                </a>
+
+                <button type="button" class="btn font-weight-bold shadow-sm d-inline-flex align-items-center gap-2 btn-cta-danger" id="quick-bill-btn" style="display: none;">
+                    <i class="fas fa-receipt"></i> <span>Quick Bill</span> <span id="quick_bill_count" class="badge bg-white text-dark rounded-pill ms-1"></span>
+                </button>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle font-weight-bold d-inline-flex align-items-center gap-1 btn-cta-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cog me-1"></i> Tools
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:10px;">
+                        <li><a class="dropdown-item py-2" href="{{ route('clients.export') }}"><i class="fas fa-file-export text-primary me-2"></i> @lang('crud.export')</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('clients.import.create') }}"><i class="fas fa-file-import text-success me-2"></i> @lang('crud.import')</a></li>
+                    </ul>
+                </div>
+
+                <button type="button" class="btn font-weight-bold d-inline-flex align-items-center gap-2 btn-cta-toggle" data-bs-toggle="collapse" data-bs-target="#dashboard-section" aria-expanded="false" aria-controls="dashboard-section">
+                    <i class="fas fa-chart-pie"></i> <span id="stats-toggle-label">Overview Stats</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Collapsible Dashboard Section -->
+        <div id="dashboard-section" class="collapse dashboard-section mb-3">
             <!-- All Stats in one compact row -->
             <div class="row mb-2">
                 <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
@@ -116,10 +168,219 @@
                 @endforeach
             </div>
             @endif
-
         </div><!-- End of dashboard-section -->
 
+        <!-- Search & Filter Hub Card -->
+        <div class="card shadow-sm border-0 mb-3" style="border-radius: 12px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0 !important;">
+            <div class="card-body p-3">
+                <!-- Quick Filter Pills -->
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-3" id="quick-filter-chips">
+                    <span class="text-muted small fw-bold me-1" style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">
+                        <i class="fas fa-filter text-primary me-1"></i> Quick Filters:
+                    </span>
+                    <button type="button" class="btn btn-xs chip-btn active" data-filter-type="all">All Clients</button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="status" data-filter-value="Active">
+                        <i class="fas fa-check-circle text-success"></i> Active
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="status" data-filter-value="Expired">
+                        <i class="fas fa-clock text-danger"></i> Expired
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="due" data-filter-value="has_due">
+                        <i class="fas fa-exclamation-triangle text-warning"></i> Has Unpaid Due
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="isp" data-filter-value="carnival">
+                        <i class="fas fa-router text-primary"></i> Carnival
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="isp" data-filter-value="bijoy">
+                        <i class="fas fa-broadcast-tower text-info"></i> Bijoy
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="onu" data-filter-value="free">
+                        <i class="fas fa-gift text-info"></i> Free ONU
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="cable" data-filter-value="returned">
+                        <i class="fas fa-plug text-success"></i> Cable Returned
+                    </button>
+                </div>
+
+                <!-- Detailed Filter Row -->
+                <div class="row g-2 align-items-center">
+                    <!-- Instant Search Bar -->
+                    <div class="col-lg-4 col-md-12">
+                        <div class="input-group search-input-group" style="border-radius: 10px; overflow: hidden; border: 1.5px solid #cbd5e1; transition: all 0.2s ease;">
+                            <span class="input-group-text bg-white border-0 text-primary ps-3">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="custom-client-search" class="form-control border-0 ps-2 client-filter-input" placeholder="Search by name, ID, phone, package, address..." style="font-size:0.88rem; box-shadow: none;">
+                            <button type="button" class="btn btn-link text-muted pe-3 d-none" id="clear-search-btn" title="Clear search">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <select id="status-filter" class="form-select form-select-sm client-filter-input" style="border-radius: 10px; border: 1.5px solid #cbd5e1; padding: 7px 12px; font-size: 0.85rem;">
+                            <option value="">All Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Registered">Registered</option>
+                        </select>
+                    </div>
+
+                    <!-- ISP Filter -->
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <select id="isp-filter" class="form-select form-select-sm client-filter-input" style="border-radius: 10px; border: 1.5px solid #cbd5e1; padding: 7px 12px; font-size: 0.85rem;">
+                            <option value="">All ISPs</option>
+                            <option value="carnival">Carnival</option>
+                            <option value="bijoy">Bijoy</option>
+                        </select>
+                    </div>
+
+                    <!-- Payment Due Filter -->
+                    <div class="col-lg-2 col-md-3 col-sm-6">
+                        <select id="due-filter" class="form-select form-select-sm client-filter-input" style="border-radius: 10px; border: 1.5px solid #cbd5e1; padding: 7px 12px; font-size: 0.85rem;">
+                            <option value="">All Due States</option>
+                            <option value="has_due">Has Unpaid Due</option>
+                            <option value="no_due">Fully Paid</option>
+                        </select>
+                    </div>
+
+                    <!-- Reset Filters Button -->
+                    <div class="col-lg-2 col-md-3 col-sm-6 text-end">
+                        <button type="button" id="reset-filters-btn" class="btn btn-sm w-100 font-weight-bold d-inline-flex align-items-center justify-content-center gap-1" style="border-radius: 10px; background: #ffffff; color: #64748b; border: 1.5px solid #cbd5e1 !important; padding: 7px 12px;">
+                            <i class="fas fa-undo text-danger"></i> <span>Reset Filters</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <style>
+            /* ========== CTA BUTTON STYLES ========== */
+            .btn-cta-primary {
+                background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+                color: #ffffff !important;
+                border: none;
+                border-radius: 10px;
+                padding: 8px 18px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            }
+            .btn-cta-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(16, 185, 129, 0.38);
+                color: #ffffff !important;
+            }
+
+            .btn-cta-warning {
+                background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+                color: #ffffff !important;
+                border: none;
+                border-radius: 10px;
+                padding: 8px 16px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+            }
+            .btn-cta-warning:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(245, 158, 11, 0.38);
+                color: #ffffff !important;
+            }
+
+            .btn-cta-danger {
+                background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+                color: #ffffff !important;
+                border: none;
+                border-radius: 10px;
+                padding: 8px 16px;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+            }
+            .btn-cta-danger:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(239, 68, 68, 0.38);
+                color: #ffffff !important;
+            }
+
+            .btn-cta-secondary {
+                background: #ffffff;
+                color: #475569 !important;
+                border: 1.5px solid #cbd5e1 !important;
+                border-radius: 10px;
+                padding: 8px 16px;
+                transition: all 0.2s ease;
+            }
+            .btn-cta-secondary:hover {
+                background: #f8fafc;
+                color: #0f172a !important;
+                border-color: #94a3b8 !important;
+            }
+
+            .btn-cta-toggle {
+                background: #eff6ff;
+                color: #2563eb !important;
+                border: 1.5px solid #bfdbfe;
+                border-radius: 10px;
+                padding: 8px 16px;
+                transition: all 0.2s ease;
+            }
+            .btn-cta-toggle:hover {
+                background: #dbeafe;
+                color: #1d4ed8 !important;
+            }
+
+            /* ========== QUICK FILTER CHIPS ========== */
+            .chip-btn {
+                border-radius: 20px;
+                padding: 5px 14px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                background: #f8fafc;
+                color: #64748b;
+                border: 1px solid #e2e8f0;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                cursor: pointer;
+            }
+            .chip-btn:hover {
+                background: #f1f5f9;
+                color: #1e293b;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            }
+            .chip-btn.active {
+                background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                color: #ffffff;
+                border-color: #2563eb;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            }
+            .chip-btn.active i {
+                color: #ffffff !important;
+            }
+            .search-input-group:focus-within {
+                border-color: #2563eb !important;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+            }
+
+            /* Allow DataTables action dropdowns to pop out without clipping */
+            .table-responsive {
+                overflow: visible !important;
+            }
+            @media (max-width: 991px) {
+                .table-responsive {
+                    overflow-x: auto !important;
+                }
+            }
+            #clients td {
+                position: relative;
+            }
+            #clients .dropdown-menu {
+                z-index: 1060 !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            }
+
             /* ========== MINI STAT CARDS ========== */
             .mini-stat-card {
                 border-radius: 8px;
@@ -483,75 +744,6 @@
                 border-bottom: 2px solid #f0f2f5;
             }
 
-            /* ========== TOOLBAR STYLES ========== */
-            .clients-toolbar {
-                display: flex !important;
-                gap: 10px !important;
-                flex-wrap: wrap !important;
-                align-items: center !important;
-                padding: 12px 0;
-                border-bottom: 1px solid #e9ecef;
-                animation: slideDown 0.3s ease-out;
-            }
-
-            .clients-toolbar .btn-sm {
-                font-size: 0.875rem;
-                padding: 0.375rem 0.75rem;
-                white-space: nowrap;
-                transition: all 0.2s ease;
-            }
-
-            .clients-toolbar .btn-sm:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            }
-
-            .clients-toolbar .btn-group .btn-primary {
-                background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
-                border-color: #0d47a1;
-            }
-
-            .clients-toolbar .btn-group .btn-primary:hover {
-                background: linear-gradient(135deg, #0d47a1 0%, #1a73e8 100%);
-                border-color: #0d47a1;
-            }
-
-            @keyframes slideDown {
-                from {
-                    opacity: 0;
-                    transform: translateY(-10px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            /* Responsive toolbar adjustments */
-            @media (max-width: 576px) {
-                .clients-toolbar {
-                    gap: 8px !important;
-                    padding: 10px 0;
-                }
-
-                .clients-toolbar .btn-sm {
-                    font-size: 0.8rem;
-                    padding: 0.25rem 0.5rem;
-                }
-
-                .clients-toolbar .btn-sm i {
-                    margin-right: 0.25rem;
-                }
-
-                .clients-toolbar .btn-sm span {
-                    display: none;
-                }
-
-                .clients-toolbar .btn-group .dropdown-menu {
-                    right: 0 !important;
-                    left: auto !important;
-                }
-            }
             /* ===== LATEST COMMENT INLINE CELL ===== */
             .lc-cell {
                 display: flex;
@@ -602,35 +794,10 @@
         </style>
 
         <div class="section-body" id="clients-header">
-            <div class="card">
-                <div class="card-body">
-                    <!-- Compact Toolbar -->
-                    <div class="clients-toolbar mb-3" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-
-
-                        <a href="#" id="bulk_btn" style="display: none" data-bs-toggle="modal" data-bs-target="#smsModal"
-                           class="btn btn-sm btn-warning">Bulk SMS <i class="fas fa-envelope"></i> <span id="bulk_count"
-                            class="badge badge-success p-1"></span> </a>
-
-                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#quickBillModal" id="quick-bill-btn" style="display: none;" title="Create quick due bill for current month">
-                            <i class="fas fa-receipt"></i> Quick Bill <span id="quick_bill_count" class="badge badge-light p-1"></span>
-                        </button>
-
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-cogs"></i> Tools
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ route('clients.export') }}"><i class="fas fa-file-export me-2"></i> @lang('crud.export')</a></li>
-                                <li><a class="dropdown-item" href="{{ route('clients.import.create') }}"><i class="fas fa-file-import me-2"></i> @lang('crud.import')</a></li>
-                            </ul>
-                        </div>
-
-                        <a href="{{ route('clients.create') }}" class="btn btn-sm btn-success">@lang('crud.add_new')<i class="fas fa-plus"></i></a>
-                    </div>
-
+            <div class="card shadow-sm border-0" style="border-radius: 12px;">
+                <div class="card-body p-3">
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="clients">
+                        <table class="table table-hover table-striped w-100" id="clients">
                             <thead>
                                 <tr>
                                     <th></th> {{-- Checkbox --}}
@@ -1533,15 +1700,9 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script>
-        // ========== SCROLL TO CLIENTS & FOCUS SEARCH ON LOAD ==========
-        $(document).ready(function() {
-            setTimeout(function() {
-                var clientsTop = $('#clients-header').offset().top;
-                $(window).scrollTop(clientsTop - 200);
-                // Focus the DataTables search input so user is ready to search
-                $('#clients_filter input').focus();
-            }, 800); // wait for DataTables to fully render
-        });
+        // Global filter state variables
+        window.currentOnuFilter = '';
+        window.currentCableFilter = '';
 
         // ------------------ DATA TABLES SETUP ------------------
         $(document).ready(function() {
@@ -1552,6 +1713,9 @@
                 }
             });
 
+            // Focus instant search input right away on load
+            $('#custom-client-search').focus();
+
             const table = $('#clients').DataTable({
                 pageLength: 10,
                 processing: true,
@@ -1560,7 +1724,16 @@
                 autoWidth: false,
                 searching: true,
                 select: true,
-                ajax: "{{ route('clients.index') }}",
+                ajax: {
+                    url: "{{ route('clients.index') }}",
+                    data: function(d) {
+                        d.status_filter = $('#status-filter').val();
+                        d.isp_filter    = $('#isp-filter').val();
+                        d.due_filter    = $('#due-filter').val();
+                        d.onu_filter    = window.currentOnuFilter || '';
+                        d.cable_filter  = window.currentCableFilter || '';
+                    }
+                },
                 columns: [
                     { data: null, defaultContent: '', orderable: false, searchable: false }, // Checkbox
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', searchable: false, orderable: false },
@@ -1635,6 +1808,78 @@
                 order: [
                     [1, 'asc']
                 ]
+            });
+
+            // Connect Instant Search input with DataTables search & toggle clear button
+            $('#custom-client-search').on('keyup input', function() {
+                const val = $(this).val();
+                if (val.length > 0) {
+                    $('#clear-search-btn').removeClass('d-none');
+                } else {
+                    $('#clear-search-btn').addClass('d-none');
+                }
+                table.search(val).draw();
+            });
+
+            // Clear search button handler
+            $('#clear-search-btn').on('click', function() {
+                $('#custom-client-search').val('').focus();
+                $(this).addClass('d-none');
+                table.search('').draw();
+            });
+
+            // Toggle Stats label feedback
+            $('#dashboard-section').on('show.bs.collapse', function () {
+                $('#stats-toggle-label').text('Hide Stats');
+            }).on('hide.bs.collapse', function () {
+                $('#stats-toggle-label').text('Overview Stats');
+            });
+
+            // Filter dropdown change triggers table reload
+            $('.client-filter-input').on('change', function() {
+                $('.chip-btn').removeClass('active');
+                table.draw();
+            });
+
+            // Quick chip button handler
+            $('.chip-btn').on('click', function() {
+                $('.chip-btn').removeClass('active');
+                $(this).addClass('active');
+
+                const type = $(this).data('filter-type');
+                const val  = $(this).data('filter-value') || '';
+
+                // Reset dropdowns & specific states
+                $('#status-filter, #isp-filter, #due-filter').val('');
+                window.currentOnuFilter = '';
+                window.currentCableFilter = '';
+
+                if (type === 'status') $('#status-filter').val(val);
+                else if (type === 'isp') $('#isp-filter').val(val);
+                else if (type === 'due') $('#due-filter').val(val);
+                else if (type === 'onu') window.currentOnuFilter = val;
+                else if (type === 'cable') window.currentCableFilter = val;
+
+                table.draw();
+            });
+
+            // Reset filters button
+            $('#reset-filters-btn').on('click', function() {
+                $('#custom-client-search').val('');
+                $('#clear-search-btn').addClass('d-none');
+                table.search('');
+                $('#status-filter, #isp-filter, #due-filter').val('');
+                window.currentOnuFilter = '';
+                window.currentCableFilter = '';
+                $('.chip-btn').removeClass('active');
+                $('.chip-btn[data-filter-type="all"]').addClass('active');
+                table.draw();
+            });
+
+            // ISP analytics card filter button integration
+            $(document).on('click', '.filter-by-isp', function() {
+                const isp = $(this).data('isp');
+                $(`.chip-btn[data-filter-type="isp"][data-filter-value="${isp}"]`).click();
             });
 
             // SMS MODAL TEMPLATE SELECTION
@@ -2257,6 +2502,12 @@
             if (selectedData.length === 1) {
                 showQuickBillModal(selectedData[0].id, selectedData[0].name, selectedData[0].contact || '', selectedData[0].address || '');
             } else {
+                // Close single client modal if it's open
+                const singleModal = bootstrap.Modal.getInstance(document.getElementById('quickBillModal'));
+                if (singleModal) {
+                    singleModal.hide();
+                }
+
                 Swal.fire({
                     title: 'Create Bills for Multiple Clients?',
                     text: `Create due bills for ${selectedData.length} selected clients?`,
@@ -2272,105 +2523,306 @@
             }
         }
 
-        // Create bills for multiple clients
+        // Create bills for multiple clients (Enhanced Bulk Quick Bill)
         function createMultipleQuickBills(clientsData) {
-            const priceRequests = clientsData.map(function(client) {
-                return $.get('{{ url("clients") }}/' + client.id + '/package-price')
-                    .then(function(response) {
-                        return response.success ? response.price : '';
-                    })
-                    .catch(function() {
-                        return '';
-                    });
+            const clientIds = clientsData.map(c => c.id);
+
+            // Show loading dialog while fetching info
+            Swal.fire({
+                title: 'Loading Client Details...',
+                text: 'Retrieving package rates and current bill statuses...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
             });
 
-            Swal.fire({
-                title: 'Enter Amounts for Clients',
-                html: '<div id="bulk-bill-amounts" style="max-height: 320px; overflow-y: auto; text-align: left;"></div>' +
-                    '<small class="text-muted">Each client can have a different bill amount.</small>',
-                showCancelButton: true,
-                confirmButtonText: 'Create Bills',
-                showLoaderOnConfirm: true,
-                allowOutsideClick: () => !Swal.isLoading(),
-                didOpen: function() {
-                    Swal.disableConfirmButton();
-                    Promise.all(priceRequests).then(function(prices) {
-                        const container = document.getElementById('bulk-bill-amounts');
-                        clientsData.forEach(function(client, index) {
-                            const row = document.createElement('div');
-                            row.className = 'mb-2';
-                            row.innerHTML = '<label class="form-label mb-1">' +
-                                $('<div>').text(client.name || client.username).html() +
-                                '</label><input type="number" class="form-control bulk-bill-amount" data-client-id="' +
-                                client.id + '" step="0.01" min="0.01" value="' + (prices[index] || '') + '" required>';
-                            container.appendChild(row);
-                        });
-                        Swal.enableConfirmButton();
-                    });
+            $.ajax({
+                url: '{{ route("clients.bulk-bill-info") }}',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    client_ids: clientIds
                 },
-                preConfirm: function() {
-                    const amounts = {};
-                    let invalid = false;
-                    $('.bulk-bill-amount').each(function() {
-                        const amount = parseFloat($(this).val());
-                        if (!amount || amount <= 0) {
-                            invalid = true;
-                        }
-                        amounts[$(this).data('client-id')] = amount;
-                    });
-
-                    if (invalid || Object.keys(amounts).length !== clientsData.length) {
-                        Swal.showValidationMessage('Enter a valid amount for every client.');
-                        return false;
+                success: function(res) {
+                    if (!res.success) {
+                        Swal.fire('Error', res.message || 'Failed to load client details.', 'error');
+                        return;
                     }
 
-                    const today = new Date();
-                    const billDate = today.toISOString().split('T')[0];
-                    const dueDate = new Date(today.getTime() + 30*24*60*60*1000).toISOString().split('T')[0];
-                    const currentMonth = today.getMonth() + 1;
-                    const currentYear = today.getFullYear();
+                    const clients = res.clients || [];
+                    const periodName = res.current_month_name || '';
 
-                    return Promise.all(clientsData.map(function(client) {
-                        return $.ajax({
-                            url: '{{ route("due-bills.store") }}',
-                            type: 'POST',
-                            data: {
-                                _token: '{{ csrf_token() }}',
-                                client_id: client.id,
-                                month: currentMonth,
-                                year: currentYear,
-                                bill_date: billDate,
-                                due_date: dueDate,
-                                amount: amounts[client.id],
-                                notes: `Bulk created on ${new Date().toLocaleDateString()}`
+                    // Build interactive table HTML
+                    let rowsHtml = '';
+                    clients.forEach((c) => {
+                        const priceVal = (c.price && c.price > 0) ? c.price : '';
+                        const alertBadge = c.has_existing_bill
+                            ? `<span class="badge bg-warning text-dark" style="font-size:0.7rem;"><i class="fas fa-exclamation-triangle"></i> Exists</span>`
+                            : `<span class="badge bg-success" style="font-size:0.7rem;"><i class="fas fa-check"></i> Ready</span>`;
+
+                        const rowStyle = c.has_existing_bill ? 'background-color: #fffbe6;' : '';
+
+                        rowsHtml += `
+                            <tr style="${rowStyle}">
+                                <td class="align-middle text-start ps-2">
+                                    <div class="fw-bold text-dark" style="font-size:0.85rem;">${c.name}</div>
+                                    <small class="text-muted">${c.username} ${c.contact ? '· ' + c.contact : ''}</small>
+                                </td>
+                                <td class="align-middle text-center">
+                                    <span class="badge bg-light text-dark border" style="font-size:0.75rem;">${c.package_name}</span>
+                                </td>
+                                <td class="align-middle text-center" style="width: 140px;">
+                                    <input type="number" class="form-control form-control-sm text-end bulk-bill-amount-input"
+                                           data-client-id="${c.id}"
+                                           data-package-price="${priceVal}"
+                                           value="${priceVal}"
+                                           placeholder="0.00"
+                                           step="0.01"
+                                           min="0.01">
+                                </td>
+                                <td class="align-middle text-center">
+                                    ${alertBadge}
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    const dialogHtml = `
+                        <div class="text-start mb-2">
+                            <div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded" style="background:#f1f5f9;">
+                                <div class="small text-muted fw-bold">
+                                    <i class="fas fa-calendar-alt text-primary me-1"></i> Period: <span class="text-dark">${periodName}</span>
+                                </div>
+                                <div class="small fw-bold text-primary">
+                                    <i class="fas fa-users me-1"></i> ${clients.length} Clients Selected
+                                </div>
+                            </div>
+
+                            <!-- Mass Edit Controls -->
+                            <div class="p-2 mb-2 border rounded bg-white">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-6">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light text-muted fw-bold">Set All ৳</span>
+                                            <input type="number" id="mass-set-amount-input" class="form-control text-end" placeholder="e.g. 1000" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-6 d-flex gap-1">
+                                        <button type="button" id="btn-apply-mass-amount" class="btn btn-sm btn-primary flex-fill" style="font-size:0.75rem;">
+                                            <i class="fas fa-check me-1"></i> Apply All
+                                        </button>
+                                        <button type="button" id="btn-reset-package-rates" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;" title="Reset each client to individual package price">
+                                            <i class="fas fa-redo me-1"></i> Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Scrollable Table Matrix -->
+                            <div style="max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <table class="table table-sm table-hover mb-0" style="font-size:0.85rem;">
+                                    <thead class="table-light sticky-top" style="z-index:1;">
+                                        <tr>
+                                            <th class="ps-2">Client</th>
+                                            <th class="text-center">Package</th>
+                                            <th class="text-center">Billing Amount (৳)</th>
+                                            <th class="text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rowsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Live Grand Total Indicator -->
+                            <div class="d-flex align-items-center justify-content-between mt-2 p-2 rounded" style="background: #ecfdf5; border: 1px solid #a7f3d0;">
+                                <span class="fw-bold text-success" style="font-size:0.85rem;">
+                                    <i class="fas fa-calculator me-1"></i> Calculated Total:
+                                </span>
+                                <span class="fw-bold text-success" id="bulk-grand-total-display" style="font-size:1.1rem;">
+                                    ৳ 0
+                                </span>
+                            </div>
+                        </div>
+                    `;
+
+                    Swal.fire({
+                        title: 'Bulk Quick Bill Creation',
+                        html: dialogHtml,
+                        width: '640px',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Create All Bills',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#10b981',
+                        allowOutsideClick: false,
+                        focusConfirm: false,
+                        didOpen: function(modal) {
+                            // Close single client modal if it's open
+                            const singleModal = document.getElementById('quickBillModal');
+                            if (singleModal) {
+                                const bsModal = bootstrap.Modal.getInstance(singleModal);
+                                if (bsModal) {
+                                    bsModal.hide();
+                                }
                             }
-                        }).then(function() {
-                            return { success: true };
-                        }).catch(function(xhr) {
-                            return {
-                                success: false,
-                                client: client.name || client.username,
-                                message: xhr.responseJSON?.message || 'Could not create bill.'
-                            };
-                        });
-                    }));
-                }
-            }).then(function(result) {
-                if (!result.isConfirmed || !result.value) {
-                    return;
-                }
+                            // Remove any leftover modal backdrops
+                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
 
-                const failed = result.value.filter(function(item) { return !item.success; });
-                Swal.fire({
-                    icon: failed.length === 0 ? 'success' : 'warning',
-                    title: failed.length === 0 ? 'Bills Created' : 'Bills Partially Created',
-                    text: failed.length === 0
-                        ? `Successfully created ${clientsData.length} bills.`
-                        : `Successfully created ${clientsData.length - failed.length} bills. Failed: ${failed.length}.`,
-                    confirmButtonText: 'OK'
-                }).then(function() {
-                    $('#clients').DataTable().ajax.reload(null, false);
-                });
+                            // Function to update total
+                            function updateCalculatedTotal() {
+                                let total = 0;
+                                document.querySelectorAll('.bulk-bill-amount-input').forEach(function(input) {
+                                    const val = parseFloat(input.value) || 0;
+                                    total += val;
+                                });
+                                const display = document.getElementById('bulk-grand-total-display');
+                                if (display) {
+                                    display.textContent = '৳ ' + total.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                                }
+                            }
+
+                            // Initial calculation
+                            updateCalculatedTotal();
+
+                            // Setup input listeners
+                            setTimeout(function() {
+                                document.querySelectorAll('.bulk-bill-amount-input').forEach(function(input) {
+                                    input.addEventListener('input', updateCalculatedTotal, false);
+                                    input.addEventListener('change', updateCalculatedTotal, false);
+                                    input.addEventListener('keyup', updateCalculatedTotal, false);
+                                });
+                            }, 100);
+
+                            // Apply All button
+                            const applyBtn = document.getElementById('btn-apply-mass-amount');
+                            const massInput = document.getElementById('mass-set-amount-input');
+                            if (applyBtn && massInput) {
+                                applyBtn.addEventListener('click', function() {
+                                    const val = massInput.value;
+                                    if (val) {
+                                        document.querySelectorAll('.bulk-bill-amount-input').forEach(function(input) {
+                                            input.value = val;
+                                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                                        });
+                                        updateCalculatedTotal();
+                                    }
+                                });
+                            }
+
+                            // Reset button
+                            const resetBtn = document.getElementById('btn-reset-package-rates');
+                            if (resetBtn) {
+                                resetBtn.addEventListener('click', function() {
+                                    document.querySelectorAll('.bulk-bill-amount-input').forEach(function(input) {
+                                        input.value = input.getAttribute('data-package-price') || '';
+                                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                                    });
+                                    updateCalculatedTotal();
+                                });
+                            }
+                        },
+                        preConfirm: function() {
+                            const billsToCreate = [];
+                            let invalid = false;
+
+                            $('.bulk-bill-amount-input').each(function() {
+                                const clientId = $(this).data('client-id');
+                                const amountVal = parseFloat($(this).val());
+
+                                if (!amountVal || amountVal <= 0) {
+                                    invalid = true;
+                                }
+
+                                billsToCreate.push({
+                                    client_id: clientId,
+                                    amount: amountVal
+                                });
+                            });
+
+                            if (invalid || billsToCreate.length === 0) {
+                                Swal.showValidationMessage('Please enter a valid billing amount for every selected client.');
+                                return false;
+                            }
+
+                            const today = new Date();
+                            const billDate = today.toISOString().split('T')[0];
+                            const dueDate = new Date(today.getTime() + 30*24*60*60*1000).toISOString().split('T')[0];
+                            const currentMonth = today.getMonth() + 1;
+                            const currentYear = today.getFullYear();
+
+                            Swal.showLoading();
+
+                            return Promise.all(billsToCreate.map(function(item) {
+                                return $.ajax({
+                                    url: '{{ route("due-bills.store") }}',
+                                    type: 'POST',
+                                    data: {
+                                        _token: '{{ csrf_token() }}',
+                                        client_id: item.client_id,
+                                        month: currentMonth,
+                                        year: currentYear,
+                                        bill_date: billDate,
+                                        due_date: dueDate,
+                                        amount: item.amount,
+                                        notes: `Bulk created on ${periodName}`
+                                    }
+                                }).then(function() {
+                                    return { success: true, client_id: item.client_id, amount: item.amount };
+                                }).catch(function(xhr) {
+                                    return {
+                                        success: false,
+                                        client_id: item.client_id,
+                                        message: xhr.responseJSON?.message || 'Error creating bill'
+                                    };
+                                });
+                            }));
+                        }
+                    }).then(function(result) {
+                        if (!result.isConfirmed || !result.value) return;
+
+                        const results = result.value;
+                        const successful = results.filter(r => r.success);
+                        const failed = results.filter(r => !r.success);
+
+                        const totalSumBilled = successful.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+                        if (failed.length === 0) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'All Bills Created Successfully!',
+                                html: `
+                                    <p class="text-muted">Successfully created <strong>${successful.length}</strong> due bills.</p>
+                                    <div class="alert alert-success fw-bold text-center">
+                                        Total Billed: ৳ ${totalSumBilled.toLocaleString()}
+                                    </div>
+                                `,
+                                confirmButtonText: 'Done',
+                                confirmButtonColor: '#10b981'
+                            }).then(() => {
+                                $('#clients').DataTable().ajax.reload(null, false);
+                            });
+                        } else {
+                            const failedMsgList = failed.map(f => `<li>${f.message}</li>`).join('');
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Bills Summary',
+                                html: `
+                                    <p>Successfully created <strong>${successful.length}</strong> out of ${results.length} bills (Total Billed: ৳ ${totalSumBilled.toLocaleString()}).</p>
+                                    <div class="text-start bg-light p-2 rounded small text-danger" style="max-height: 150px; overflow-y: auto;">
+                                        <strong>Notice / Skipped:</strong>
+                                        <ul class="mb-0 ps-3">${failedMsgList}</ul>
+                                    </div>
+                                `,
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                $('#clients').DataTable().ajax.reload(null, false);
+                            });
+                        }
+                    });
+                },
+                error: function() {
+                    Swal.fire('Error', 'Failed to load client details for bulk billing.', 'error');
+                }
             });
         }
 
