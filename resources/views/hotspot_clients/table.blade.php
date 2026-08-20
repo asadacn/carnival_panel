@@ -140,8 +140,17 @@
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
                                         <li><a class="dropdown-item" href="{{ route('hotspotClients.show', $client->id) }}"><i class="fas fa-eye text-primary me-2"></i> View Details</a></li>
                                         <li><a class="dropdown-item" href="{{ route('hotspotClients.edit', $client->id) }}"><i class="fas fa-edit text-warning me-2"></i> Edit Client</a></li>
+                                        <li>
+                                            <a class="dropdown-item" href="javascript:void(0)" onclick="openExpiryModal({{ $client->id }}, '{{ addslashes($client->name) }}', '{{ $client->expires_at ? $client->expires_at->format('Y-m-d') : '' }}', '{{ $client->status }}')">
+                                                <i class="fas fa-calendar-alt text-primary me-2"></i> Edit Expiry Date
+                                            </a>
+                                        </li>
                                         @if($client->status == 'active')
-                                        <li><a class="dropdown-item" href="{{ route('hotspotClients.sendSms', $client->id) }}" onclick="return confirm('Send SMS Reminder now?')"><i class="fas fa-sms text-info me-2"></i> Send SMS</a></li>
+                                        <li>
+                                            {!! Form::open(['route' => ['hotspotClients.sendSms', $client->id], 'method' => 'post', 'class' => 'm-0']) !!}
+                                                <button type="submit" class="dropdown-item" onclick="return confirm('Send SMS Reminder now?')"><i class="fas fa-sms text-info me-2"></i> Send SMS</button>
+                                            {!! Form::close() !!}
+                                        </li>
                                         @endif
                                         <li><hr class="dropdown-divider"></li>
                                         <li>

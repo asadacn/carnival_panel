@@ -345,11 +345,12 @@
             <a href="{{ route('hotspots.import.create') }}" class="hz-btn hz-btn-outline">
                 <i class="fas fa-file-import"></i> Import
             </a>
-            <a href="{{ route('hotspots.erase') }}"
-               onclick="return confirm('WARNING: This will erase ALL hotspot zone records. Continue?')"
-               class="hz-btn hz-btn-danger">
-                <i class="fas fa-trash-alt"></i> Erase All
-            </a>
+            <form action="{{ route('hotspots.erase') }}" method="POST" class="d-inline" onsubmit="return confirm('WARNING: This will erase ALL hotspot zone records. Continue?')">
+                @csrf
+                <button type="submit" class="hz-btn hz-btn-danger">
+                    <i class="fas fa-trash-alt"></i> Erase All
+                </button>
+            </form>
         </div>
     </div>
 

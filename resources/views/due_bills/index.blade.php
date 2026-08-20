@@ -546,7 +546,16 @@
             confirmButtonText: 'Yes, Pay Now!'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = "{{ route('due-bills.mark-paid', ':id') }}".replace(':id', billId);
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ route('due-bills.mark-paid', ':id') }}".replace(':id', billId);
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = '{{ csrf_token() }}';
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     }

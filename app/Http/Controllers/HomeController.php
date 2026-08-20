@@ -8,7 +8,8 @@ use App\Models\HotspotClient;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth; // Added for completeness, although not used in index
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class HomeController extends Controller
 {
@@ -19,17 +20,14 @@ class HomeController extends Controller
 
     public function checkMasterPassword(Request $request)
     {
-        // Validation ensures email, password, and revenue are provided
+        // Validation ensures password and revenue are provided
         $request->validate([
-            'email' => 'required|email',    // This is required to identify the user
             'password' => 'required|string',
             'totalRevenue' => 'required|numeric',
         ]);
 
-        // Use Auth::attempt() to verify the email and password against the session user
-        if (!Auth::attempt(['email' => $request->input('email'), 'password' => $request->input('password')])) {
-
-            // If attempt failed, deny access to the sensitive data.
+        $user = Auth::user();
+        if (!$user || !Hash::check($request->input('password'), $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Incorrect password for your session account. Access denied.'

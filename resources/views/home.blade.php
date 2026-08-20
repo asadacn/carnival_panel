@@ -722,18 +722,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         errorDiv.style.display = 'none';
 
-        // IMPORTANT: Ensure your Laravel route is correctly configured for this endpoint
         fetch('/api/check-master-password', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // This assumes you have the meta tag for CSRF in your main layout file:
-                // <meta name="csrf-token" content="{{ csrf_token() }}">
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
-                // CRITICAL FIX: Sending the logged-in user's email is required for Auth::attempt()
-                email: userEmail,
                 password: password,
                 totalRevenue: totalRevenue
             })

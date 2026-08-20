@@ -123,12 +123,20 @@
         <div class="d-flex flex-wrap gap-2">
             {{-- Manual SMS --}}
             @if($hotspotClient->status == 'active')
-                <a href="{{ route('hotspotClients.sendSms', $hotspotClient->id) }}"
-                   class="btn btn-outline-info shadow-sm rounded-pill fw-bold"
-                   onclick="return confirm('Send SMS Reminder now?')">
-                   <i class="fas fa-sms me-1"></i> Send SMS
-                </a>
+                {!! Form::open(['route' => ['hotspotClients.sendSms', $hotspotClient->id], 'method' => 'post', 'class' => 'm-0']) !!}
+                    {!! Form::button('<i class="fas fa-sms me-1"></i> Send SMS', [
+                        'type' => 'submit',
+                        'class' => 'btn btn-outline-info shadow-sm rounded-pill fw-bold',
+                        'onclick' => 'return confirm("Send SMS Reminder now?")'
+                    ]) !!}
+                {!! Form::close() !!}
             @endif
+
+            {{-- Edit Expiry Date --}}
+            <button type="button" class="btn btn-outline-primary shadow-sm rounded-pill fw-bold"
+                    onclick="openShowExpiryModal('{{ $hotspotClient->expires_at ? $hotspotClient->expires_at->format('Y-m-d') : '' }}', '{{ $hotspotClient->status }}')">
+                <i class="fas fa-calendar-alt me-1"></i> Edit Expiry
+            </button>
 
             {{-- Edit --}}
             <a href="{{ route('hotspotClients.edit', $hotspotClient->id) }}" class="btn btn-warning shadow-sm rounded-pill fw-bold text-dark">
@@ -168,6 +176,38 @@
         </div>
     </div>
 </div>
+
+<style>
+    .w-20px {
+        width: 20px;
+        text-align: center;
+    }
+    .list-group-item {
+        border-color: #f1f3f5;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+    .card {
+        transition: all 0.3s ease;
+    }
+    .progress {
+        background-color: #e9ecef;
+        overflow: visible;
+    }
+    .progress-bar {
+        transition: width 1s ease;
+        border-radius: 50px;
+        position: relative;
+        overflow: visible;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+    .progress-bar span {
+        white-space: nowrap;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+</style>
 
 <style>
     .w-20px {

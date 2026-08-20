@@ -32,14 +32,12 @@ Route::get('/', function () {
 });
 
 
-Auth::routes();
-
-
-
-// AJAX endpoints for client data (outside auth to test)
-Route::get('ajax/clients/{clientId}/bills', [App\Http\Controllers\DueBillController::class, 'getBillsForClient'])->name('ajax.client.bills');
+Auth::routes(['register' => false]);
 
 Route::middleware(['auth'])->group(function () {
+// AJAX endpoints for client data (protected with auth)
+Route::get('ajax/clients/{clientId}/bills', [App\Http\Controllers\DueBillController::class, 'getBillsForClient'])->name('ajax.client.bills');
+
 // ISP Statistics API
 Route::get('clients/stats/isp', [ClientController::class, 'getIspStatistics'])->name('clients.isp.stats');
 
@@ -48,7 +46,7 @@ Route::resource('clients', ClientController::class);
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
 Route::post('client/import/', [ClientController::class, 'import'])->name('clients.import');
 Route::get('client/import/create', [ClientController::class, 'create_import'])->name('clients.import.create');
-Route::get('client/erase/', [ClientController::class, 'erase'])->name('clients.erase')->middleware('password.confirm');
+Route::post('client/erase/', [ClientController::class, 'erase'])->name('clients.erase')->middleware('password.confirm');
 
 // Get client package price
 Route::get('clients/{clientId}/package-price', [ClientController::class, 'getPackagePrice'])->name('clients.package-price');
@@ -63,7 +61,7 @@ Route::delete('client-comments/{commentId}', [ClientCommentController::class, 'd
 Route::get('hotspot/export/', [HotspotZoneController::class, 'export'])->name('hotspots.export');
 Route::post('hotspot/import/', [HotspotZoneController::class, 'import'])->name('hotspots.import');
 Route::get('hotspot/import/create', [HotspotZoneController::class, 'create_import'])->name('hotspots.import.create');
-Route::get('hotspot/erase/', [HotspotZoneController::class, 'erase'])->name('hotspots.erase')->middleware('password.confirm');
+Route::post('hotspot/erase/', [HotspotZoneController::class, 'erase'])->name('hotspots.erase')->middleware('password.confirm');
 
 Route::resource('packages', App\Http\Controllers\PackageController::class);
 Route::resource('investments', App\Http\Controllers\InvestmentController::class);
@@ -72,17 +70,11 @@ Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])-
 
 Route::resource('hotspotZones', App\Http\Controllers\HotspotZoneController::class);
 
-
-
 Route::get('cardSellers/export/', [App\Http\Controllers\CardSellerController::class, 'export'])->name('cardseller.export');
 Route::post('cardSellers/import/', [App\Http\Controllers\CardSellerController::class, 'import'])->name('cardseller.import');
 Route::get('cardSellers/import/create', [App\Http\Controllers\CardSellerController::class, 'create_import'])->name('cardseller.import.create');
-Route::get('cardSellers/erase/', [App\Http\Controllers\CardSellerController::class, 'erase'])->name('cardseller.erase')->middleware('password.confirm');
-
-
 
 Route::resource('areas', App\Http\Controllers\AreaController::class);
-
 
 Route::resource('collectors', App\Http\Controllers\CollectorController::class);
 
@@ -98,14 +90,11 @@ Route::get('sms/log',[SmsController::class,"sms_log"])->name('sms_log');
 Route::post('bulk-voice-campaign', [App\Http\Controllers\SmsController::class, 'bulk_voice_campaign'])->name('bulk_voice_campaign');
 Route::get('bulk-voice-campaign/{campaignId}/status', [App\Http\Controllers\SmsController::class, 'get_voice_campaign_status'])->name('bulk_voice_campaign.status');
 
-
 Route::resource('cardSellers', App\Http\Controllers\CardSellerController::class);
 
-
 Route::resource('hotspotClients', App\Http\Controllers\HotspotClientController::class);
-Route::get('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sendSmsReminder'])->name('hotspotClients.sendSms');
+Route::post('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'sendSmsReminder'])->name('hotspotClients.sendSms');
 Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');
-
 
 Route::get('/tickets/analytics', [App\Http\Controllers\TicketAnalyticsController::class, 'index'])->name('tickets.analytics');
 
@@ -116,7 +105,7 @@ Route::get('/technicians', TechnicianManager::class)->name('technicians');
 
 // Due Bills Management
 Route::get('due-bills/report', [App\Http\Controllers\DueBillController::class, 'report'])->name('due-bills.report');
-Route::get('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController::class, 'markAsPaid'])->name('due-bills.mark-paid');
+Route::post('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController::class, 'markAsPaid'])->name('due-bills.mark-paid');
 Route::post('due-bills/{id}/send-reminder', [App\Http\Controllers\DueBillController::class, 'sendReminder'])->name('due-bills.send-reminder');
 Route::post('due-bills/send-bulk-reminders', [App\Http\Controllers\DueBillController::class, 'sendBulkReminders'])->name('due-bills.send-bulk-reminders');
 Route::post('due-bills/send-telegram', [App\Http\Controllers\DueBillController::class, 'sendTelegramNotification'])->name('due-bills.send-telegram');
@@ -130,6 +119,6 @@ Route::resource('due-bill-payments', App\Http\Controllers\DueBillPaymentControll
 Route::get('clients/{id}/payment-history', [App\Http\Controllers\DueBillPaymentController::class, 'clientPaymentHistory'])->name('clients.payment-history');
 Route::get('clients/{id}/payments-statement-pdf', [App\Http\Controllers\DueBillPaymentController::class, 'paymentStatementPdf'])->name('clients.payments-statement-pdf');
 
-Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPassword']);
+Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPassword'])->middleware('throttle:5,1');
 });
 

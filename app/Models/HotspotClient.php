@@ -67,7 +67,10 @@ class HotspotClient extends Model
         'cable_owner' => 'required',
         'onu_mac' => 'nullable',
         'onu_owner' => 'nullable',
-        'adrress' => 'nullable'
+        'adrress' => 'nullable',
+        'package_days' => 'nullable|integer',
+        'expires_at' => 'nullable|date',
+        'status' => 'nullable|in:active,inactive'
     ];
 
     /**

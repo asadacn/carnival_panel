@@ -591,7 +591,16 @@
 <script>
     function markAsPaid(billId) {
         if(!confirm('Mark this bill as completely paid?')) return;
-        window.location.href = `/due-bills/${billId}/mark-paid`;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/due-bills/${billId}/mark-paid`;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_token';
+        csrfInput.value = '{{ csrf_token() }}';
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function deleteBill(billId) {

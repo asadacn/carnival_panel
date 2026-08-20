@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Flash;
 use Response;
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class HotspotClientController extends AppBaseController
 {
@@ -68,11 +69,17 @@ class HotspotClientController extends AppBaseController
     {
         $input = $request->all();
 
-        // Default package fields
-        $input['package_days'] = null;
-        $input['activated_at'] = null;
-        $input['expires_at'] = null;
-        $input['status'] = 'inactive';
+        if (!empty($input['expires_at'])) {
+            $expiry = Carbon::parse($input['expires_at'])->endOfDay();
+            $input['expires_at'] = $expiry;
+            $input['activated_at'] = now();
+            $input['status'] = $input['status'] ?? ($expiry->isFuture() ? 'active' : 'inactive');
+        } else {
+            $input['package_days'] = $input['package_days'] ?? null;
+            $input['activated_at'] = null;
+            $input['expires_at'] = null;
+            $input['status'] = $input['status'] ?? 'inactive';
+        }
 
         $hotspotClient = $this->hotspotClientRepository->create($input);
 
@@ -104,7 +111,25 @@ class HotspotClientController extends AppBaseController
             return redirect(route('hotspotClients.index'));
         }
 
-        $hotspotClient = $this->hotspotClientRepository->update($request->all(), $id);
+        $input = $request->all();
+
+        if (!empty($input['expires_at'])) {
+            $expiry = Carbon::parse($input['expires_at'])->endOfDay();
+            $input['expires_at'] = $expiry;
+
+            if (!$hotspotClient->activated_at) {
+                $input['activated_at'] = now();
+            }
+
+            // Sync status if not explicitly specified
+            if (empty($input['status'])) {
+                $input['status'] = $expiry->isFuture() ? 'active' : 'inactive';
+            }
+        } else {
+            $input['expires_at'] = null;
+        }
+
+        $hotspotClient = $this->hotspotClientRepository->update($input, $id);
 
         Flash::success('Hotspot Client updated successfully.');
 
