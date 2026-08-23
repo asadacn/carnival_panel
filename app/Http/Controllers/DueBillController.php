@@ -16,7 +16,7 @@ class DueBillController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = DueBill::query()
+            $query = DueBill::with('client')
                 ->orderBy('year', 'desc')
                 ->orderBy('month', 'desc')
                 ->orderByRaw('(amount - paid_amount) DESC');
@@ -55,7 +55,53 @@ class DueBillController extends Controller
                     });
                 })
                 ->addColumn('client_name', function ($row) {
-                    return $row->client->name ?? '-';
+                    $client = $row->client;
+                    if (!$client) return '-';
+
+                    $name     = e($client->name);
+                    $contact  = e($client->contact ?? '');
+                    $address  = e($client->address ?? '');
+                    $package  = e($client->package ?? '');
+                    $status   = $client->status ?? '';
+                    $isActive = $status === 'Active';
+
+                    // Avatar: first letter of name, colored by status
+                    $initial     = mb_strtoupper(mb_substr($name, 0, 1));
+                    $avatarBg    = $isActive ? '#dcfce7' : '#fee2e2';
+                    $avatarColor = $isActive ? '#166534' : '#991b1b';
+
+                    $statusDot = $isActive
+                        ? "<span class='status-dot status-dot-active' title='Active'></span>"
+                        : "<span class='status-dot status-dot-inactive' title='{$status}'></span>";
+
+                    $html  = "<div class='client-info-cell'>";
+                    $html .= "<div class='client-avatar' style='background:{$avatarBg};color:{$avatarColor};'>{$initial}</div>";
+                    $html .= "<div class='client-info-body'>";
+
+                    $html .= "<div class='client-name-row'>";
+                    $html .= "<span class='client-main-name' title='{$name}'>{$name}</span>{$statusDot}";
+                    $html .= "</div>";
+
+                    $metaParts = [];
+                    if ($contact) {
+                        $metaParts[] = "<a href='tel:{$contact}' class='client-meta-item client-phone' title='Call {$contact}'>"
+                            . "<i class='fa fa-phone'></i><span>{$contact}</span></a>";
+                    }
+                    if ($package) {
+                        $metaParts[] = "<span class='client-meta-item'><i class='fa fa-box'></i><span>{$package}</span></span>";
+                    }
+                    if (!empty($metaParts)) {
+                        $html .= "<div class='client-meta-row'>" . implode('', $metaParts) . "</div>";
+                    }
+
+                    if ($address) {
+                        $short = \Illuminate\Support\Str::limit($address, 35);
+                        $html .= "<div class='client-address' title='{$address}'>"
+                            . "<i class='fa fa-map-marker-alt'></i><span>{$short}</span></div>";
+                    }
+
+                    $html .= "</div></div>";
+                    return $html;
                 })
                 ->addColumn('customer_id', function ($row) {
                     return $row->client->username ?? '-';
@@ -86,7 +132,7 @@ class DueBillController extends Controller
                         <button class='btn btn-sm btn-danger' onclick=\"deleteBill({$row->id})\"><i class='fa fa-trash'></i></button>
                     ";
                 })
-                ->rawColumns(['status_badge', 'action'])
+                ->rawColumns(['client_name', 'status_badge', 'action'])
                 ->make(true);
         }
 
@@ -168,7 +214,7 @@ class DueBillController extends Controller
         try {
             $client = Client::findOrFail($validated['client_id']);
             $monthName = \Carbon\Carbon::createFromDate($validated['year'], $validated['month'], 1)->format('F Y');
-            $message = "প্রিয় {$client->name},\n"
+            $message = "প্রিয় {$client->name},\n"
                 . "গ্রাহক আইডি: {$client->username}\n"
                 . "{$monthName} মাসের নতুন বিল: ৳" . number_format($validated['amount'], 2) . "\n"
                 . config('sms.payment_instruction') . "\n"
@@ -273,10 +319,10 @@ class DueBillController extends Controller
         ]);
 
         if ($bill->client && $bill->client->contact) {
-            $message = "প্রিয় {$bill->client->name},\n"
+            $message = "প্রিয় {$bill->client->name},\n"
                 . "গ্রাহক আইডি: {$bill->client->username}\n"
                 . $bill->month_year . ' মাসের বিল: ৳' . number_format($bill->amount, 2)
-                . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($bill->client->isp_code);
+                . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($bill->client->isp_code);
             sms($bill->client->contact, $message);
         }
 

@@ -114,6 +114,7 @@ class ClientController extends AppBaseController
                     $editUrl       = route('clients.edit', $client->id);
                     $billsUrl      = route('clients.due-bills', $client->id);
                     $addPaymentUrl = route('due-bill-payments.create', ['client_id' => $client->id]);
+                    $ticketUrl     = route('tickets.live') . '?client_id=' . $client->id . '&client_name=' . urlencode($client->name);
 
                     $commentBadge = $commentCount > 0
                         ? "<span class=\"badge rounded-pill bg-primary\" style=\"font-size:0.68rem; padding: 2px 6px;\">$commentCount</span>"
@@ -165,6 +166,12 @@ class ClientController extends AppBaseController
                             <li>
                                 <a class="dropdown-item py-2" href="#" onclick="openCommentModal({$client->id}, '{$name}')">
                                     <i class="fas fa-comments me-2" style="color:#06b6d4;"></i> Client Notes {$commentBadge}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-semibold" href="{$ticketUrl}" title="Open a new support ticket for this client">
+                                    <i class="fas fa-ticket-alt me-2" style="color:#8b5cf6;"></i> <span style="color:#8b5cf6;">Open Ticket</span>
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider my-1"></li>

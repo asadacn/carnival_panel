@@ -174,6 +174,91 @@
         border-radius: 8px;
     }
     .bulk-actions .selection-count { color: #9a3412; font-weight: 600; }
+    .client-info-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 4px 0;
+}
+
+.client-avatar {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.client-info-body {
+    min-width: 0; /* allows text truncation to work */
+}
+
+.client-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.client-main-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.status-dot-active { background: #22c55e; }
+.status-dot-inactive { background: #ef4444; }
+
+.client-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+
+.client-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.client-phone:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.client-meta-item i,
+.client-address i {
+    font-size: 11px;
+    color: #9ca3af;
+    width: 12px;
+}
+
+.client-address {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #6b7280;
+}
 </style>
 @endsection
 

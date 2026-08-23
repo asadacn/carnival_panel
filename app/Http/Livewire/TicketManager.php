@@ -43,10 +43,24 @@ class TicketManager extends Component
     public $complainTypeStats = [];
     // ------------------
 
+    public $autoOpenModal = false;
+
     public function mount()
     {
         $this->complain_types = ComplainType::all();
         $this->technicians = Technician::where('status', 'active')->get(['id', 'name', 'phone', 'telegram_id']);
+
+        // Pre-fill client if arriving from clients list "Open Ticket" shortcut
+        $clientId   = request()->query('client_id');
+        $clientName = request()->query('client_name');
+        if ($clientId) {
+            $client = Client::find($clientId);
+            if ($client) {
+                $this->selectedClient = $client->id;
+                $this->search         = $client->name;
+                $this->autoOpenModal  = true;
+            }
+        }
     }
 
     // Client search

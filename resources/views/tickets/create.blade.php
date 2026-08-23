@@ -658,6 +658,16 @@
                 if (searchInput) searchInput.focus();
             });
 
+            // Auto-open modal if arriving from "Open Ticket" shortcut on clients page
+            @if($autoOpenModal)
+                document.addEventListener('DOMContentLoaded', function () {
+                    setTimeout(function () {
+                        var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.show();
+                    }, 300);
+                });
+            @endif
+
             // After ticket created: close modal then show share popup (Livewire v2)
             document.addEventListener('livewire:load', function () {
                 Livewire.on('ticket-created', function (id, clientName, clientId, contact, address, complainType, priority, description) {
