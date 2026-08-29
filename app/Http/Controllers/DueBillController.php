@@ -310,7 +310,20 @@ class DueBillController extends Controller
         $bill = DueBill::with('client')->findOrFail($id);
 
         if ($bill->remaining_balance <= 0) {
-            return redirect()->back()->with('error', 'This bill has no outstanding balance.');
+            return redirect()->route('due-bills.invoice', ['id' => $bill->id, 'print' => 1])
+                ->with('info', 'This bill is already fully paid.');
+        }
+
+        $remaining = $bill->remaining_balance;
+        if ($remaining > 0) {
+            \App\Models\DueBillPayment::create([
+                'due_bill_id' => $bill->id,
+                'client_id' => $bill->client_id,
+                'payment_date' => now()->toDateString(),
+                'amount' => $remaining,
+                'payment_method' => 'cash',
+                'notes' => 'Marked as paid'
+            ]);
         }
 
         $bill->update([
@@ -319,15 +332,31 @@ class DueBillController extends Controller
         ]);
 
         if ($bill->client && $bill->client->contact) {
-            $message = "প্রিয় {$bill->client->name},\n"
-                . "গ্রাহক আইডি: {$bill->client->username}\n"
-                . $bill->month_year . ' মাসের বিল: ৳' . number_format($bill->amount, 2)
-                . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($bill->client->isp_code);
-            sms($bill->client->contact, $message);
+            try {
+                $message = "প্রিয় {$bill->client->name},\n"
+                    . "গ্রাহক আইডি: {$bill->client->username}\n"
+                    . $bill->month_year . ' মাসের বিল: ৳' . number_format($bill->amount, 2)
+                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($bill->client->isp_code);
+                sms($bill->client->contact, $message);
+            } catch (\Exception $e) {
+                // Log error but don't fail
+            }
         }
 
-        return redirect()->route('due-bills.show', $bill->id)
+        return redirect()->route('due-bills.invoice', ['id' => $bill->id, 'print' => 1])
             ->with('success', 'Bill marked as paid successfully!');
+    }
+
+    /**
+     * Display printable invoice for a due bill
+     */
+    public function invoice($id)
+    {
+        $bill = DueBill::with(['client', 'payments' => function ($q) {
+            $q->orderBy('payment_date', 'asc')->orderBy('id', 'asc');
+        }])->findOrFail($id);
+
+        return view('due_bills.invoice', compact('bill'));
     }
 
     /**

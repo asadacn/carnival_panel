@@ -421,6 +421,9 @@
             <div class="bill-detail-header">
                 <h1><i class="fas fa-receipt"></i> Bill Details</h1>
                 <div class="bill-header-actions">
+                    <a href="{{ route('due-bills.invoice', $bill->id) }}" class="btn btn-primary" style="background:#2563eb; color:white;">
+                        <i class="fas fa-print"></i> Print Invoice
+                    </a>
                     <a href="{{ route('due-bills.edit', $bill->id) }}" class="btn btn-warning">
                         <i class="fas fa-edit"></i> Edit
                     </a>
@@ -565,6 +568,9 @@
                     <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
                     <a href="{{ route('due-bill-payments.create', ['bill_id' => $bill->id, 'client_id' => $bill->client_id]) }}" class="action-button btn-success">
                         <i class="fas fa-plus-circle"></i> Add Payment
+                    </a>
+                    <a href="{{ route('due-bills.invoice', $bill->id) }}" class="action-button btn-primary" style="background:#2563eb;">
+                        <i class="fas fa-file-invoice"></i> View / Print Invoice
                     </a>
                     @if($bill->status !== 'paid')
                     <form method="POST" action="{{ route('due-bills.send-reminder', $bill->id) }}">

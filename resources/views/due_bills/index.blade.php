@@ -475,7 +475,8 @@
                 { data: 'action', name: 'action', orderable: false, searchable: false, render: function(data, type, row) {
                     return `
                         <div class="dt-action-btns">
-                            <button class="action-btn btn-view" onclick="viewBill(${row.id})" title="View"><i data-lucide="eye" style="width:16px;height:16px;"></i></button>
+                            <a href="/due-bills/${row.id}/invoice" class="action-btn" title="Print Invoice" style="background:#eff6ff;color:#2563eb;"><i data-lucide="printer" style="width:16px;height:16px;"></i></a>
+                            <button class="action-btn btn-view" onclick="viewBill(${row.id})" title="View Details"><i data-lucide="eye" style="width:16px;height:16px;"></i></button>
                             ${Number(row.remaining) > 0 ? `<button class="action-btn" onclick="payBill(${row.id})" title="Pay Now" style="background:#10b981;color:white;"><i data-lucide="banknote" style="width:16px;height:16px;"></i></button>` : ''}
                             ${row.status !== 'paid' ? `<button class="action-btn btn-reminder" onclick="sendReminder(${row.id}, this)" title="Send SMS Reminder"><i data-lucide="bell-ring" style="width:16px;height:16px;"></i></button>` : ''}
                             <button class="action-btn btn-edit" onclick="editBill(${row.id})" title="Edit"><i data-lucide="edit-2" style="width:16px;height:16px;"></i></button>

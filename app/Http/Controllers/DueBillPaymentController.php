@@ -186,7 +186,7 @@ class DueBillPaymentController extends Controller
             // Log error but don't fail the payment creation
         }
 
-        return redirect()->route('due-bills.show', $bill->id)
+        return redirect()->route('due-bills.invoice', ['id' => $bill->id, 'print' => 1])
             ->with('success', 'Payment recorded successfully');
     }
 
@@ -248,7 +248,7 @@ class DueBillPaymentController extends Controller
 
         $bill->save();
 
-        return redirect()->route('due-bills.show', $bill->id)
+        return redirect()->route('due-bills.invoice', ['id' => $bill->id, 'print' => 1])
             ->with('success', 'Payment updated successfully');
     }
 
@@ -374,5 +374,14 @@ class DueBillPaymentController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error generating payment statement: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Redirect to printable invoice for a payment
+     */
+    public function invoice($id)
+    {
+        $payment = DueBillPayment::findOrFail($id);
+        return redirect()->route('due-bills.invoice', ['id' => $payment->due_bill_id, 'print' => 1]);
     }
 }

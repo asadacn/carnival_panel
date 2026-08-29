@@ -217,9 +217,14 @@
         </div>
         @endif
 
-        <a href="{{ route('due-bill-payments.index') }}" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to Payments
-        </a>
+        <div class="d-flex align-items-center gap-2 mt-3">
+            <a href="{{ route('due-bill-payments.index') }}" class="back-button" style="margin-top:0;">
+                <i class="fas fa-arrow-left"></i> Back to Payments
+            </a>
+            <a href="{{ route('due-bills.invoice', $payment->due_bill_id) }}" class="back-button" style="margin-top:0; background-color:#2563eb; color:white;">
+                <i class="fas fa-print"></i> View / Print Invoice
+            </a>
+        </div>
     </div>
 </div>
 @endsection
