@@ -476,6 +476,9 @@
 @endsection
 
 @section('content')
+@php
+    $ispCode = $bill->client->isp_code ?? null;
+@endphp
 <div class="invoice-wrapper">
     <!-- Top Action Bar (Hidden during printing) -->
     <div class="invoice-action-bar">
@@ -520,19 +523,29 @@
 
         <!-- Header -->
         <div class="invoice-header">
-            <div class="company-brand">
-                <h2>
-                    <i class="fas fa-network-wired text-primary"></i> 
-                    {{ strtoupper($bill->client->isp_code ?? 'CARNIVAL') }} NETWORKS
-                </h2>
-                <p>High-Speed Broadband Internet & Network Solutions</p>
-                <p class="small text-muted mt-1">
-                    <i class="fas fa-phone-alt me-1"></i> Support: {{ config('sms.payment_number', '01XXXXXXXXX') }} &nbsp;|&nbsp; 
-                    <i class="fas fa-globe me-1"></i> www.carnival.com.bd
-                </p>
+            <div class="company-brand d-flex align-items-center gap-3">
+                <img src="{{ isp_logo($ispCode) }}" alt="{{ isp_name($ispCode) }}" style="max-height: 55px; max-width: 150px; object-fit: contain;">
+                <div>
+                    <h2>
+                        {{ isp_name($ispCode, 'CARNIVAL NETWORKS') }}
+                    </h2>
+                    <p>{{ isp_setting('isp_tagline', 'High-Speed Broadband Internet & Network Solutions', $ispCode) }}</p>
+                    <p class="small text-muted mt-1">
+                        <i class="fas fa-phone-alt me-1"></i> Support: {{ isp_setting('phone', config('sms.payment_number', '01XXXXXXXXX'), $ispCode) }}
+                        @if(isp_setting('website', null, $ispCode))
+                            &nbsp;|&nbsp; <i class="fas fa-globe me-1"></i> {{ isp_setting('website', null, $ispCode) }}
+                        @endif
+                        @if(isp_setting('email', null, $ispCode))
+                            &nbsp;|&nbsp; <i class="fas fa-envelope me-1"></i> {{ isp_setting('email', null, $ispCode) }}
+                        @endif
+                    </p>
+                    @if(isp_setting('address', null, $ispCode))
+                        <p class="small text-muted mb-0"><i class="fas fa-map-marker-alt me-1"></i> {{ isp_setting('address', null, $ispCode) }}</p>
+                    @endif
+                </div>
             </div>
             <div class="invoice-title-block">
-                <h3>MONEY RECEIPT</h3>
+                <h3>{{ isp_setting('invoice_title', 'MONEY RECEIPT', $ispCode) }}</h3>
                 <div class="invoice-number">
                     INV-{{ $bill->year }}{{ str_pad($bill->month, 2, '0', STR_PAD_LEFT) }}-{{ str_pad($bill->id, 5, '0', STR_PAD_LEFT) }}
                 </div>
@@ -581,6 +594,10 @@
                         <td>{{ $bill->client->package ?? 'Broadband' }}</td>
                     </tr>
                     <tr>
+                        <td>ISP Provider:</td>
+                        <td><span class="badge bg-light text-dark border">{{ strtoupper($bill->client->isp_code ?? 'Default') }}</span></td>
+                    </tr>
+                    <tr>
                         <td>Bill Date:</td>
                         <td>{{ $bill->bill_date ? $bill->bill_date->format('d-m-Y') : '-' }}</td>
                     </tr>
@@ -612,7 +629,7 @@
                         <th style="width: 8%;">#</th>
                         <th style="width: 52%;">Description / Service Item</th>
                         <th style="width: 20%;" class="text-center">Billing Cycle</th>
-                        <th style="width: 20%;" class="text-right">Amount (BDT)</th>
+                        <th style="width: 20%;" class="text-right">Amount ({{ isp_setting('currency_symbol', '৳', $ispCode) }})</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -626,7 +643,7 @@
                             </div>
                         </td>
                         <td class="text-center">Monthly</td>
-                        <td class="text-right">৳ {{ number_format($bill->amount, 2) }}</td>
+                        <td class="text-right">{{ isp_setting('currency_symbol', '৳', $ispCode) }} {{ number_format($bill->amount, 2) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -655,7 +672,7 @@
                                 <td>{{ $payment->payment_date ? $payment->payment_date->format('d-m-Y') : '-' }}</td>
                                 <td><span class="badge bg-light text-dark border">{{ ucfirst($payment->payment_method) }}</span></td>
                                 <td class="text-muted font-monospace small">{{ $payment->transaction_id ?? '-' }}</td>
-                                <td class="text-right font-weight-bold text-success">৳ {{ number_format($payment->amount, 2) }}</td>
+                                <td class="text-right font-weight-bold text-success">{{ isp_setting('currency_symbol', '৳', $ispCode) }} {{ number_format($payment->amount, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -672,23 +689,23 @@
                 <table class="summary-card-table">
                     <tr>
                         <td class="text-muted">Sub Total:</td>
-                        <td class="text-right font-weight-bold">৳ {{ number_format($bill->amount, 2) }}</td>
+                        <td class="text-right font-weight-bold">{{ isp_setting('currency_symbol', '৳', $ispCode) }} {{ number_format($bill->amount, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">Discount:</td>
-                        <td class="text-right">৳ 0.00</td>
+                        <td class="text-right">{{ isp_setting('currency_symbol', '৳', $ispCode) }} 0.00</td>
                     </tr>
                     <tr class="total-row">
                         <td>Total Payable:</td>
-                        <td class="text-right">৳ {{ number_format($bill->amount, 2) }}</td>
+                        <td class="text-right">{{ isp_setting('currency_symbol', '৳', $ispCode) }} {{ number_format($bill->amount, 2) }}</td>
                     </tr>
                     <tr>
                         <td class="text-success font-weight-bold">Total Paid:</td>
-                        <td class="text-right text-success font-weight-bold">৳ {{ number_format($bill->paid_amount, 2) }}</td>
+                        <td class="text-right text-success font-weight-bold">{{ isp_setting('currency_symbol', '৳', $ispCode) }} {{ number_format($bill->paid_amount, 2) }}</td>
                     </tr>
                     <tr class="due-row {{ $bill->remaining_balance <= 0 ? 'paid-zero' : '' }}">
                         <td>Balance Due:</td>
-                        <td class="text-right">৳ {{ number_format(max(0, $bill->remaining_balance), 2) }}</td>
+                        <td class="text-right">{{ isp_setting('currency_symbol', '৳', $ispCode) }} {{ number_format(max(0, $bill->remaining_balance), 2) }}</td>
                     </tr>
                 </table>
             </div>
@@ -705,12 +722,12 @@
             <div class="invoice-footer-grid">
                 <div class="footer-notes">
                     <strong>Payment Instructions & Terms:</strong><br>
-                    Please pay through bKash/Nagad Merchant or Cash within the due date.<br>
-                    Keep this invoice receipt for future reference. Thank you for being with us!
+                    {{ isp_setting('payment_instruction', 'Please pay through bKash/Nagad Merchant or Cash within the due date.', $ispCode) }}<br>
+                    {{ isp_setting('invoice_footer', 'Keep this invoice receipt for future reference. Thank you for being with us!', $ispCode) }}
                 </div>
                 <div class="signature-block">
                     <div class="signature-line">
-                        Authorized Signatory
+                        {{ isp_setting('signatory_title', 'Authorized Signatory', $ispCode) }}
                     </div>
                 </div>
             </div>

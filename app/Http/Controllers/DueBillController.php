@@ -213,13 +213,20 @@ class DueBillController extends Controller
         // Send SMS notification
         try {
             $client = Client::findOrFail($validated['client_id']);
+            $ispCode = $client->isp_code ?? null;
             $monthName = \Carbon\Carbon::createFromDate($validated['year'], $validated['month'], 1)->format('F Y');
+            $currency = isp_setting('currency_symbol', '৳', $ispCode);
+            $instruction = isp_setting('payment_instruction', config('sms.payment_instruction', 'Please pay through bKash/Nagad.'), $ispCode);
+            $methods = isp_setting('payment_methods', config('sms.payment_methods', 'bKash/Nagad'), $ispCode);
+            $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
+            $ispName = isp_name($ispCode, ucfirst($client->isp_code ?? 'Carnival'));
+
             $message = "প্রিয় {$client->name},\n"
                 . "গ্রাহক আইডি: {$client->username}\n"
-                . "{$monthName} মাসের নতুন বিল: ৳" . number_format($validated['amount'], 2) . "\n"
-                . config('sms.payment_instruction') . "\n"
-                . config('sms.payment_methods') . ': ' . config('sms.payment_number')
-                . "\n- " . ucfirst($client->isp_code);
+                . "{$monthName} মাসের নতুন বিল: {$currency}" . number_format($validated['amount'], 2) . "\n"
+                . $instruction . "\n"
+                . $methods . ': ' . $paymentNumber
+                . "\n- " . $ispName;
 
             if ($client->contact) {
                 sms($client->contact, $message);
@@ -333,10 +340,13 @@ class DueBillController extends Controller
 
         if ($bill->client && $bill->client->contact) {
             try {
+                $ispCode = $bill->client->isp_code ?? null;
+                $currency = isp_setting('currency_symbol', '৳', $ispCode);
+                $ispName = isp_name($ispCode, ucfirst($bill->client->isp_code ?? 'Carnival'));
                 $message = "প্রিয় {$bill->client->name},\n"
                     . "গ্রাহক আইডি: {$bill->client->username}\n"
-                    . $bill->month_year . ' মাসের বিল: ৳' . number_format($bill->amount, 2)
-                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($bill->client->isp_code);
+                    . $bill->month_year . " মাসের বিল: {$currency}" . number_format($bill->amount, 2)
+                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
                 sms($bill->client->contact, $message);
             } catch (\Exception $e) {
                 // Log error but don't fail

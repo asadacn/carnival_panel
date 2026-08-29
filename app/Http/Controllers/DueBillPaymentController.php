@@ -161,22 +161,28 @@ class DueBillPaymentController extends Controller
         // Send SMS notification
         try {
             $client = Client::findOrFail($validated['client_id']);
+            $ispCode = $client->isp_code ?? null;
             $monthName = \Carbon\Carbon::createFromDate($bill->year, $bill->month, 1)->format('F Y');
             $remainingAmount = $bill->amount - $bill->paid_amount;
+            $currency = isp_setting('currency_symbol', '৳', $ispCode);
+            $instruction = isp_setting('payment_instruction', config('sms.payment_instruction', 'Please pay through bKash/Nagad.'), $ispCode);
+            $methods = isp_setting('payment_methods', config('sms.payment_methods', 'bKash/Nagad'), $ispCode);
+            $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
+            $ispName = isp_name($ispCode, ucfirst($client->isp_code ?? 'Carnival'));
 
             if ($remainingAmount <= 0) {
                 $message = "প্রিয় {$client->name}, পেমেন্ট নিশ্চিত হয়েছে।\n"
                     . "কাস্টমার আইডি: {$client->username}\n"
-                    . "{$monthName} মাসের বিল: ৳" . number_format($validated['amount'], 2)
-                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . ucfirst($client->isp_code);
+                    . "{$monthName} মাসের বিল: {$currency}" . number_format($validated['amount'], 2)
+                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
             } else {
                 $message = "প্রিয় {$client->name}, আংশিক পেমেন্ট নিশ্চিত হয়েছে।\n"
                     . "কাস্টমার আইডি: {$client->username}\n"
-                    . "{$monthName} মাসে জমা: ৳" . number_format($validated['amount'], 2)
-                    . "\nঅবশিষ্ট বকেয়া: ৳" . number_format($remainingAmount, 2)
-                    . "\n" . config('sms.payment_instruction') . "\n"
-                    . config('sms.payment_methods') . ': ' . config('sms.payment_number')
-                    . "\n- " . ucfirst($client->isp_code);
+                    . "{$monthName} মাসে জমা: {$currency}" . number_format($validated['amount'], 2)
+                    . "\nঅবশিষ্ট বকেয়া: {$currency}" . number_format($remainingAmount, 2)
+                    . "\n" . $instruction . "\n"
+                    . $methods . ': ' . $paymentNumber
+                    . "\n- " . $ispName;
             }
 
             if ($client->contact) {

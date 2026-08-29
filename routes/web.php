@@ -121,6 +121,13 @@ Route::resource('due-bill-payments', App\Http\Controllers\DueBillPaymentControll
 Route::get('clients/{id}/payment-history', [App\Http\Controllers\DueBillPaymentController::class, 'clientPaymentHistory'])->name('clients.payment-history');
 Route::get('clients/{id}/payments-statement-pdf', [App\Http\Controllers\DueBillPaymentController::class, 'paymentStatementPdf'])->name('clients.payments-statement-pdf');
 
+// ISP Settings Management
+Route::get('isp-settings', [App\Http\Controllers\IspSettingController::class, 'index'])->name('isp-settings.index');
+Route::post('isp-settings', [App\Http\Controllers\IspSettingController::class, 'store'])->name('isp-settings.store');
+Route::post('isp-settings/{id}', [App\Http\Controllers\IspSettingController::class, 'update'])->name('isp-settings.update');
+Route::post('isp-settings/{id}/default', [App\Http\Controllers\IspSettingController::class, 'setDefault'])->name('isp-settings.default');
+Route::delete('isp-settings/{id}', [App\Http\Controllers\IspSettingController::class, 'destroy'])->name('isp-settings.destroy');
+
 Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPassword'])->middleware('throttle:5,1');
 });
 

@@ -55,7 +55,7 @@
 
 <aside id="sidebar-wrapper">
     <div class="sidebar-brand">
-        <a href="{{ url('/') }}">Carnival Internet</a>
+        <a href="{{ url('/') }}">{{ isp_name() }}</a>
     </div>
 
     <ul class="sidebar-menu">
@@ -155,6 +155,11 @@
             <a href="{{ route('cardSellers.index') }}"><i class="fa fa-credit-card"></i><span>@lang('models/cardSellers.plural')</span></a>
         </li>
 
+        <li class="menu-header">Settings</li>
+
+        <li class="menu-item-featured {{ Request::is('isp-settings*') ? 'active' : '' }}">
+            <a href="{{ route('isp-settings.index') }}"><i class="fa fa-sliders-h"></i><span>ISP Settings</span></a>
+        </li>
 
     </ul>
 </aside>

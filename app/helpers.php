@@ -297,3 +297,91 @@ if (!function_exists('getVoiceCampaignDetails')) {
         }
     }
 }
+
+if (!function_exists('isp_profile')) {
+    /**
+     * Get the ISP model instance for a specific isp_code or default ISP
+     *
+     * @param string|null $ispCode
+     * @return \App\Models\Isp|null
+     */
+    function isp_profile($ispCode = null)
+    {
+        return \App\Models\Isp::forCode($ispCode);
+    }
+}
+
+if (!function_exists('isp_setting')) {
+    /**
+     * Get an ISP setting value for a specific ISP code with fallback
+     *
+     * @param string $key
+     * @param mixed $default
+     * @param string|null $ispCode
+     * @return mixed
+     */
+    function isp_setting($key, $default = null, $ispCode = null)
+    {
+        $profile = \App\Models\Isp::forCode($ispCode);
+        if ($profile && isset($profile->{$key}) && $profile->{$key} !== null && $profile->{$key} !== '') {
+            return $profile->{$key};
+        }
+
+        return \App\Models\IspSetting::get($key, $default);
+    }
+}
+
+if (!function_exists('isp_logo')) {
+    /**
+     * Get ISP Logo URL for a specific ISP code with fallback
+     *
+     * @param string|null $ispCode
+     * @return string
+     */
+    function isp_logo($ispCode = null)
+    {
+        $profile = \App\Models\Isp::forCode($ispCode);
+        if ($profile && $profile->logo_url) {
+            return $profile->logo_url;
+        }
+
+        return \App\Models\IspSetting::getLogoUrl();
+    }
+}
+
+if (!function_exists('isp_favicon')) {
+    /**
+     * Get ISP Favicon URL for a specific ISP code with fallback
+     *
+     * @param string|null $ispCode
+     * @return string
+     */
+    function isp_favicon($ispCode = null)
+    {
+        $profile = \App\Models\Isp::forCode($ispCode);
+        if ($profile && $profile->favicon_url) {
+            return $profile->favicon_url;
+        }
+
+        return \App\Models\IspSetting::getFaviconUrl();
+    }
+}
+
+if (!function_exists('isp_name')) {
+    /**
+     * Get ISP Name for a specific ISP code with fallback
+     *
+     * @param string|null $ispCode
+     * @param string $default
+     * @return string
+     */
+    function isp_name($ispCode = null, $default = 'Carnival Internet')
+    {
+        $profile = \App\Models\Isp::forCode($ispCode);
+        if ($profile && !empty($profile->isp_name)) {
+            return $profile->isp_name;
+        }
+
+        return \App\Models\IspSetting::get('isp_name', $default);
+    }
+}

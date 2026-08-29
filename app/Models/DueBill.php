@@ -101,13 +101,20 @@ class DueBill extends Model
             return false;
         }
 
+        $ispCode = $this->client->isp_code ?? null;
+        $currency = isp_setting('currency_symbol', '৳', $ispCode);
+        $instruction = isp_setting('payment_instruction', config('sms.payment_instruction', 'Please pay through bKash/Nagad.'), $ispCode);
+        $methods = isp_setting('payment_methods', config('sms.payment_methods', 'bKash/Nagad'), $ispCode);
+        $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
+        $ispName = isp_name($ispCode, ucfirst($this->client->isp_code ?? 'Carnival'));
+
         $message = "প্রিয় {$this->client->name},\n"
             . "গ্রাহক আইডি: {$this->client->username}\n"
-            . $this->month_year . ' মাসের বকেয়া: ৳'
+            . $this->month_year . " মাসের বকেয়া: {$currency}"
             . number_format($this->remaining_balance, 2)
-            . "\n" . config('sms.payment_instruction') . "\n"
-            . config('sms.payment_methods') . ': ' . config('sms.payment_number')
-            . "\n- " . ucfirst($this->client->isp_code);
+            . "\n" . $instruction . "\n"
+            . $methods . ': ' . $paymentNumber
+            . "\n- " . $ispName;
 
         if (!sms($this->client->contact, $message)) {
             Log::warning('Due bill reminder SMS failed', ['due_bill_id' => $this->id]);
