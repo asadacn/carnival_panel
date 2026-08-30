@@ -17,7 +17,7 @@ class DueBillPaymentController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = DueBillPayment::query();
+            $query = DueBillPayment::with('dueBill', 'client');
 
             // Filter by client if provided
             if ($request->filled('client_id')) {
@@ -42,14 +42,23 @@ class DueBillPaymentController extends Controller
                 ->addColumn('client_name', function ($row) {
                     return $row->client->name ?? '-';
                 })
+                ->addColumn('customer_id', function ($row) {
+                    return $row->client->username ?? '-';
+                })
                 ->addColumn('bill_month', function ($row) {
                     return $row->dueBill->month_year ?? '-';
                 })
                 ->addColumn('payment_date_formatted', function ($row) {
                     return $row->payment_date->format('d-m-Y');
                 })
+                ->addColumn('payment_date', function ($row) {
+                    return $row->payment_date->format('Y-m-d');
+                })
+                ->addColumn('bill_status', function ($row) {
+                    return $row->dueBill->status ?? 'unpaid';
+                })
                 ->addColumn('amount_formatted', function ($row) {
-                    return '৳ ' . number_format($row->amount, 2);
+                    return number_format($row->amount, 2);
                 })
                 ->addColumn('method_badge', function ($row) {
                     $colors = [
@@ -62,11 +71,20 @@ class DueBillPaymentController extends Controller
                     $color = $colors[$row->payment_method] ?? 'secondary';
                     return "<span class='badge bg-{$color}'>" . ucfirst($row->payment_method) . "</span>";
                 })
+                ->addColumn('transaction_id', function ($row) {
+                    return $row->transaction_id ?? '-';
+                })
+                ->addColumn('remaining', function ($row) {
+                    return $row->dueBill->remaining_balance ?? 0;
+                })
                 ->addColumn('action', function ($row) {
                     return "
-                        <button class='btn btn-sm btn-primary' onclick=\"viewPayment({$row->id})\"><i class='fa fa-eye'></i></button>
-                        <button class='btn btn-sm btn-warning' onclick=\"editPayment({$row->id})\"><i class='fa fa-edit'></i></button>
-                        <button class='btn btn-sm btn-danger' onclick=\"deletePayment({$row->id})\"><i class='fa fa-trash'></i></button>
+                        <div class='dt-action-btns'>
+                            <a href='/due-bill-payments/{$row->id}' class='action-btn btn-view' title='View Details'><i data-lucide='eye' style='width:16px;height:16px;'></i></a>
+                            <a href='/due-bill-payments/{$row->id}/invoice' class='action-btn' title='Print Invoice' style='background:#eff6ff;color:#2563eb;'><i data-lucide='printer' style='width:16px;height:16px;'></i></a>
+                            <button class='action-btn btn-edit' onclick=\"editPayment({$row->id})\" title='Edit'><i data-lucide='edit-2' style='width:16px;height:16px;'></i></button>
+                            <button class='action-btn btn-delete' onclick=\"deletePayment({$row->id})\" title='Delete'><i data-lucide='trash-2' style='width:16px;height:16px;'></i></button>
+                        </div>
                     ";
                 })
                 ->rawColumns(['method_badge', 'action'])
@@ -76,7 +94,19 @@ class DueBillPaymentController extends Controller
         $clients = Client::select('id', 'name', 'username')->orderBy('name')->get();
         $methods = ['cash', 'bkash', 'nagad', 'bank', 'other'];
 
-        return view('due_bill_payments.index', compact('clients', 'methods'));
+        $totalCollected = DueBillPayment::sum('amount');
+        $monthCollections = DueBillPayment::whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->sum('amount');
+        $todayCollections = DueBillPayment::whereDate('payment_date', today())->sum('amount');
+        $totalPayments = DueBillPayment::count();
+        $averagePayment = DueBillPayment::avg('amount');
+
+        return view('due_bill_payments.index', compact(
+            'clients', 'methods',
+            'totalCollected', 'monthCollections',
+            'todayCollections', 'totalPayments', 'averagePayment'
+        ));
     }
 
     /**
