@@ -224,6 +224,9 @@
             <a href="{{ route('due-bills.invoice', $payment->due_bill_id) }}" class="back-button" style="margin-top:0; background-color:#2563eb; color:white;">
                 <i class="fas fa-print"></i> View / Print Invoice
             </a>
+            <button type="button" onclick="window.open('{{ route('due-bills.invoice', $payment->due_bill_id) }}', '_blank')" class="back-button" style="margin-top:0; background-color:#16a34a; color:white;">
+                <i class="fas fa-share-alt"></i> Share Invoice
+            </button>
         </div>
     </div>
 </div>

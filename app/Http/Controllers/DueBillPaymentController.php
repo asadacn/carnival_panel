@@ -42,23 +42,14 @@ class DueBillPaymentController extends Controller
                 ->addColumn('client_name', function ($row) {
                     return $row->client->name ?? '-';
                 })
-                ->addColumn('customer_id', function ($row) {
-                    return $row->client->username ?? '-';
-                })
                 ->addColumn('bill_month', function ($row) {
-                    return $row->dueBill->month_year ?? '-';
-                })
-                ->addColumn('payment_date_formatted', function ($row) {
-                    return $row->payment_date->format('d-m-Y');
-                })
-                ->addColumn('payment_date', function ($row) {
-                    return $row->payment_date->format('Y-m-d');
-                })
-                ->addColumn('bill_status', function ($row) {
-                    return $row->dueBill->status ?? 'unpaid';
+                    return $row->dueBill ? $row->dueBill->month . '/' . $row->dueBill->year : '-';
                 })
                 ->addColumn('amount_formatted', function ($row) {
                     return number_format($row->amount, 2);
+                })
+                ->addColumn('payment_date_formatted', function ($row) {
+                    return $row->payment_date ? $row->payment_date->format('M d, Y') : '-';
                 })
                 ->addColumn('method_badge', function ($row) {
                     $colors = [
@@ -71,11 +62,17 @@ class DueBillPaymentController extends Controller
                     $color = $colors[$row->payment_method] ?? 'secondary';
                     return "<span class='badge bg-{$color}'>" . ucfirst($row->payment_method) . "</span>";
                 })
+                ->addColumn('bill_status', function ($row) {
+                    $status = $row->dueBill ? $row->dueBill->status : 'unpaid';
+                    $label = $status === 'paid' ? 'Paid' : ($status === 'partially_paid' ? 'Partial' : ($status === 'overdue' ? 'Overdue' : 'Unpaid'));
+                    $cls = $status === 'paid' ? 'status-paid' : ($status === 'partially_paid' ? 'status-partial' : ($status === 'overdue' ? 'status-overdue' : 'status-unpaid'));
+                    return "<span class='status-badge {$cls}'>{$label}</span>";
+                })
                 ->addColumn('transaction_id', function ($row) {
                     return $row->transaction_id ?? '-';
                 })
                 ->addColumn('remaining', function ($row) {
-                    return $row->dueBill->remaining_balance ?? 0;
+                    return $row->dueBill ? $row->dueBill->remaining_balance : 0;
                 })
                 ->addColumn('action', function ($row) {
                     return "
@@ -87,7 +84,7 @@ class DueBillPaymentController extends Controller
                         </div>
                     ";
                 })
-                ->rawColumns(['method_badge', 'action'])
+                ->rawColumns(['method_badge', 'bill_status', 'action'])
                 ->make(true);
         }
 

@@ -7,6 +7,8 @@ use App\Models\Client;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Yajra\DataTables\DataTables;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class DueBillController extends Controller
 {
@@ -611,6 +613,159 @@ class DueBillController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to send message.'], 500);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Share invoice via WhatsApp, Telegram, or Email
+     */
+    public function shareInvoice(Request $request, $id)
+    {
+        $request->validate([
+            'channel' => 'required|in:whatsapp,telegram,email'
+        ]);
+
+        $bill = DueBill::with('client')->findOrFail($id);
+        $client = $bill->client;
+        $ispCode = $client->isp_code ?? null;
+        $ispName = isp_name($ispCode, 'Carnival Networks');
+        $currency = isp_setting('currency_symbol', '৳', $ispCode);
+        $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
+        $instruction = isp_setting('payment_instruction', config('sms.payment_instruction', 'Please pay through bKash/Nagad.'), $ispCode);
+        $methods = isp_setting('payment_methods', config('sms.payment_methods', 'bKash/Nagad'), $ispCode);
+        $statusLabel = ucfirst(str_replace('_', ' ', $bill->status));
+        $invoiceNumber = '#INV-' . $bill->year . str_pad($bill->month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($bill->id, 5, '0', STR_PAD_LEFT);
+        $pdfUrl = route('due-bills.invoice-pdf', $bill->id);
+
+        $message = "🏢 {$ispName}\n";
+        $message .= "📄 INVOICE {$invoiceNumber}\n\n";
+        $message .= "👤 Client: {$client->name}\n";
+        $message .= "🆔 User ID: {$client->username}\n";
+        if ($client->contact) {
+            $message .= "📱 Contact: {$client->contact}\n";
+        }
+        $message .= "📅 Bill Month: " . \Carbon\Carbon::createFromDate($bill->year, $bill->month, 1)->format('F Y') . "\n";
+        $message .= "💰 Total Amount: {$currency}" . number_format($bill->amount, 2) . "\n";
+        $message .= "✅ Paid: {$currency}" . number_format($bill->paid_amount, 2) . "\n";
+        $message .= "🔴 Balance Due: {$currency}" . number_format(max(0, $bill->remaining_balance), 2) . "\n\n";
+        $message .= "📊 Status: {$statusLabel}\n\n";
+        $message .= "💳 Payment Methods: {$methods}\n";
+        if ($paymentNumber) {
+            $message .= "📞 Payment Number: {$paymentNumber}\n";
+        }
+        $message .= "\n📝 {$instruction}\n";
+        $message .= "\n📎 Download Invoice PDF: {$pdfUrl}\n";
+        $message .= "\nThank you for being with us!\n- {$ispName}";
+
+        $channel = $request->channel;
+
+        if ($channel === 'telegram') {
+            try {
+                $channelId = env('TELEGRAM_BILLING_CHANNEL_ID') ?? env('TELEGRAM_CHAT_ID');
+                $botToken = env('TELEGRAM_BOT_TOKEN');
+
+                if ($botToken && $channelId) {
+                    $html = view('due_bills.invoice-pdf', compact('bill'))->render();
+
+                    $options = new Options();
+                    $options->set('isRemoteEnabled', true);
+                    $options->set('isHtml5ParserEnabled', true);
+                    $options->set('isPhpEnabled', true);
+                    $options->set('defaultFont', 'DejaVu Sans');
+
+                    $dompdf = new Dompdf($options);
+                    $dompdf->loadHtml($html);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->render();
+                    $pdfContent = $dompdf->output();
+
+                    $caption = "🏢 {$ispName}\n📄 {$invoiceNumber}\n👤 {$client->name}\n💰 {$currency}" . number_format($bill->amount, 2) . "\n📊 {$statusLabel}";
+
+                    $response = Http::attach(
+                        'document',
+                        $pdfContent,
+                        'invoice-' . $bill->year . str_pad($bill->month, 2, '0', STR_PAD_LEFT) . '-' . $bill->id . '.pdf'
+                    )->post("https://api.telegram.org/bot{$botToken}/sendDocument", [
+                        'chat_id' => $channelId,
+                        'caption' => $caption,
+                        'parse_mode' => 'HTML'
+                    ]);
+
+                    if ($response->successful()) {
+                        return response()->json(['success' => true, 'message' => 'Invoice shared to Telegram Channel!']);
+                    }
+                }
+
+                return response()->json(['success' => false, 'message' => 'Failed to send to Telegram.'], 500);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
+        }
+
+        if ($channel === 'whatsapp') {
+            $phone = $client->contact ?? '';
+            $encodedMessage = urlencode($message);
+            if ($phone) {
+                $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+                if (strpos($cleanPhone, '0') === 0) {
+                    $cleanPhone = '88' . $cleanPhone;
+                } elseif (strpos($cleanPhone, '88') === 0 && ($cleanPhone[2] ?? '') !== '0') {
+                    $cleanPhone = '880' . substr($cleanPhone, 2);
+                }
+                $url = "https://api.whatsapp.com/send?phone={$cleanPhone}&text={$encodedMessage}";
+            } else {
+                $url = "https://api.whatsapp.com/send?text={$encodedMessage}";
+            }
+            return response()->json(['success' => true, 'url' => $url, 'pdf_url' => $pdfUrl]);
+        }
+
+        if ($channel === 'email') {
+            $email = $client->email ?? '';
+            $subject = "Invoice {$invoiceNumber} - {$ispName}";
+            $body = urlencode($message);
+            $url = $email ? "mailto:{$email}?subject=" . urlencode($subject) . "&body={$body}" : "mailto:?subject=" . urlencode($subject) . "&body={$body}";
+            return response()->json(['success' => true, 'url' => $url, 'pdf_url' => $pdfUrl]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Unsupported channel.'], 400);
+    }
+
+    /**
+     * Generate and download invoice PDF
+     */
+    public function invoicePdf($id)
+    {
+        try {
+            $bill = DueBill::with(['client', 'payments' => function ($q) {
+                $q->orderBy('payment_date', 'asc')->orderBy('id', 'asc');
+            }])->findOrFail($id);
+
+            $html = view('due_bills.invoice-pdf', compact('bill'))->render();
+
+            $options = new Options();
+            $options->set('isRemoteEnabled', true);
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isPhpEnabled', true);
+            $options->set('defaultFont', 'DejaVu Sans');
+            $options->set('isEnablePhp', true);
+            $options->set('tempDir', storage_path('tmp'));
+            if (!file_exists(storage_path('tmp'))) {
+                mkdir(storage_path('tmp'), 0755, true);
+            }
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+
+            $filename = 'invoice-' . $bill->year . str_pad($bill->month, 2, '0', STR_PAD_LEFT) . '-' . $bill->id . '.pdf';
+
+            return response($dompdf->output(), 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'PDF generation failed: ' . $e->getMessage()], 500);
         }
     }
 }

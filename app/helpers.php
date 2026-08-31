@@ -131,27 +131,47 @@ function en2bnNumber($number){
 
 //BDT MONEY FORMATTER
 if (!function_exists('takaFormat')) {
-function takaFormat($input){
-            //CUSTOM FUNCTION TO GENERATE ##,##,###.##
-            $dec = "";
-            $pos = strpos($input, ".");
-            if ($pos === false){
-                //no decimals
-            } else {
-                //decimals
-                $dec = substr(round(substr($input,$pos),2),1);
-                $input = substr($input,0,$pos);
+    function takaFormat($input){
+                //CUSTOM FUNCTION TO GENERATE ##,##,###.##
+                $dec = "";
+                $pos = strpos($input, ".");
+                if ($pos === false){
+                    //no decimals
+                } else {
+                    //decimals
+                    $dec = substr(round(substr($input,$pos),2),1);
+                    $input = substr($input,0,$pos);
+                }
+                $num = substr($input,-3); //get the last 3 digits
+                $input = substr($input,0, -3); //omit the last 3 digits already stored in $num
+                while(strlen($input) > 0) //loop the process - further get digits 2 by 2
+                {
+                    $num = substr($input,-2).",".$num;
+                    $input = substr($input,0,-2);
+                }
+                return $num . $dec;
             }
-            $num = substr($input,-3); //get the last 3 digits
-            $input = substr($input,0, -3); //omit the last 3 digits already stored in $num
-            while(strlen($input) > 0) //loop the process - further get digits 2 by 2
-            {
-                $num = substr($input,-2).",".$num;
-                $input = substr($input,0,-2);
-            }
-            return $num . $dec;
         }
+
+if (!function_exists('bdtFormat')) {
+    function bdtFormat($amount, $decimals = 2) {
+        $amount = number_format((float) $amount, $decimals, '.', '');
+        $parts = explode('.', $amount);
+        $whole = $parts[0];
+        $decimal = $parts[1] ?? '';
+
+        $len = strlen($whole);
+        if ($len <= 3) {
+            return $whole . ($decimals > 0 ? '.' . $decimal : '');
+        }
+
+        $first3 = substr($whole, -3);
+        $rest = substr($whole, 0, -3);
+        $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $rest);
+
+        return $rest . ',' . $first3 . ($decimals > 0 ? '.' . $decimal : '');
     }
+}
 
 //SEND TELEGRAM MESSAGE
 if(!function_exists('sendTelegram')){

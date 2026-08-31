@@ -141,6 +141,7 @@
     .dt-action-btns {
         display: flex;
         gap: 0.4rem;
+        flex-wrap: wrap;
     }
     .action-btn {
         width: 32px;

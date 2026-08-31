@@ -214,29 +214,14 @@
                             </div>
                             <div class="client-info">
                                 <div class="client-name">${data}</div>
-                                <div class="client-meta">${row.customer_id || '-'}</div>
                             </div>
                         </div>
                     `;
                 }},
                 { data: 'bill_month', name: 'bill_month', searchable: false },
                 { data: 'amount_formatted', name: 'amount', render: function(data) { return `<span class="amount">৳ ${data}</span>`; } },
-                { data: 'payment_date', name: 'payment_date', render: function(data, type, row) {
-                    var parts = data.split('-');
-                    var dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-                    var now = new Date();
-                    now.setHours(0, 0, 0, 0);
-                    dateObj.setHours(0, 0, 0, 0);
-                    var diff = now - dateObj;
-                    var days = Math.floor(diff / 86400000);
-
-                    var relative = '';
-                    if (days === 0) relative = 'Today';
-                    else if (days === 1) relative = 'Yesterday';
-                    else if (days < 7) relative = days + ' days ago';
-                    else relative = row.payment_date_formatted || data;
-
-                    return `<div class="timestamp-cell">${row.payment_date_formatted || data}</div><div class="timestamp-relative">${relative}</div>`;
+                { data: 'payment_date_formatted', name: 'payment_date', render: function(data, type, row) {
+                    return `<div class="timestamp-cell">${data}</div>`;
                 }},
                 { data: 'method_badge', name: 'payment_method', orderable: false, searchable: false },
                 { data: 'bill_status', name: 'bill_status', orderable: false, searchable: false, render: function(data, type, row) {
@@ -289,6 +274,10 @@
 
     function viewPayment(id) {
         window.location.href = `/due-bill-payments/${id}`;
+    }
+
+    function sharePaymentInvoice(id) {
+        window.open(`/due-bill-payments/${id}/invoice`, '_blank');
     }
 
     function printInvoice(id) {

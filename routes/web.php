@@ -110,6 +110,8 @@ Route::post('due-bills/{id}/mark-paid', [App\Http\Controllers\DueBillController:
 Route::post('due-bills/{id}/send-reminder', [App\Http\Controllers\DueBillController::class, 'sendReminder'])->name('due-bills.send-reminder');
 Route::post('due-bills/send-bulk-reminders', [App\Http\Controllers\DueBillController::class, 'sendBulkReminders'])->name('due-bills.send-bulk-reminders');
 Route::post('due-bills/send-telegram', [App\Http\Controllers\DueBillController::class, 'sendTelegramNotification'])->name('due-bills.send-telegram');
+Route::post('due-bills/{id}/share-invoice', [App\Http\Controllers\DueBillController::class, 'shareInvoice'])->name('due-bills.share-invoice');
+Route::get('due-bills/{id}/invoice-pdf', [App\Http\Controllers\DueBillController::class, 'invoicePdf'])->name('due-bills.invoice-pdf');
 Route::resource('due-bills', App\Http\Controllers\DueBillController::class);
 Route::get('clients/{id}/due-bills', [App\Http\Controllers\DueBillController::class, 'clientBills'])->name('clients.due-bills');
 Route::get('clients/{id}/bills-statement-pdf', [App\Http\Controllers\DueBillController::class, 'billStatementPdf'])->name('clients.bills-statement-pdf');

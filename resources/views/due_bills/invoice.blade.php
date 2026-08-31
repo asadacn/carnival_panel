@@ -401,6 +401,89 @@
         transform: translateY(-2px);
     }
 
+    .btn-share {
+        background: #ffffff;
+        color: #4b5563 !important;
+        border: 1px solid #e5e7eb;
+    }
+    .btn-share:hover {
+        background: #f9fafb;
+        transform: translateY(-2px);
+    }
+
+    .btn-pdf {
+        background: #ffffff;
+        color: #dc2626 !important;
+        border: 1px solid #fecaca;
+    }
+    .btn-pdf:hover {
+        background: #fef2f2;
+        transform: translateY(-2px);
+    }
+
+    .share-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .share-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        margin-top: 0.5rem;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        min-width: 200px;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .share-menu.show {
+        display: block;
+    }
+
+    .share-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        background: none;
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-decoration: none;
+    }
+
+    .share-menu-item:hover {
+        background: #f3f4f6;
+    }
+
+    .share-menu-item i {
+        width: 20px;
+        text-align: center;
+        font-size: 1rem;
+    }
+
+    .share-menu-item.wa { color: #16a34a; }
+    .share-menu-item.wa:hover { background: #f0fdf4; }
+    .share-menu-item.tg { color: #0088cc; }
+    .share-menu-item.tg:hover { background: #f0f9ff; }
+    .share-menu-item.email { color: #ea580c; }
+    .share-menu-item.email:hover { background: #fff7ed; }
+
+    .share-menu-divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 0.25rem 0;
+    }
+
     /* ─── Print Stylesheet ─────────────────────────────────────── */
     @media print {
         @page {
@@ -499,6 +582,29 @@
             <button type="button" onclick="window.print()" class="btn-action btn-print">
                 <i class="fas fa-print"></i> Print Invoice
             </button>
+            <a href="{{ route('due-bills.invoice-pdf', $bill->id) }}" class="btn-action btn-pdf" title="Download PDF">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <div class="share-dropdown">
+                <button type="button" class="btn-action btn-share" onclick="toggleShareMenu()">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
+                <div class="share-menu" id="shareMenu">
+                    <button class="share-menu-item wa" onclick="shareInvoice('whatsapp')">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button class="share-menu-item tg" onclick="shareInvoice('telegram')">
+                        <i class="fab fa-telegram-plane"></i> Telegram
+                    </button>
+                    <button class="share-menu-item email" onclick="shareInvoice('email')">
+                        <i class="fas fa-envelope"></i> Email
+                    </button>
+                    <div class="share-menu-divider"></div>
+                    <a href="{{ route('due-bills.invoice-pdf', $bill->id) }}" class="share-menu-item" style="color:#dc2626;" download>
+                        <i class="fas fa-file-download"></i> Download PDF
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -739,7 +845,6 @@
 @section('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Automatically trigger print dialog if requested in query parameter
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('print') === '1') {
             setTimeout(function () {
@@ -747,5 +852,64 @@
             }, 500);
         }
     });
+
+    function toggleShareMenu() {
+        const menu = document.getElementById('shareMenu');
+        menu.classList.toggle('show');
+    }
+
+    document.addEventListener('click', function(e) {
+        const dropdown = document.querySelector('.share-dropdown');
+        if (dropdown && !dropdown.contains(e.target)) {
+            const menu = document.getElementById('shareMenu');
+            if (menu) menu.classList.remove('show');
+        }
+    });
+
+    async function shareInvoice(channel) {
+        const menu = document.getElementById('shareMenu');
+        if (menu) menu.classList.remove('show');
+
+        try {
+            const response = await fetch("{{ route('due-bills.share-invoice', $bill->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ channel: channel })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.url) {
+                window.open(data.url, '_blank');
+            } else if (data.success && data.message) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Shared!',
+                    text: data.message,
+                    timer: 2500,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to share invoice.',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An unexpected error occurred.',
+                confirmButtonColor: '#ef4444'
+            });
+        }
+    }
 </script>
 @endsection
