@@ -16,6 +16,12 @@
     <p>{{ $package->descriptoin }}</p>
 </div>
 
+<!-- ISP Field -->
+<div class="form-group">
+    {!! Form::label('isp_code', __('models/packages.fields.isp_code').':') !!}
+    <p>{{ ucfirst($package->isp_code ?? 'N/A') }}</p>
+</div>
+
 <!-- Created At Field -->
 <div class="form-group">
     {!! Form::label('created_at', __('models/packages.fields.created_at').':') !!}

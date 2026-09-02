@@ -59,6 +59,7 @@ Route::post('clients/{clientId}/close', [ClientController::class, 'addToClosedLi
 Route::post('clients/{clientId}/unclose', [ClientController::class, 'removeFromClosedList'])->name('clients.removeFromClosedList');
 Route::post('clients/{clientId}/cable-return', [ClientController::class, 'updateCableReturn'])->name('clients.updateCableReturn');
 Route::post('clients/{clientId}/onu-return', [ClientController::class, 'updateOnuReturn'])->name('clients.updateOnuReturn');
+Route::get('clients/{clientId}/details', [ClientController::class, 'getClientDetails'])->name('clients.details');
 
 // Client Comments (social-media style)
 Route::get('clients/{clientId}/comments', [ClientCommentController::class, 'index'])->name('clients.comments.index');

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property string $title
  * @property integer $price
  * @property string $descriptoin
+ * @property string $isp_code
  */
 class Package extends Model
 {
@@ -31,7 +32,8 @@ class Package extends Model
     public $fillable = [
         'title',
         'price',
-        'descriptoin'
+        'descriptoin',
+        'isp_code'
     ];
 
     /**
@@ -42,7 +44,8 @@ class Package extends Model
     protected $casts = [
         'title' => 'string',
         'price' => 'integer',
-        'descriptoin' => 'string'
+        'descriptoin' => 'string',
+        'isp_code' => 'string'
     ];
 
     /**
@@ -51,9 +54,50 @@ class Package extends Model
      * @var array
      */
     public static $rules = [
-        'title' => 'required',
-        'price' => 'required',
-        'descriptoin' => 'nullable'
+        'title' => 'required|string|max:255',
+        'price' => 'required|integer',
+        'descriptoin' => 'nullable|string',
+        'isp_code' => 'required|string|max:50'
     ];
     
+    public function scopeIsp($query, string $isp_code)
+    {
+        return $query->where('isp_code', strtolower($isp_code));
+    }
+
+    /**
+     * Packages belonging to a specific ISP, with fallback to default ISP
+     */
+    public static function forIsp(string $isp_code, ?bool $withFallback = true)
+    {
+        $isp_code = strtolower(trim($isp_code));
+        $query = static::where('isp_code', $isp_code);
+
+        if ($withFallback) {
+            $defaultIsp = config('app.isp_code', 'carnival');
+            if ($isp_code !== strtolower($defaultIsp)) {
+                $query->orWhere('isp_code', strtolower($defaultIsp));
+            }
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Find a package by title for a specific ISP, with fallback to default ISP
+     */
+    public static function findByTitleForIsp(string $title, string $isp_code): ?self
+    {
+        $isp_code = strtolower(trim($isp_code));
+        $pkg = static::where('title', $title)->where('isp_code', $isp_code)->first();
+
+        if (!$pkg) {
+            $defaultIsp = config('app.isp_code', 'carnival');
+            if ($isp_code !== strtolower($defaultIsp)) {
+                $pkg = static::where('title', $title)->where('isp_code', strtolower($defaultIsp))->first();
+            }
+        }
+
+        return $pkg;
+    }
 }

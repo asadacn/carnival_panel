@@ -19,7 +19,8 @@ class PackageRepository extends BaseRepository
     protected $fieldSearchable = [
         'title',
         'price',
-        'descriptoin'
+        'descriptoin',
+        'isp_code'
     ];
 
     /**

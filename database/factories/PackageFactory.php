@@ -25,6 +25,7 @@ class PackageFactory extends Factory
             'title' => $this->faker->word,
         'price' => $this->faker->randomDigitNotNull,
         'descriptoin' => $this->faker->text,
+        'isp_code' => $this->faker->randomElement(['carnival', 'bijoy', 'icc']),
         'created_at' => $this->faker->date('Y-m-d H:i:s'),
         'updated_at' => $this->faker->date('Y-m-d H:i:s')
         ];

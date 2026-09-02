@@ -33,28 +33,28 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                              <!-- Carnival ID / Username -->
-                <div class="col-md-4">
-                    {!! Form::label('isp', __('models/clients.fields.isp').':', ['class' => 'form-label']) !!}
-                    {!! Form::text('isp_code', null, ['class' => 'form-control', 'placeholder' => 'Enter ISP']) !!}
-                </div>
-                <!-- Carnival ID / Username -->
-                <div class="col-md-4">
-                    {!! Form::label('username', __('models/clients.fields.username').':', ['class' => 'form-label']) !!}
-                    {!! Form::text('username', null, ['class' => 'form-control', 'placeholder' => 'Enter Carnival ID']) !!}
-                </div>
+                    <!-- ISP -->
+                    <div class="col-md-4">
+                        {!! Form::label('isp_code', __('models/clients.fields.isp').':', ['class' => 'form-label']) !!}
+                        {!! Form::select('isp_code', $isps->pluck('isp_name', 'isp_code'), null, ['class' => 'form-select', 'id' => 'client_isp_code', 'placeholder' => 'Select ISP']) !!}
+                    </div>
+                    <!-- Carnival ID / Username -->
+                    <div class="col-md-4">
+                        {!! Form::label('username', __('models/clients.fields.username').':', ['class' => 'form-label']) !!}
+                        {!! Form::text('username', null, ['class' => 'form-control', 'placeholder' => 'Enter Carnival ID']) !!}
+                    </div>
 
-                <!-- Password -->
-                <div class="col-md-4">
-                    {!! Form::label('password', __('models/clients.fields.password').':', ['class' => 'form-label']) !!}
-                    {!! Form::text('password', null, ['class' => 'form-control', 'placeholder' => 'Enter PPPoE password']) !!}
-                </div>
+                    <!-- Password -->
+                    <div class="col-md-4">
+                        {!! Form::label('password', __('models/clients.fields.password').':', ['class' => 'form-label']) !!}
+                        {!! Form::text('password', null, ['class' => 'form-control', 'placeholder' => 'Enter PPPoE password']) !!}
+                    </div>
 
-                <!-- Package Dropdown -->
-                <div class="col-md-4">
-                    {!! Form::label('package', __('models/clients.fields.package').':', ['class' => 'form-label']) !!}
-                    {!! Form::select('package', $packages->pluck('title', 'title'), null, ['class' => 'form-select', 'placeholder' => 'Select package']) !!}
-                </div>
+                    <!-- Package Dropdown -->
+                    <div class="col-md-4">
+                        {!! Form::label('package', __('models/clients.fields.package').':', ['class' => 'form-label']) !!}
+                        {!! Form::select('package', $packages->pluck('title', 'title'), null, ['class' => 'form-select', 'id' => 'client_package', 'placeholder' => 'Select package']) !!}
+                    </div>
             </div>
         </div>
     </div>
@@ -155,3 +155,41 @@
         <a href="{{ route('clients.index') }}" class="btn btn-light">@lang('crud.cancel')</a>
     </div>
 </div>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // All packages keyed by isp_code|title
+    const allPackages = @json($packages->mapWithKeys(function ($pkg) {
+        return [$pkg->isp_code . '|' . $pkg->title => $pkg->title];
+    })->groupBy('isp_code'));
+
+    const ispCodeMap = {};
+    @foreach($packages as $pkg)
+    if (!ispCodeMap['{{ $pkg->isp_code }}']) ispCodeMap['{{ $pkg->isp_code }}'] = [];
+    ispCodeMap['{{ $pkg->isp_code }}'].push({ title: '{{ addslashes($pkg->title) }}', price: {{ $pkg->price }} });
+    @endforeach
+
+    function filterPackages(ispCode) {
+        const $pkgSelect = $('#client_package');
+        const $currentVal = $pkgSelect.val();
+        $pkgSelect.empty().append('<option value="">Select package</option>');
+        const pkgs = ispCodeMap[ispCode] || [];
+        pkgs.forEach(function(p) {
+            const selected = p.title === $currentVal ? 'selected' : '';
+            $pkgSelect.append(`<option value="${p.title}" ${selected}>${p.title} (${p.price})</option>`);
+        });
+    }
+
+    $('#client_isp_code').on('change', function() {
+        filterPackages($(this).val());
+    });
+
+    // Initial filter based on pre-selected ISP
+    const initialIsp = $('#client_isp_code').val();
+    if (initialIsp) {
+        filterPackages(initialIsp);
+    }
+});
+</script>
+@endpush

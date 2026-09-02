@@ -77,7 +77,10 @@ class HomeController extends Controller
             $package = Package::pluck('price','title');
 
             $clients_by_package = DB::table('clients')
-                ->join('packages', 'clients.package', '=', 'packages.title')
+                ->join('packages', function ($join) {
+                    $join->on('clients.package', '=', 'packages.title')
+                         ->whereColumn('clients.isp_code', 'packages.isp_code');
+                })
                 ->where('clients.status', 'Active')
                 ->select(
                     'clients.package',

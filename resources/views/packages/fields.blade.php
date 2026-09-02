@@ -10,6 +10,12 @@
     {!! Form::number('price', null, ['class' => 'form-control']) !!}
 </div>
 
+<!-- ISP Field -->
+<div class="form-group col-sm-6">
+    {!! Form::label('isp_code', __('models/packages.fields.isp_code').':') !!}
+    {!! Form::select('isp_code', ['carnival' => 'Carnival', 'bijoy' => 'Bijoy', 'icc' => 'ICC'], null, ['class' => 'form-select', 'placeholder' => 'Select ISP']) !!}
+</div>
+
 <!-- Descriptoin Field -->
 <div class="form-group col-sm-12 col-lg-12">
     {!! Form::label('descriptoin', __('models/packages.fields.descriptoin').':') !!}

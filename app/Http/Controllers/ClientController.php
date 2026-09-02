@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 use App\Imports\ClientsImport;
 use App\Models\Client;
+use App\Models\Isp;
 use App\Models\Package;
 use App\Models\SMS_TEMPALTE;
 use Maatwebsite\Excel\Facades\Excel;
@@ -296,7 +297,8 @@ EOT;
     public function create()
     {
         $packages = Package::all();
-        return view('clients.create', compact('packages'));
+        $isps = Isp::getAllCached();
+        return view('clients.create', compact('packages', 'isps'));
     }
 
     /**
@@ -313,8 +315,9 @@ EOT;
     public function getPackagePrice($clientId)
     {
         try {
-            $client = Client::findOrFail($clientId);
-            $package = Package::where('title', $client->package)->first();
+            $client  = Client::findOrFail($clientId);
+            $ispCode = $client->isp_code ?? config('app.isp_code', 'carnival');
+            $package = Package::findByTitleForIsp($client->package, $ispCode);
 
             if ($package) {
                 return response()->json([
@@ -351,7 +354,9 @@ EOT;
             $currentYear  = now()->year;
 
             $clients = Client::whereIn('id', $clientIds)->get();
-            $packages = Package::all()->keyBy('title');
+            $packages = Package::all()->keyBy(function ($pkg) {
+                return $pkg->isp_code . '|' . $pkg->title;
+            });
 
             $existingBillClientIds = DB::table('due_bills')
                 ->whereIn('client_id', $clientIds)
@@ -362,7 +367,8 @@ EOT;
 
             $result = [];
             foreach ($clients as $client) {
-                $pkg = $packages->get($client->package);
+                $ispCode = $client->isp_code ?? config('app.isp_code', 'carnival');
+                $pkg = Package::findByTitleForIsp($client->package, $ispCode);
                 $result[] = [
                     'id' => $client->id,
                     'name' => $client->name,
@@ -414,8 +420,9 @@ EOT;
 
         $client->loadCount('comments');
         $templates = SMS_TEMPALTE::all();
+        $packages  = Package::all();
 
-        return view('clients.show', compact('client', 'templates'));
+        return view('clients.show', compact('client', 'templates', 'packages'));
     }
 
     /**
@@ -425,13 +432,14 @@ EOT;
     {
         $client   = $this->clientRepository->find($id);
         $packages = Package::all();
+        $isps     = Isp::getAllCached();
 
         if (empty($client)) {
             Flash::error(__('messages.not_found', ['model' => __('models/clients.singular')]));
             return redirect(route('clients.index'));
         }
 
-        return view('clients.edit', compact('client', 'packages'));
+        return view('clients.edit', compact('client', 'packages', 'isps'));
     }
 
     /**
@@ -666,6 +674,31 @@ EOT;
 
             return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('customer', function ($client) {
+                    $name = e($client->name ?? 'Unknown');
+                    $uid  = e($client->username ?? '-');
+                    $initials = '';
+                    if (!empty($client->name)) {
+                        $parts = preg_split('/\s+/', trim($client->name));
+                        foreach ($parts as $p) {
+                            if (mb_strlen($initials) >= 2) break;
+                            if ($p !== '') $initials .= mb_strtoupper(mb_substr($p, 0, 1));
+                        }
+                    }
+                    if ($initials === '') $initials = '?';
+                    return '<div class="customer-cell">'
+                         . '<div class="customer-avatar">' . $initials . '</div>'
+                         . '<div class="customer-meta">'
+                         .   '<span class="customer-name">' . $name . '</span>'
+                         .   '<span class="customer-id">ID: ' . $uid . '</span>'
+                         . '</div>'
+                         . '</div>';
+                })
+                ->addColumn('address', function ($client) {
+                    $addr = $client->address ?? '-';
+                    $short = mb_strlen($addr) > 60 ? e(mb_strimwidth($addr, 0, 60, '…')) : e($addr);
+                    return '<span class="address-cell" title="' . e($addr) . '"><i class="fas fa-map-marker-alt text-muted me-1"></i>' . $short . '</span>';
+                })
                 ->addColumn('total_due', function ($client) {
                     try {
                         $due = DB::table('due_bills')
@@ -686,11 +719,12 @@ EOT;
                     if ($client->cable_returned) {
                         $date = $client->cable_returned_at
                             ? \Carbon\Carbon::parse($client->cable_returned_at)->setTimezone('Asia/Dhaka')->format('d-m-Y')
-                            : '-';
-                        return '<span class="badge bg-success bg-gradient px-2 py-1" style="font-size:0.78rem;"><i class="fa fa-check-circle me-1"></i> Returned' . ($client->cable_returned_at ? '<small class="d-block mt-1 opacity-75" style="font-size:0.65rem;">' . $date . '</small>' : '') . '</span>';
+                            : '';
+                        $sub = $date ? '<small class="d-block opacity-75 mt-1" style="font-size:0.65rem; font-weight:500;">' . $date . '</small>' : '';
+                        return '<span class="status-pill status-returned"><span class="dot"></span> Returned' . $sub . '</span>';
                     }
                     $reason = $client->cable_return_reason ? e(mb_strimwidth($client->cable_return_reason, 0, 30, '…')) : 'Not yet returned';
-                    return '<span class="badge bg-danger bg-gradient px-2 py-1" style="font-size:0.78rem;"><i class="fa fa-times-circle me-1"></i> ' . e($reason) . '</span>';
+                    return '<span class="status-pill status-pending" title="' . e($client->cable_return_reason ?? 'Not yet returned') . '"><span class="dot"></span> ' . $reason . '</span>';
                 })
                 ->addColumn('cable_action', function ($client) {
                     $id = $client->id;
@@ -698,25 +732,24 @@ EOT;
                     $returned = $client->cable_returned ? 1 : 0;
                     $reason = addslashes($client->cable_return_reason ?? '');
 
-                    $btn = '<div class="btn-group btn-group-sm" role="group">';
                     if ($client->cable_returned) {
-                        $btn .= '<button type="button" class="btn btn-sm btn-outline-danger" title="Mark as Not Returned" onclick="quickToggleReturn(' . $id . ', \'cable\', 0, \'' . $name . '\')"><i class="fas fa-undo"></i> Not Returned</button>';
+                        $toggleBtn = '<button type="button" class="btn-icon btn-danger-icon" title="Mark as Not Returned" onclick="quickToggleReturn(' . $id . ', \'cable\', 0, \'' . $name . '\')"><i class="fas fa-undo"></i></button>';
                     } else {
-                        $btn .= '<button type="button" class="btn btn-sm btn-outline-success" title="Mark as Returned" onclick="quickToggleReturn(' . $id . ', \'cable\', 1, \'' . $name . '\')"><i class="fas fa-check"></i> Returned</button>';
+                        $toggleBtn = '<button type="button" class="btn-icon btn-success-icon" title="Mark as Returned" onclick="quickToggleReturn(' . $id . ', \'cable\', 1, \'' . $name . '\')"><i class="fas fa-check"></i></button>';
                     }
-                    $btn .= '<button type="button" class="btn btn-sm btn-outline-info" title="Manage Cable Return Details" onclick="openCableReturnModal(' . $id . ', \'' . $name . '\', ' . $returned . ', \'' . $reason . '\')"><i class="fas fa-cog"></i></button>';
-                    $btn .= '</div>';
-                    return $btn;
+                    $manageBtn = '<button type="button" class="btn-icon btn-info-icon" title="Manage Cable Return" onclick="openCableReturnModal(' . $id . ', \'' . $name . '\', ' . $returned . ', \'' . $reason . '\')"><i class="fas fa-cog"></i></button>';
+                    return '<div class="action-stack">' . $toggleBtn . $manageBtn . '</div>';
                 })
                 ->addColumn('onu_status', function ($client) {
                     if ($client->onu_returned) {
                         $date = $client->onu_returned_at
                             ? \Carbon\Carbon::parse($client->onu_returned_at)->setTimezone('Asia/Dhaka')->format('d-m-Y')
-                            : '-';
-                        return '<span class="badge bg-success bg-gradient px-2 py-1" style="font-size:0.78rem;"><i class="fa fa-check-circle me-1"></i> Returned' . ($client->onu_returned_at ? '<small class="d-block mt-1 opacity-75" style="font-size:0.65rem;">' . $date . '</small>' : '') . '</span>';
+                            : '';
+                        $sub = $date ? '<small class="d-block opacity-75 mt-1" style="font-size:0.65rem; font-weight:500;">' . $date . '</small>' : '';
+                        return '<span class="status-pill status-returned"><span class="dot"></span> Returned' . $sub . '</span>';
                     }
                     $reason = $client->onu_return_reason ? e(mb_strimwidth($client->onu_return_reason, 0, 30, '…')) : 'Not yet returned';
-                    return '<span class="badge bg-warning bg-gradient px-2 py-1" style="font-size:0.78rem; color:#000;"><i class="fa fa-times-circle me-1"></i> ' . e($reason) . '</span>';
+                    return '<span class="status-pill status-pending" title="' . e($client->onu_return_reason ?? 'Not yet returned') . '"><span class="dot"></span> ' . $reason . '</span>';
                 })
                 ->addColumn('onu_action', function ($client) {
                     $id = $client->id;
@@ -724,15 +757,13 @@ EOT;
                     $returned = $client->onu_returned ? 1 : 0;
                     $reason = addslashes($client->onu_return_reason ?? '');
 
-                    $btn = '<div class="btn-group btn-group-sm" role="group">';
                     if ($client->onu_returned) {
-                        $btn .= '<button type="button" class="btn btn-sm btn-outline-danger" title="Mark ONU as Not Returned" onclick="quickToggleReturn(' . $id . ', \'onu\', 0, \'' . $name . '\')"><i class="fas fa-undo"></i> Not Returned</button>';
+                        $toggleBtn = '<button type="button" class="btn-icon btn-danger-icon" title="Mark ONU as Not Returned" onclick="quickToggleReturn(' . $id . ', \'onu\', 0, \'' . $name . '\')"><i class="fas fa-undo"></i></button>';
                     } else {
-                        $btn .= '<button type="button" class="btn btn-sm btn-outline-success" title="Mark ONU as Returned" onclick="quickToggleReturn(' . $id . ', \'onu\', 1, \'' . $name . '\')"><i class="fas fa-check"></i> Returned</button>';
+                        $toggleBtn = '<button type="button" class="btn-icon btn-success-icon" title="Mark ONU as Returned" onclick="quickToggleReturn(' . $id . ', \'onu\', 1, \'' . $name . '\')"><i class="fas fa-check"></i></button>';
                     }
-                    $btn .= '<button type="button" class="btn btn-sm btn-outline-warning" title="Manage ONU Return Details" onclick="openOnuReturnModal(' . $id . ', \'' . $name . '\', ' . $returned . ', \'' . $reason . '\')"><i class="fas fa-cog"></i></button>';
-                    $btn .= '</div>';
-                    return $btn;
+                    $manageBtn = '<button type="button" class="btn-icon btn-warning-icon" title="Manage ONU Return" onclick="openOnuReturnModal(' . $id . ', \'' . $name . '\', ' . $returned . ', \'' . $reason . '\')"><i class="fas fa-cog"></i></button>';
+                    return '<div class="action-stack">' . $toggleBtn . $manageBtn . '</div>';
                 })
                 ->addColumn('closed_at_formatted', function ($client) {
                     if (!$client->closed_at) return '-';
@@ -743,16 +774,30 @@ EOT;
                     $editUrl = route('clients.edit', $client->id);
                     $viewUrl = route('clients.show', $client->id);
 
-                    $btn = <<<EOT
-                    <div class="btn-group btn-group-sm" role="group">
-                        <a href="{$editUrl}" class="btn btn-sm btn-warning" title="Edit Client"><i class="fa fa-edit"></i></a>
-                        <a href="{$viewUrl}" class="btn btn-sm btn-info text-white" title="View Profile"><i class="fa fa-eye"></i></a>
-                        <button type="button" class="btn btn-sm btn-success" title="Remove from Closed List" onclick="removeFromClosedList({$client->id}, '{$name}')"><i class="fa fa-user-check"></i></button>
-                    </div>
-                    EOT;
+                    $copyPayload = [
+                        'name'      => $client->name,
+                        'username'  => $client->username,
+                        'contact'   => $client->contact,
+                        'address'   => $client->address,
+                        'isp'       => $client->isp_code,
+                        'package'   => $client->package_name ?? null,
+                        'onu_brand' => $client->onu_brand,
+                        'onu_serial'=> $client->onu_serial,
+                        'onu_mac'   => $client->Onu_mac,
+                        'cable'     => $client->cable,
+                        'closed_at' => $client->closed_at,
+                    ];
+                    $copyJson = json_encode($copyPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                    $btn = '<div class="action-stack">'
+                         . '<button type="button" class="btn-icon btn-copy-icon" title="Copy details for technician" onclick="copyClientDetails(' . $client->id . ')"><i class="fas fa-copy"></i></button>'
+                         . '<a href="' . $editUrl . '" class="btn-icon btn-warning-icon" title="Edit Client"><i class="fas fa-edit"></i></a>'
+                         . '<a href="' . $viewUrl . '" class="btn-icon btn-info-icon" title="View Profile"><i class="fas fa-eye"></i></a>'
+                         . '<button type="button" class="btn-icon btn-success-icon" title="Restore / Remove from Closed List" onclick="removeFromClosedList(' . $client->id . ', \'' . $name . '\')"><i class="fas fa-user-check"></i></button>'
+                         . '</div>';
                     return $btn;
                 })
-                ->rawColumns(['total_due', 'cable_status', 'onu_status', 'cable_action', 'onu_action', 'closed_at_formatted', 'action'])
+                ->rawColumns(['customer', 'address', 'total_due', 'cable_status', 'onu_status', 'cable_action', 'onu_action', 'closed_at_formatted', 'action'])
                 ->editColumn('isp_code', function ($row) {
                     return ucfirst($row->isp_code);
                 })
@@ -839,6 +884,39 @@ EOT;
                 : 'Cable return status updated. Cable marked as not returned.',
             'cable_return_status' => $client->fresh()->cable_return_status,
         ]);
+    }
+
+    /**
+     * Get a copy-friendly details payload for a closed client.
+     */
+    public function getClientDetails(Request $request, $clientId)
+    {
+        $client = Client::findOrFail($clientId);
+
+        $cableStatus  = $client->cable_returned ? 'Returned' : ($client->cable_return_reason ? 'Not Returned (' . $client->cable_return_reason . ')' : 'Not Returned');
+        $onuStatus    = $client->onu_returned ? 'Returned' : ($client->onu_return_reason ? 'Not Returned (' . $client->onu_return_reason . ')' : 'Not Returned');
+
+        $payload = [
+            'name'             => $client->name,
+            'username'         => $client->username,
+            'contact'          => $client->contact,
+            'secondary_contact'=> $client->secondary_contact,
+            'email'            => $client->email,
+            'address'          => $client->address,
+            'isp'              => strtoupper($client->isp_code ?? ''),
+            'package'          => $client->package_name ?? null,
+            'gps_location'     => $client->gps_location,
+            'onu_brand'        => $client->onu_brand,
+            'onu_serial'       => $client->onu_serial,
+            'onu_mac'          => $client->Onu_mac,
+            'onu_owner'        => $client->onu_owner,
+            'cable_owner'      => $client->cable_owner,
+            'cable_status'     => $cableStatus,
+            'onu_status'       => $onuStatus,
+            'closed_at'        => $client->closed_at ? \Carbon\Carbon::parse($client->closed_at)->setTimezone('Asia/Dhaka')->format('d-m-Y H:i') : null,
+        ];
+
+        return response()->json(['success' => true, 'data' => $payload]);
     }
 
     /**
