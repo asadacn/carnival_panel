@@ -51,6 +51,8 @@ class ClientController extends AppBaseController
                               $sub->whereNotNull('expiration')->where('expiration', '<', now());
                           });
                     });
+                } elseif ($status === 'Closed') {
+                    $data->whereNotNull('closed_at');
                 } else {
                     $data->where('status', $status);
                 }
@@ -120,6 +122,10 @@ class ClientController extends AppBaseController
                         ? "<span class=\"badge rounded-pill bg-primary\" style=\"font-size:0.68rem; padding: 2px 6px;\">$commentCount</span>"
                         : '';
 
+                    $closedAction = !$client->closed_at
+                        ? '<li><a class="dropdown-item py-2 text-warning fw-semibold" href="#" onclick="addToClosedList(' . $client->id . ', \'' . $name . '\')"><i class="fas fa-user-slash me-2"></i> Add to Closed List</a></li>'
+                        : '<li><a class="dropdown-item py-2 text-success fw-semibold" href="#" onclick="removeFromClosedList(' . $client->id . ', \'' . $name . '\')"><i class="fas fa-user-check me-2"></i> Remove from Closed List</a></li>';
+
                     $btn = <<<EOT
                     <div class="btn-group btn-group-sm" role="group" style="position: relative;">
                         <a href="{$editUrl}" class="btn btn-sm border-0 px-2" title="Edit Client" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background:#fffbebf0; color:#d97706; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbebf0'">
@@ -174,6 +180,7 @@ class ClientController extends AppBaseController
                                     <i class="fas fa-ticket-alt me-2" style="color:#8b5cf6;"></i> <span style="color:#8b5cf6;">Open Ticket</span>
                                 </a>
                             </li>
+                            {$closedAction}
                             <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <a class="dropdown-item py-2 text-danger fw-semibold" href="#" onclick="deleteClient({$client->id})" data-id="{$client->id}">
@@ -243,6 +250,7 @@ EOT;
 
         $ActiveClientsCount        = Client::where('status', 'Active')->count();
         $expiredClientsCount       = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
+        $closedClientsCount        = Client::closed()->count();
         $freeOnuClientsCount       = Client::where('onu_free', 1)->count();
         $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
 
@@ -272,6 +280,7 @@ EOT;
             'templates',
             'ActiveClientsCount',
             'expiredClientsCount',
+            'closedClientsCount',
             'freeOnuClientsCount',
             'cableReturnedClientsCount',
             'totalDueAmount',
@@ -403,7 +412,10 @@ EOT;
             return redirect(route('clients.index'));
         }
 
-        return view('clients.show')->with('client', $client);
+        $client->loadCount('comments');
+        $templates = SMS_TEMPALTE::all();
+
+        return view('clients.show', compact('client', 'templates'));
     }
 
     /**
@@ -620,5 +632,246 @@ EOT;
         Client::query()->truncate();
         Flash::success('Truncate Successful');
         return back();
+    }
+
+    /**
+     * Display the Closed Clients cable return management page.
+     */
+    public function closed(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = Client::closed()
+                ->withCount('comments')
+                ->with('latestComment');
+
+            if ($request->filled('isp_filter')) {
+                $data->where('isp_code', strtolower($request->isp_filter));
+            }
+
+            if ($request->filled('cable_filter')) {
+                if ($request->cable_filter === 'returned') {
+                    $data->where('cable_returned', 1);
+                } elseif ($request->cable_filter === 'not_returned') {
+                    $data->where('cable_returned', 0)->where('cable_owner', 'company');
+                }
+            }
+
+            if ($request->filled('onu_filter')) {
+                if ($request->onu_filter === 'returned') {
+                    $data->where('onu_returned', 1);
+                } elseif ($request->onu_filter === 'not_returned') {
+                    $data->where('onu_returned', 0)->where('onu_owner', 'company');
+                }
+            }
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('total_due', function ($client) {
+                    try {
+                        $due = DB::table('due_bills')
+                            ->where('client_id', $client->id)
+                            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                            ->selectRaw('SUM(amount - paid_amount) as total')
+                            ->value('total') ?? 0;
+
+                        if ($due > 0) {
+                            return '<span class="badge bg-danger" style="font-size: 0.85rem;">৳ ' . number_format($due, 0) . '</span>';
+                        }
+                        return '<span class="badge bg-success" style="font-size: 0.85rem;">✓ Paid</span>';
+                    } catch (\Exception $e) {
+                        return '-';
+                    }
+                })
+                ->addColumn('cable_status', function ($client) {
+                    if ($client->cable_returned) {
+                        $date = $client->cable_returned_at
+                            ? \Carbon\Carbon::parse($client->cable_returned_at)->setTimezone('Asia/Dhaka')->format('d-m-Y')
+                            : '-';
+                        return '<span class="badge bg-success bg-gradient px-2 py-1" style="font-size:0.78rem;"><i class="fa fa-check-circle me-1"></i> Returned' . ($client->cable_returned_at ? '<small class="d-block mt-1 opacity-75" style="font-size:0.65rem;">' . $date . '</small>' : '') . '</span>';
+                    }
+                    $reason = $client->cable_return_reason ? e(mb_strimwidth($client->cable_return_reason, 0, 30, '…')) : 'Not yet returned';
+                    return '<span class="badge bg-danger bg-gradient px-2 py-1" style="font-size:0.78rem;"><i class="fa fa-times-circle me-1"></i> ' . e($reason) . '</span>';
+                })
+                ->addColumn('cable_action', function ($client) {
+                    $id = $client->id;
+                    $name = addslashes($client->name);
+                    $returned = $client->cable_returned ? 1 : 0;
+                    $reason = addslashes($client->cable_return_reason ?? '');
+
+                    $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    if ($client->cable_returned) {
+                        $btn .= '<button type="button" class="btn btn-sm btn-outline-danger" title="Mark as Not Returned" onclick="quickToggleReturn(' . $id . ', \'cable\', 0, \'' . $name . '\')"><i class="fas fa-undo"></i> Not Returned</button>';
+                    } else {
+                        $btn .= '<button type="button" class="btn btn-sm btn-outline-success" title="Mark as Returned" onclick="quickToggleReturn(' . $id . ', \'cable\', 1, \'' . $name . '\')"><i class="fas fa-check"></i> Returned</button>';
+                    }
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-info" title="Manage Cable Return Details" onclick="openCableReturnModal(' . $id . ', \'' . $name . '\', ' . $returned . ', \'' . $reason . '\')"><i class="fas fa-cog"></i></button>';
+                    $btn .= '</div>';
+                    return $btn;
+                })
+                ->addColumn('onu_status', function ($client) {
+                    if ($client->onu_returned) {
+                        $date = $client->onu_returned_at
+                            ? \Carbon\Carbon::parse($client->onu_returned_at)->setTimezone('Asia/Dhaka')->format('d-m-Y')
+                            : '-';
+                        return '<span class="badge bg-success bg-gradient px-2 py-1" style="font-size:0.78rem;"><i class="fa fa-check-circle me-1"></i> Returned' . ($client->onu_returned_at ? '<small class="d-block mt-1 opacity-75" style="font-size:0.65rem;">' . $date . '</small>' : '') . '</span>';
+                    }
+                    $reason = $client->onu_return_reason ? e(mb_strimwidth($client->onu_return_reason, 0, 30, '…')) : 'Not yet returned';
+                    return '<span class="badge bg-warning bg-gradient px-2 py-1" style="font-size:0.78rem; color:#000;"><i class="fa fa-times-circle me-1"></i> ' . e($reason) . '</span>';
+                })
+                ->addColumn('onu_action', function ($client) {
+                    $id = $client->id;
+                    $name = addslashes($client->name);
+                    $returned = $client->onu_returned ? 1 : 0;
+                    $reason = addslashes($client->onu_return_reason ?? '');
+
+                    $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    if ($client->onu_returned) {
+                        $btn .= '<button type="button" class="btn btn-sm btn-outline-danger" title="Mark ONU as Not Returned" onclick="quickToggleReturn(' . $id . ', \'onu\', 0, \'' . $name . '\')"><i class="fas fa-undo"></i> Not Returned</button>';
+                    } else {
+                        $btn .= '<button type="button" class="btn btn-sm btn-outline-success" title="Mark ONU as Returned" onclick="quickToggleReturn(' . $id . ', \'onu\', 1, \'' . $name . '\')"><i class="fas fa-check"></i> Returned</button>';
+                    }
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-warning" title="Manage ONU Return Details" onclick="openOnuReturnModal(' . $id . ', \'' . $name . '\', ' . $returned . ', \'' . $reason . '\')"><i class="fas fa-cog"></i></button>';
+                    $btn .= '</div>';
+                    return $btn;
+                })
+                ->addColumn('closed_at_formatted', function ($client) {
+                    if (!$client->closed_at) return '-';
+                    return \Carbon\Carbon::parse($client->closed_at)->setTimezone('Asia/Dhaka')->format('d-m-Y H:i');
+                })
+                ->addColumn('action', function ($client) {
+                    $name = addslashes($client->name);
+                    $editUrl = route('clients.edit', $client->id);
+                    $viewUrl = route('clients.show', $client->id);
+
+                    $btn = <<<EOT
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{$editUrl}" class="btn btn-sm btn-warning" title="Edit Client"><i class="fa fa-edit"></i></a>
+                        <a href="{$viewUrl}" class="btn btn-sm btn-info text-white" title="View Profile"><i class="fa fa-eye"></i></a>
+                        <button type="button" class="btn btn-sm btn-success" title="Remove from Closed List" onclick="removeFromClosedList({$client->id}, '{$name}')"><i class="fa fa-user-check"></i></button>
+                    </div>
+                    EOT;
+                    return $btn;
+                })
+                ->rawColumns(['total_due', 'cable_status', 'onu_status', 'cable_action', 'onu_action', 'closed_at_formatted', 'action'])
+                ->editColumn('isp_code', function ($row) {
+                    return ucfirst($row->isp_code);
+                })
+                ->make(true);
+        }
+
+        $totalClosed = Client::closed()->count();
+        $cableReturnedCount = Client::closed()->where('cable_returned', 1)->count();
+        $cablePendingCount = Client::closed()->where('cable_returned', 0)->where('cable_owner', 'company')->count();
+        $onuReturnedCount = Client::closed()->where('onu_returned', 1)->count();
+        $onuPendingCount = Client::closed()->where('onu_returned', 0)->where('onu_owner', 'company')->count();
+
+        return view('clients.closed', compact(
+            'totalClosed',
+            'cableReturnedCount',
+            'cablePendingCount',
+            'onuReturnedCount',
+            'onuPendingCount'
+        ));
+    }
+
+    /**
+     * Add a client to the closed list (AJAX).
+     */
+    public function addToClosedList(Request $request, $clientId)
+    {
+        $client = Client::findOrFail($clientId);
+
+        $client->update(['closed_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Client added to the closed list.',
+            'client_id' => $client->id,
+            'closed_at' => $client->closed_at->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    /**
+     * Remove a client from the closed list (AJAX).
+     */
+    public function removeFromClosedList(Request $request, $clientId)
+    {
+        $client = Client::findOrFail($clientId);
+
+        $client->update(['closed_at' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Client removed from the closed list.',
+            'client_id' => $client->id,
+        ]);
+    }
+
+    /**
+     * Update cable return status for a closed client (AJAX).
+     */
+    public function updateCableReturn(Request $request, $clientId)
+    {
+        $client = Client::findOrFail($clientId);
+
+        $request->validate([
+            'cable_returned' => 'required|boolean',
+            'cable_return_reason' => 'nullable|string|max:500',
+        ]);
+
+        $data = [
+            'cable_returned' => (bool) $request->cable_returned,
+            'cable_return_reason' => $request->cable_return_reason,
+        ];
+
+        if ($data['cable_returned']) {
+            $data['cable_returned_at'] = $request->cable_returned_at ?: now();
+        } else {
+            $data['cable_returned_at'] = null;
+        }
+
+        $client->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => $data['cable_returned']
+                ? 'Cable return status updated. Cable marked as returned.'
+                : 'Cable return status updated. Cable marked as not returned.',
+            'cable_return_status' => $client->fresh()->cable_return_status,
+        ]);
+    }
+
+    /**
+     * Update ONU return status for a closed client (AJAX).
+     */
+    public function updateOnuReturn(Request $request, $clientId)
+    {
+        $client = Client::findOrFail($clientId);
+
+        $request->validate([
+            'onu_returned' => 'required|boolean',
+            'onu_return_reason' => 'nullable|string|max:500',
+        ]);
+
+        $data = [
+            'onu_returned' => (bool) $request->onu_returned,
+            'onu_return_reason' => $request->onu_return_reason,
+        ];
+
+        if ($data['onu_returned']) {
+            $data['onu_returned_at'] = $request->onu_returned_at ?: now();
+        } else {
+            $data['onu_returned_at'] = null;
+        }
+
+        $client->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => $data['onu_returned']
+                ? 'ONU return status updated. ONU marked as returned.'
+                : 'ONU return status updated. ONU marked as not returned.',
+            'onu_return_status' => $client->fresh()->onu_return_status,
+        ]);
     }
 }

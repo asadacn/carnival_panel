@@ -121,9 +121,29 @@
                     {!! Form::label('status', __('models/clients.fields.status').':', ['class' => 'form-label']) !!}
                     {!! Form::select('status', ['Active' => 'Active', 'Expired' => 'Expired'], null, ['class' => 'form-select']) !!}
                 </div>
-                <div class="col-12 mt-3">
+                <div class="col-md-6">
                     {!! Form::label('comment', __('models/clients.fields.comment').':', ['class' => 'form-label']) !!}
                     {!! Form::textarea('comment', null, ['class' => 'form-control', 'rows' => 3, 'placeholder' => 'Any additional comments']) !!}
+                </div>
+                <div class="col-md-3">
+                    {!! Form::label('closed_at', __('models/clients.fields.closed_at').':', ['class' => 'form-label']) !!}
+                    {!! Form::datetime('closed_at', null, ['class' => 'form-control', 'placeholder' => 'Client closed date']) !!}
+                </div>
+                <div class="col-md-3">
+                    {!! Form::label('cable_returned_at', __('models/clients.fields.cable_returned_at').':', ['class' => 'form-label']) !!}
+                    {!! Form::datetime('cable_returned_at', null, ['class' => 'form-control', 'placeholder' => 'Cable returned date']) !!}
+                </div>
+                <div class="col-12 mt-3">
+                    {!! Form::label('cable_return_reason', __('models/clients.fields.cable_return_reason').':', ['class' => 'form-label']) !!}
+                    {!! Form::text('cable_return_reason', null, ['class' => 'form-control', 'placeholder' => 'Reason for cable return / non-return']) !!}
+                </div>
+                <div class="col-md-3">
+                    {!! Form::label('onu_returned_at', __('models/clients.fields.onu_returned_at').':', ['class' => 'form-label']) !!}
+                    {!! Form::datetime('onu_returned_at', null, ['class' => 'form-control', 'placeholder' => 'ONU returned date']) !!}
+                </div>
+                <div class="col-md-9 mt-4 mt-md-0">
+                    {!! Form::label('onu_return_reason', __('models/clients.fields.onu_return_reason').':', ['class' => 'form-label']) !!}
+                    {!! Form::text('onu_return_reason', null, ['class' => 'form-control', 'placeholder' => 'Reason for ONU return / non-return']) !!}
                 </div>
             </div>
         </div>

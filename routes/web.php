@@ -41,6 +41,8 @@ Route::get('ajax/clients/{clientId}/bills', [App\Http\Controllers\DueBillControl
 // ISP Statistics API
 Route::get('clients/stats/isp', [ClientController::class, 'getIspStatistics'])->name('clients.isp.stats');
 
+// Closed Clients Cable Return Management (must be before resource)
+Route::get('clients/closed', [ClientController::class, 'closed'])->name('clients.closed');
 Route::resource('clients', ClientController::class);
 //Clients Import Export
 Route::get('client/export/', [ClientController::class, 'export'])->name('clients.export');
@@ -51,6 +53,12 @@ Route::post('client/erase/', [ClientController::class, 'erase'])->name('clients.
 // Get client package price
 Route::get('clients/{clientId}/package-price', [ClientController::class, 'getPackagePrice'])->name('clients.package-price');
 Route::post('clients/bulk-bill-info', [ClientController::class, 'getBulkBillInfo'])->name('clients.bulk-bill-info');
+
+// Closed Clients Cable Return Management AJAX endpoints
+Route::post('clients/{clientId}/close', [ClientController::class, 'addToClosedList'])->name('clients.addToClosedList');
+Route::post('clients/{clientId}/unclose', [ClientController::class, 'removeFromClosedList'])->name('clients.removeFromClosedList');
+Route::post('clients/{clientId}/cable-return', [ClientController::class, 'updateCableReturn'])->name('clients.updateCableReturn');
+Route::post('clients/{clientId}/onu-return', [ClientController::class, 'updateOnuReturn'])->name('clients.updateOnuReturn');
 
 // Client Comments (social-media style)
 Route::get('clients/{clientId}/comments', [ClientCommentController::class, 'index'])->name('clients.comments.index');

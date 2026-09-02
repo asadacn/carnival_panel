@@ -14,9 +14,12 @@
                     <span class="badge font-weight-bold" style="background:#e0edff; color:#1e40af; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
                         <i class="fas fa-user-check me-1"></i> {{ $ActiveClientsCount }} Active
                     </span>
-                    <span class="badge font-weight-bold" style="background:#fde8e8; color:#991b1b; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
-                        <i class="fas fa-user-clock me-1"></i> {{ $expiredClientsCount }} Expired
-                    </span>
+                     <span class="badge font-weight-bold" style="background:#fde8e8; color:#991b1b; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
+                         <i class="fas fa-user-clock me-1"></i> {{ $expiredClientsCount }} Expired
+                     </span>
+                     <span class="badge font-weight-bold" style="background:#e0f2fe; color:#0c4a6d; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
+                         <i class="fas fa-user-slash me-1"></i> {{ $closedClientsCount }} Closed
+                     </span>
                     @if($unpaidBillsCount > 0)
                         <span class="badge font-weight-bold" style="background:#fff3cd; color:#856404; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
                             <i class="fas fa-exclamation-circle me-1"></i> {{ $unpaidBillsCount }} Unpaid Bills (৳{{ number_format($totalDueAmount, 0) }})
@@ -75,6 +78,15 @@
                         <div class="card-wrap">
                             <div class="card-header"><h4>Expired Clients</h4></div>
                             <div class="card-body"><span class="mini-stat-number">{{ $expiredClientsCount }}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
+                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients added to the closed list for cable return management">
+                        <div class="card-icon bg-secondary mini-icon"><i class="fas fa-user-slash"></i></div>
+                        <div class="card-wrap">
+                            <div class="card-header"><h4>Closed Clients</h4></div>
+                            <div class="card-body"><span class="mini-stat-number">{{ $closedClientsCount }}</span></div>
                         </div>
                     </div>
                 </div>
@@ -184,6 +196,9 @@
                     </button>
                     <button type="button" class="btn btn-xs chip-btn" data-filter-type="status" data-filter-value="Expired">
                         <i class="fas fa-clock text-danger"></i> Expired
+                    </button>
+                    <button type="button" class="btn btn-xs chip-btn" data-filter-type="status" data-filter-value="Closed">
+                        <i class="fas fa-user-slash text-secondary"></i> Closed
                     </button>
                     <button type="button" class="btn btn-xs chip-btn" data-filter-type="due" data-filter-value="has_due">
                         <i class="fas fa-exclamation-triangle text-warning"></i> Has Unpaid Due
@@ -3033,6 +3048,93 @@
             if (e.ctrlKey && e.key === 'Enter') submitComment();
         });
         // ========== END SOCIAL COMMENT MODAL ==========
+
+        // ========== CLOSED CLIENTS CABLE RETURN INTEGRATION ==========
+        window.addToClosedList = function(clientId, clientName) {
+            Swal.fire({
+                title: 'Close Client?',
+                text: '"' + clientName + '" will be added to the closed clients list for cable return management.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Close Client',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc2626',
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.showLoading();
+
+                $.ajax({
+                    url: '{{ url("clients") }}/' + clientId + '/close',
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function(res) {
+                        Swal.hideLoading();
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Client Closed!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false,
+                            }).then(() => {
+                                window.location.href = "{{ route('clients.closed') }}";
+                            });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Could not close client' });
+                        }
+                    },
+                    error: function() {
+                        Swal.hideLoading();
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Server error. Please try again.' });
+                    }
+                });
+            });
+        };
+
+        window.removeFromClosedList = function(clientId, clientName) {
+            Swal.fire({
+                title: 'Remove from Closed List?',
+                text: '"' + clientName + '" will be removed from the closed clients list.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Remove',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#6563f1',
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                Swal.showLoading();
+
+                $.ajax({
+                    url: '{{ url("clients") }}/' + clientId + '/unclose',
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function(res) {
+                        Swal.hideLoading();
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Removed!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false,
+                                toast: true,
+                                position: 'top-end',
+                            });
+                            $('#clients').DataTable().ajax.reload(null, false);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Could not remove client' });
+                        }
+                    },
+                    error: function() {
+                        Swal.hideLoading();
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Server error. Please try again.' });
+                    }
+                });
+            });
+        };
+        // ========== END CLOSED CLIENTS INTEGRATION ==========
 
         // Robust copy to clipboard function
         function copyCustomerId(text) {

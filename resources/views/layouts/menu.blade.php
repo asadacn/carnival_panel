@@ -68,8 +68,12 @@
             </a>
         </li>
 
-        <li class="menu-item-featured {{ Request::is('clients*') ? 'active' : '' }}">
+        <li class="menu-item-featured {{ Request::is('clients') || Request::is('clients/*') && !Request::is('clients/closed*') ? 'active' : '' }}">
             <a href="{{ route('clients.index') }}"><i class="fa fa-users"></i><span>@lang('models/clients.plural')</span></a>
+        </li>
+
+        <li class="menu-item-featured {{ Request::is('clients/closed*') ? 'active' : '' }}">
+            <a href="{{ route('clients.closed') }}"><i class="fas fa-user-slash"></i><span>Closed Clients</span></a>
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('due-bills*', 'due-bill-payments*') ? 'active' : '' }}">

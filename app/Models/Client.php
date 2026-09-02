@@ -14,7 +14,7 @@ class Client extends Model
 
     protected $table = 'clients';
 
-    protected $dates = ['deleted_at', 'expiration'];
+    protected $dates = ['deleted_at', 'expiration', 'closed_at', 'cable_returned_at', 'onu_returned_at'];
 
     protected $fillable = [
         'name',
@@ -40,6 +40,11 @@ class Client extends Model
         'expiration',
         'status',
         'comment',
+        'closed_at',
+        'cable_returned_at',
+        'cable_return_reason',
+        'onu_returned_at',
+        'onu_return_reason',
     ];
 
     protected $casts = [
@@ -66,6 +71,11 @@ class Client extends Model
         'expiration'        => 'datetime',
         'status'            => 'string',
         'comment'           => 'string',
+        'closed_at'         => 'datetime',
+        'cable_returned_at' => 'datetime',
+        'cable_return_reason' => 'string',
+        'onu_returned_at'   => 'datetime',
+        'onu_return_reason'  => 'string',
     ];
 
     public static $rules = [
@@ -92,6 +102,11 @@ class Client extends Model
         'expiration'        => 'nullable|date',
         'status'            => 'required|in:Registered,Active,Expired',
         'comment'           => 'nullable|string|max:500',
+        'closed_at'         => 'nullable|date',
+        'cable_returned_at' => 'nullable|date',
+        'cable_return_reason' => 'nullable|string',
+        'onu_returned_at'   => 'nullable|date',
+        'onu_return_reason'  => 'nullable|string',
     ];
 
     // ── Scopes ────────────────────────────────────────────────────────────────
@@ -120,10 +135,22 @@ class Client extends Model
         return $query->where('status', 'Registered');
     }
 
-    /** Clients expiring within N days: Client::expiringWithin(7)->get() */
+    /** Client::expiringWithin(7)->get() */
     public function scopeExpiringWithin($query, int $days)
     {
         return $query->whereBetween('expiration', [now(), now()->addDays($days)]);
+    }
+
+    /** Client::closed()->get() — clients added to the closed list */
+    public function scopeClosed($query)
+    {
+        return $query->whereNotNull('closed_at');
+    }
+
+    /** Client::notClosed()->get() */
+    public function scopeNotClosed($query)
+    {
+        return $query->whereNull('closed_at');
     }
 
     // ── Accessors ─────────────────────────────────────────────────────────────
@@ -150,6 +177,36 @@ class Client extends Model
         return $this->expiration
             && !$this->expiration->isPast()
             && $this->expiration->diffInDays(now()) <= 7;
+    }
+
+    /**
+     * Cable return summary string, e.g. "Returned on 25-12-2025"
+     */
+    public function getCableReturnStatusAttribute(): string
+    {
+        if ($this->cable_returned) {
+            if ($this->cable_returned_at) {
+                $date = \Carbon\Carbon::parse($this->cable_returned_at)->setTimezone('Asia/Dhaka');
+                return 'Returned on ' . $date->format('d-m-Y');
+            }
+            return 'Returned';
+        }
+        return $this->cable_return_reason ? 'Not Returned (' . $this->cable_return_reason . ')' : 'Not Returned';
+    }
+
+    /**
+     * ONU return summary string
+     */
+    public function getOnuReturnStatusAttribute(): string
+    {
+        if ($this->onu_returned) {
+            if ($this->onu_returned_at) {
+                $date = \Carbon\Carbon::parse($this->onu_returned_at)->setTimezone('Asia/Dhaka');
+                return 'Returned on ' . $date->format('d-m-Y');
+            }
+            return 'Returned';
+        }
+        return $this->onu_return_reason ? 'Not Returned (' . $this->onu_return_reason . ')' : 'Not Returned';
     }
 
     // ── Comment Relationships ─────────────────────────────────────────────────
