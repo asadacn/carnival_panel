@@ -3170,6 +3170,64 @@
                 $temp.remove();
             }
         }
+
+        window.copyClientDetails = function(clientId) {
+            $.ajax({
+                url: "{{ url('clients') }}/" + clientId + "/details",
+                type: 'GET',
+                success: function(res) {
+                    if (!res || !res.success || !res.data) {
+                        Swal.fire({ icon: 'error', title: 'Failed', text: 'Could not load client details.' });
+                        return;
+                    }
+                    const d = res.data;
+                    const text =
+                        'ID       : ' + (d.username || '-') + '\n' +
+                        'Name     : ' + (d.name || '-') + '\n' +
+                        'Contact  : ' + (d.contact || '-') + '\n' +
+                        'Address  : ' + (d.address || '-') + '\n' +
+                        'ISP      : ' + (d.isp || '-');
+
+                    const showCopied = () => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Copied!',
+                            text: 'Client details copied to clipboard. Paste it anywhere (WhatsApp, SMS, email).',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end',
+                        });
+                    };
+
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(text).then(showCopied).catch(() => fallbackCopy(text, showCopied));
+                    } else {
+                        fallbackCopy(text, showCopied);
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load client details.' });
+                }
+            });
+        };
+
+        function fallbackCopy(text, onSuccess) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity  = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                document.execCommand('copy');
+                onSuccess && onSuccess();
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Copy failed', text: 'Please copy manually from the client profile.' });
+            }
+            document.body.removeChild(ta);
+        }
     </script>
 
 @endsection

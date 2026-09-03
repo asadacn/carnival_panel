@@ -427,6 +427,8 @@
         .btn-icon.btn-danger-icon:hover  { background: rgba(239,68,68,.08); border-color: #fca5a5; }
         .btn-icon.btn-success-icon { color: var(--crm-success); }
         .btn-icon.btn-success-icon:hover { background: rgba(16,185,129,.08); border-color: #6ee7b7; }
+        .btn-icon.btn-copy-icon    { color: #0891b2; }
+        .btn-icon.btn-copy-icon:hover    { background: rgba(8,145,178,.08); border-color: #67e8f9; }
 
         .quick-toggle-group {
             display: inline-flex;

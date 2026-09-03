@@ -132,6 +132,9 @@ class ClientController extends AppBaseController
                         <a href="{$editUrl}" class="btn btn-sm border-0 px-2" title="Edit Client" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background:#fffbebf0; color:#d97706; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbebf0'">
                             <i class="fa fa-edit"></i>
                         </a>
+                        <button type="button" class="btn btn-sm border-0 px-2" title="Copy details for technician" onclick="copyClientDetails({$client->id})" style="border-radius:0; background:#ecfefff0; color:#0891b2; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#cffafe'" onmouseout="this.style.background='#ecfefff0'">
+                            <i class="fa fa-copy"></i>
+                        </button>
                         <button type="button" class="btn btn-sm border-0 px-2 d-inline-flex align-items-center gap-1" title="Comments & Notes" onclick="openCommentModal({$client->id}, '{$name}')" style="border-radius:0; background:#f0f9fff0; color:#0284c7; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='#f0f9fff0'">
                             <i class="fa fa-comment"></i> {$commentBadge}
                         </button>
@@ -139,6 +142,11 @@ class ClientController extends AppBaseController
                             <span class="visually-hidden">Toggle Options</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:10px; font-size:0.85rem; min-width: 175px; z-index: 1050;">
+                            <li>
+                                <a class="dropdown-item py-2" href="#" onclick="copyClientDetails({$client->id})">
+                                    <i class="fa fa-copy me-2" style="color:#0891b2;"></i> Copy Details
+                                </a>
+                            </li>
                             <li>
                                 <a class="dropdown-item py-2" href="{$viewUrl}">
                                     <i class="fa fa-eye text-primary me-2"></i> View Profile
