@@ -21,6 +21,24 @@
                         d.isp_filter   = $('#isp-filter').val();
                         d.cable_filter = window.currentCableFilter || '';
                         d.onu_filter   = window.currentOnuFilter   || '';
+                    },
+                    error: function(xhr, textStatus, errorThrown) {
+                        try { table.processing(false); } catch (e) {}
+                        setTimeout(function() { $('.dataTables_processing').hide(); }, 50);
+                        const isOffline = !navigator.onLine || xhr.status === 0;
+                        const message = isOffline
+                            ? 'No internet connection. Please check your network and try again.'
+                            : 'Unable to load data. Server may be unreachable.';
+                        $('#closed-clients tbody').html(
+                            '<tr class="text-center">' +
+                            '<td colspan="100" style="padding: 40px 20px; color: #64748b; font-size: 0.9rem;">' +
+                            '<div style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.7;">' +
+                            (isOffline ? '&#x1F4F6;' : '&#x26A0;&#xFE0F;') +
+                            '</div>' +
+                            '<div style="font-weight: 600; margin-bottom: 4px;">' + message + '</div>' +
+                            '<button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="$(\'#closed-clients\').DataTable().ajax.reload();">Retry</button>' +
+                            '</td></tr>'
+                        );
                     }
                 },
                 columns: [
