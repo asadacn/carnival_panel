@@ -224,14 +224,7 @@
                     return `<div class="timestamp-cell">${data}</div>`;
                 }},
                 { data: 'method_badge', name: 'payment_method', orderable: false, searchable: false },
-                { data: 'bill_status', name: 'bill_status', orderable: false, searchable: false, render: function(data, type, row) {
-                    var cls = 'status-unpaid';
-                    var label = 'Unpaid';
-                    if (data === 'paid') { cls = 'status-paid'; label = 'Paid'; }
-                    else if (data === 'partially_paid') { cls = 'status-partial'; label = 'Partial'; }
-                    else if (data === 'overdue') { cls = 'status-overdue'; label = 'Overdue'; }
-                    return `<span class="status-badge ${cls}">${label}</span>`;
-                }},
+                { data: 'bill_status', name: 'bill_status', orderable: false, searchable: false },
                 { data: 'transaction_id', name: 'transaction_id', searchable: false, render: function(data) {
                     return data && data !== '-' ? `<span class="transaction-id">${data}</span>` : '<span class="text-muted">-</span>';
                 }},
