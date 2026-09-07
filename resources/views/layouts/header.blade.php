@@ -1,53 +1,54 @@
-<form class="form-inline mr-auto" action="#">
-    <ul class="navbar-nav mr-3">
-        <li><a href="#" data-toggle="sidebar" class="nav-link nav-link-lg"><i class="fas fa-bars"></i></a></li>
+<div class="navbar-inner d-flex align-items-center justify-content-between w-100 px-3">
+    <ul class="navbar-nav">
+        <li class="nav-item">
+            <a href="#" data-toggle="sidebar" class="nav-link nav-link-lg text-white">
+                <i class="fas fa-bars"></i>
+            </a>
+        </li>
     </ul>
-</form>
-<ul class="navbar-nav navbar-right">
-
-    @if(\Illuminate\Support\Facades\Auth::user())
-        <li class="dropdown">
-            <a href="#" data-toggle="dropdown"
-               class="nav-link dropdown-toggle nav-link-lg nav-link-user">
-                <img alt="image" src="{{ asset('img/logo.png') }}"
-                     class="rounded-circle mr-1 thumbnail-rounded user-thumbnail ">
-                <div class="d-sm-none d-lg-inline-block">
-                    Hi, {{\Illuminate\Support\Facades\Auth::user()->first_name}}</div>
-            </a>
-
-            <div class="dropdown-menu dropdown-menu-right">
-                <div class="dropdown-title">
-                    Welcome, {{\Illuminate\Support\Facades\Auth::user()->name}}</div>
-                <a class="dropdown-item has-icon edit-profile" href="#" data-id="{{ \Auth::id() }}">
-                    <i class="fa fa-user"></i>Edit Profile</a>
-                <a class="dropdown-item has-icon" data-toggle="modal" data-target="#changePasswordModal" href="#" data-id="{{ \Auth::id() }}"><i
-                            class="fa fa-lock"> </i>Change Password</a>
-                <a href="{{ url('logout') }}" class="dropdown-item has-icon text-danger"
-                   onclick="event.preventDefault(); localStorage.clear();  document.getElementById('logout-form').submit();">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+    <ul class="navbar-nav">
+        @if(\Illuminate\Support\Facades\Auth::user())
+            <li class="nav-item dropdown">
+                <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user d-flex align-items-center text-white">
+                    <img alt="image" src="{{ asset('img/logo.png') }}" class="rounded-circle mr-2 user-thumbnail" style="width: 28px; height: 28px; object-fit: cover;">
+                    <span class="d-none d-lg-inline font-weight-medium">{{ \Illuminate\Support\Facades\Auth::user()->first_name }}</span>
                 </a>
-                <form id="logout-form" action="{{ url('/logout') }}" method="POST" class="d-none">
-                    {{ csrf_field() }}
-                </form>
-            </div>
-        </li>
-    @else
-        <li class="dropdown"><a href="#" data-toggle="dropdown"
-                                class="nav-link dropdown-toggle nav-link-lg nav-link-user">
-                {{--                <img alt="image" src="#" class="rounded-circle mr-1">--}}
-                <div class="d-sm-none d-lg-inline-block">{{ __('messages.common.hello') }}</div>
-            </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <div class="dropdown-title">{{ __('messages.common.login') }}
-                    / {{ __('messages.common.register') }}</div>
-                <a href="{{ route('login') }}" class="dropdown-item has-icon">
-                    <i class="fas fa-sign-in-alt"></i> {{ __('messages.common.login') }}
+                <div class="dropdown-menu dropdown-menu-right shadow border-0">
+                    <div class="dropdown-header font-weight-bold text-primary mb-1">
+                        Welcome, {{ \Illuminate\Support\Facades\Auth::user()->name }}
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item has-icon edit-profile" href="#" data-id="{{ \Auth::id() }}">
+                        <i class="fa fa-user mr-2 text-muted"></i>Edit Profile
+                    </a>
+                    <a class="dropdown-item has-icon" data-toggle="modal" data-target="#changePasswordModal" href="#" data-id="{{ \Auth::id() }}">
+                        <i class="fa fa-lock mr-2 text-muted"></i>Change Password
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ url('logout') }}" class="dropdown-item has-icon text-danger" onclick="event.preventDefault(); localStorage.clear(); document.getElementById('logout-form').submit();">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                    <form id="logout-form" action="{{ url('/logout') }}" method="POST" class="d-none">
+                        {{ csrf_field() }}
+                    </form>
+                </div>
+            </li>
+        @else
+            <li class="nav-item dropdown">
+                <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user text-white">
+                    <div class="d-none d-lg-inline">{{ __('messages.common.hello') }}</div>
                 </a>
-                <div class="dropdown-divider"></div>
-                <a href="{{ route('register') }}" class="dropdown-item has-icon">
-                    <i class="fas fa-user-plus"></i> {{ __('messages.common.register') }}
-                </a>
-            </div>
-        </li>
-    @endif
-</ul>
+                <div class="dropdown-menu dropdown-menu-right shadow border-0">
+                    <div class="dropdown-header font-weight-bold text-primary mb-1">{{ __('messages.common.login') }} / {{ __('messages.common.register') }}</div>
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('login') }}" class="dropdown-item has-icon">
+                        <i class="fas fa-sign-in-alt mr-2 text-muted"></i> {{ __('messages.common.login') }}
+                    </a>
+                    <a href="{{ route('register') }}" class="dropdown-item has-icon">
+                        <i class="fas fa-user-plus mr-2 text-muted"></i> {{ __('messages.common.register') }}
+                    </a>
+                </div>
+            </li>
+        @endif
+    </ul>
+</div>

@@ -10,7 +10,7 @@
                 <h4 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
                     <i class="fas fa-users text-primary"></i> Client Workspace
                 </h4>
-                <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="d-flex align-items-center gap-2 flex-wrap section-header-badges">
                     <span class="badge font-weight-bold" style="background:#e0edff; color:#1e40af; font-size:0.78rem; padding:5px 12px; border-radius:20px;">
                         <i class="fas fa-user-check me-1"></i> {{ $ActiveClientsCount }} Active
                     </span>
@@ -29,7 +29,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="d-flex align-items-center gap-2 flex-wrap section-header-actions">
                 <a href="{{ route('clients.create') }}" class="btn font-weight-bold shadow-sm d-inline-flex align-items-center gap-2 btn-cta-primary">
                     <i class="fas fa-plus-circle"></i> <span>Add New Client</span>
                 </a>
@@ -396,6 +396,53 @@
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
             }
 
+            /* ========== RESPONSIVE TABLE COLUMNS ========== */
+            @media (max-width: 1199px) {
+                #clients th:nth-child(6),
+                #clients td:nth-child(6) {
+                    display: none;
+                }
+            }
+            @media (max-width: 991px) {
+                #clients th:nth-child(9),
+                #clients td:nth-child(9),
+                #clients th:nth-child(10),
+                #clients td:nth-child(10),
+                #clients th:nth-child(11),
+                #clients td:nth-child(11),
+                #clients th:nth-child(12),
+                #clients td:nth-child(12) {
+                    display: none;
+                }
+                .chip-btn {
+                    font-size: 0.72rem;
+                    padding: 4px 10px;
+                }
+            }
+            @media (max-width: 767px) {
+                #clients th:nth-child(5),
+                #clients td:nth-child(5),
+                #clients th:nth-child(7),
+                #clients td:nth-child(7),
+                #clients th:nth-child(8),
+                #clients td:nth-child(8),
+                #clients th:nth-child(14),
+                #clients td:nth-child(14) {
+                    display: none;
+                }
+                .table-responsive {
+                    border-radius: 8px;
+                }
+                .chip-btn {
+                    font-size: 0.68rem;
+                    padding: 3px 8px;
+                }
+                .btn-cta-primary, .btn-cta-warning, .btn-cta-danger, .btn-cta-secondary, .btn-cta-toggle {
+                    font-size: 0.78rem;
+                    padding: 6px 12px;
+                }
+            }
+
             /* ========== MINI STAT CARDS ========== */
             .mini-stat-card {
                 border-radius: 8px;
@@ -452,6 +499,18 @@
             #privacy-toggle-btn:hover {
                 transform: scale(1.05);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            /* ========== RESPONSIVE TOP SECTION ========== */
+            @media (max-width: 767px) {
+                .section-header-badges .badge {
+                    font-size: 0.68rem !important;
+                    padding: 4px 10px !important;
+                }
+                .section-header-actions .btn {
+                    font-size: 0.78rem;
+                    padding: 6px 12px;
+                }
             }
 
             /* ========== MODERN ISP CARDS STYLES ========== */
@@ -815,21 +874,21 @@
                         <table class="table table-hover table-striped w-100" id="clients">
                             <thead>
                                 <tr>
-                                    <th></th> {{-- Checkbox --}}
-                                    <th>#</th>
-                                    <th>@lang('models/clients.fields.username')</th>
-                                    <th>@lang('models/clients.fields.name')</th>
-                                    <th>@lang('models/clients.fields.contact')</th>
-                                    <th>@lang('models/clients.fields.address')</th>
-                                    <th>@lang('models/clients.fields.package')</th>
-                                    <th>@lang('models/clients.fields.expiration')</th>
-                                    <th>Cable</th>
-                                    <th>ONU</th>
-                                    <th>Comment</th>
-                                    <th>ISP</th>
-                                    <th>@lang('models/clients.fields.status')</th>
-                                    <th>Total Due</th>
-                                    <th>Action</th>
+                                    <th class="all"></th> {{-- Checkbox --}}
+                                    <th class="all">#</th>
+                                    <th class="all">@lang('models/clients.fields.username')</th>
+                                    <th class="all">@lang('models/clients.fields.name')</th>
+                                    <th class="min-tablet">@lang('models/clients.fields.contact')</th>
+                                    <th class="none">@lang('models/clients.fields.address')</th>
+                                    <th class="min-tablet">@lang('models/clients.fields.package')</th>
+                                    <th class="min-tablet">@lang('models/clients.fields.expiration')</th>
+                                    <th class="none">Cable</th>
+                                    <th class="none">ONU</th>
+                                    <th class="none">Comment</th>
+                                    <th class="none">ISP</th>
+                                    <th class="all">@lang('models/clients.fields.status')</th>
+                                    <th class="min-tablet">Total Due</th>
+                                    <th class="all">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

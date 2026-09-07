@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DueBill;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use Yajra\DataTables\DataTables;
 use Dompdf\Dompdf;
@@ -141,21 +142,27 @@ class DueBillController extends Controller
         $clients = Client::select('id', 'name', 'username')->orderBy('name')->get();
         $statuses = ['unpaid', 'partially_paid', 'paid', 'overdue'];
 
-        $years = DueBill::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
+        $stats = Cache::remember('due_bills_index_stats', 300, function () {
+            $years = DueBill::select('year')->distinct()->orderBy('year', 'desc')->pluck('year');
+
+            $totalDue = DueBill::where('status', '!=', 'paid')->sum('amount') -
+                               DueBill::where('status', '!=', 'paid')->sum('paid_amount');
+
+            $unpaidCount = DueBill::unpaid()->count();
+            $overdueCount = DueBill::overdue()->count();
+            $paidThisMonth = DueBill::where('status', 'paid')
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('amount');
+
+            return compact('years', 'totalDue', 'unpaidCount', 'overdueCount', 'paidThisMonth');
+        });
+
+        extract($stats);
         $months = [];
         for ($m = 1; $m <= 12; $m++) {
             $months[$m] = date('F', mktime(0, 0, 0, $m, 1));
         }
-
-        $totalDue = DueBill::where('status', '!=', 'paid')->sum('amount') -
-                           DueBill::where('status', '!=', 'paid')->sum('paid_amount');
-
-        $unpaidCount = DueBill::unpaid()->count();
-        $overdueCount = DueBill::overdue()->count();
-        $paidThisMonth = DueBill::where('status', 'paid')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->sum('amount');
 
         return view('due_bills.index', compact(
             'clients',
@@ -604,7 +611,7 @@ class DueBillController extends Controller
             $msg = strip_tags($msg, '<b><strong><i><em><u><ins><s><strike><del><code><pre><a>');
 
             // Use dedicated billing channel ID if configured in env, else fallback to standard chat ID
-            $channelId = env('TELEGRAM_BILLING_CHANNEL_ID') ?? env('TELEGRAM_CHAT_ID');
+            $channelId = config('services.telegram.group_chat_id') ?? config('services.telegram.chat_id');
 
             $status = sendTelegram($msg, $channelId);
             if ($status) {
@@ -661,8 +668,8 @@ class DueBillController extends Controller
 
         if ($channel === 'telegram') {
             try {
-                $channelId = env('TELEGRAM_BILLING_CHANNEL_ID') ?? env('TELEGRAM_CHAT_ID');
-                $botToken = env('TELEGRAM_BOT_TOKEN');
+            $channelId = config('services.telegram.group_chat_id') ?? config('services.telegram.chat_id');
+            $botToken = config('services.telegram.bot_token');
 
                 if ($botToken && $channelId) {
                     $html = view('due_bills.invoice-pdf', compact('bill'))->render();

@@ -13,6 +13,7 @@ use Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 use App\Imports\ClientsImport;
 use App\Models\Client;
@@ -257,33 +258,49 @@ EOT;
 
         $templates = SMS_TEMPALTE::all();
 
-        $ActiveClientsCount        = Client::where('status', 'Active')->count();
-        $expiredClientsCount       = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
-        $closedClientsCount        = Client::closed()->count();
-        $freeOnuClientsCount       = Client::where('onu_free', 1)->count();
-        $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
+        Cache::forget('clients_index_stats');
 
-        // Billing statistics
-        $totalDueAmount = DB::table('due_bills')
-            ->where('status', '!=', 'paid')
-            ->selectRaw('SUM(amount - paid_amount) as total')
-            ->value('total') ?? 0;
+        $stats = Cache::remember('clients_index_stats', 300, function () {
+            $ActiveClientsCount        = Client::where('status', 'Active')->count();
+            $expiredClientsCount       = Client::whereNotNull('expiration')->where('expiration', '<', now())->count();
+            $closedClientsCount        = Client::closed()->count();
+            $freeOnuClientsCount       = Client::where('onu_free', 1)->count();
+            $cableReturnedClientsCount = Client::where('cable_returned', 1)->count();
 
-        $unpaidBillsCount = DB::table('due_bills')
-            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
-            ->count();
+            $totalDueAmount = DB::table('due_bills')
+                ->where('status', '!=', 'paid')
+                ->selectRaw('SUM(amount - paid_amount) as total')
+                ->value('total') ?? 0;
 
-        $overdueBillsCount = DB::table('due_bills')
-            ->where('due_date', '<', now()->toDateString())
-            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
-            ->count();
+            $unpaidBillsCount = DB::table('due_bills')
+                ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                ->count();
 
-        // ISP-wise active clients count
-        $ispWiseActiveClients = Client::where('status', 'Active')
-            ->selectRaw('isp_code, COUNT(*) as count')
-            ->groupBy('isp_code')
-            ->get()
-            ->pluck('count', 'isp_code');
+            $overdueBillsCount = DB::table('due_bills')
+                ->where('due_date', '<', now()->toDateString())
+                ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                ->count();
+
+            $ispWiseActiveClients = Client::where('status', 'Active')
+                ->selectRaw('isp_code, COUNT(*) as count')
+                ->groupBy('isp_code')
+                ->get()
+                ->pluck('count', 'isp_code');
+
+            return compact(
+                'ActiveClientsCount',
+                'expiredClientsCount',
+                'closedClientsCount',
+                'freeOnuClientsCount',
+                'cableReturnedClientsCount',
+                'totalDueAmount',
+                'unpaidBillsCount',
+                'overdueBillsCount',
+                'ispWiseActiveClients'
+            );
+        });
+
+        extract($stats);
 
         return view('clients.index', compact(
             'templates',
@@ -812,11 +829,17 @@ EOT;
                 ->make(true);
         }
 
-        $totalClosed = Client::closed()->count();
-        $cableReturnedCount = Client::closed()->where('cable_returned', 1)->count();
-        $cablePendingCount = Client::closed()->where('cable_returned', 0)->where('cable_owner', 'company')->count();
-        $onuReturnedCount = Client::closed()->where('onu_returned', 1)->count();
-        $onuPendingCount = Client::closed()->where('onu_returned', 0)->where('onu_owner', 'company')->count();
+        $stats = Cache::remember('clients_closed_stats', 300, function () {
+            return [
+                'totalClosed' => Client::closed()->count(),
+                'cableReturnedCount' => Client::closed()->where('cable_returned', 1)->count(),
+                'cablePendingCount' => Client::closed()->where('cable_returned', 0)->where('cable_owner', 'company')->count(),
+                'onuReturnedCount' => Client::closed()->where('onu_returned', 1)->count(),
+                'onuPendingCount' => Client::closed()->where('onu_returned', 0)->where('onu_owner', 'company')->count(),
+            ];
+        });
+
+        extract($stats);
 
         return view('clients.closed', compact(
             'totalClosed',

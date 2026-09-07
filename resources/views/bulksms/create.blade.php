@@ -195,7 +195,7 @@
                                         </div>
                                         <hr class="mt-2 mb-4">
 
-                                        <form id="sms_form" action="{{ route('bulk_sms') }}" method="GET">
+                                        <form id="sms_form" action="{{ route('bulk_sms') }}" method="POST">
                                             @csrf
 
                                             <div class="form-group mb-3">

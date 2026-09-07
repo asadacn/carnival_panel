@@ -56,6 +56,7 @@ class HomeController extends Controller
         // Check for manual refresh request
         if ($request->has('refresh')) {
             \Illuminate\Support\Facades\Cache::forget('dashboard_data');
+            \Illuminate\Support\Facades\Cache::forget('sms_balance');
             // Redirect to clean URL
             return redirect()->route('dashboard');
         }

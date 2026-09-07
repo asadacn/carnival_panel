@@ -35,4 +35,10 @@ return [
         'base_url' => env('ELITCALL_BASE_URL', 'https://call.mram.com.bd'),
     ],
 
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHAT_ID'),
+        'group_chat_id' => env('TELEGRAM_GROUP_CHAT_ID'),
+    ],
+
 ];

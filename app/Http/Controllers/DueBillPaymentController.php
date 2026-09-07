@@ -6,6 +6,7 @@ use App\Models\DueBill;
 use App\Models\DueBillPayment;
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Yajra\DataTables\DataTables;
 use Carbon\Carbon;
 
@@ -91,13 +92,19 @@ class DueBillPaymentController extends Controller
         $clients = Client::select('id', 'name', 'username')->orderBy('name')->get();
         $methods = ['cash', 'bkash', 'nagad', 'bank', 'other'];
 
-        $totalCollected = DueBillPayment::sum('amount');
-        $monthCollections = DueBillPayment::whereMonth('payment_date', now()->month)
-            ->whereYear('payment_date', now()->year)
-            ->sum('amount');
-        $todayCollections = DueBillPayment::whereDate('payment_date', today())->sum('amount');
-        $totalPayments = DueBillPayment::count();
-        $averagePayment = DueBillPayment::avg('amount');
+        $stats = Cache::remember('due_bill_payments_stats', 300, function () {
+            return [
+                'totalCollected' => DueBillPayment::sum('amount'),
+                'monthCollections' => DueBillPayment::whereMonth('payment_date', now()->month)
+                    ->whereYear('payment_date', now()->year)
+                    ->sum('amount'),
+                'todayCollections' => DueBillPayment::whereDate('payment_date', today())->sum('amount'),
+                'totalPayments' => DueBillPayment::count(),
+                'averagePayment' => DueBillPayment::avg('amount'),
+            ];
+        });
+
+        extract($stats);
 
         return view('due_bill_payments.index', compact(
             'clients', 'methods',

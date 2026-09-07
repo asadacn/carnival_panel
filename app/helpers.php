@@ -3,6 +3,7 @@
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 if (!function_exists('report_header')) {
     function report_header($title)
@@ -96,25 +97,54 @@ function sms($contacts, $message, $type = 'unicode')
 //SMS BALANCE CHECKER
 
 if (!function_exists('sms_balance')) {
-function sms_balance()
-{
-    $api_key = env('MRAM_API_KEY');
-    $url = "https://sms.mram.com.bd/miscapi/{$api_key}/getBalance";
+    function sms_balance()
+    {
+        return Cache::remember('sms_balance', 300, function () {
+            $api_key = config('services.mram.api_key') ?? env('MRAM_API_KEY');
+            Log::info('SMS balance check start', ['api_key_present' => !empty($api_key)]);
 
-    try {
-        $response = Http::get($url);
-        $body = $response->body();
+            if (!$api_key) {
+                Log::warning('SMS balance: API key missing');
+                return 'N/A';
+            }
 
-        // শুধু BDT এবং সংখ্যাটি বের করা
-        if (preg_match('/BDT\s*([\d,.]+)/', $body, $matches)) {
-            return  $matches[1]; // BDT 473.32 এর মতো রিটার্ন
-        }
+            $endpoints = [
+                "https://sms.mram.com.bd/miscapi/{$api_key}/getBalance",
+                "https://sms.mram.com.bd/miscapi/{$api_key}/balance",
+                "https://sms.mram.com.bd/api/getBalance?api_key={$api_key}",
+            ];
 
-        return $body; // যদি match না হয়, পুরো response ফেরত
-    } catch (\Exception $e) {
-        return $e->getMessage();
+            foreach ($endpoints as $url) {
+                try {
+                    $response = Http::timeout(10)->get($url);
+                    Log::info('SMS balance API response', ['url' => $url, 'status' => $response->status(), 'body' => $response->body()]);
+
+                    if (!$response->successful()) {
+                        continue;
+                    }
+
+                    $body = $response->body();
+
+                    if (preg_match('/BDT\s*([\d,.]+)/', $body, $matches)) {
+                        Log::info('SMS balance matched BDT', ['value' => $matches[1]]);
+                        return $matches[1];
+                    }
+
+                    if (is_numeric(trim($body))) {
+                        Log::info('SMS balance matched numeric', ['value' => trim($body)]);
+                        return trim($body);
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('SMS balance API exception', ['url' => $url, 'error' => $e->getMessage()]);
+                    continue;
+                }
+            }
+
+            Log::warning('SMS balance: no valid response from any endpoint');
+            return 'N/A';
+        });
     }
-}}
+}
 
 
 
@@ -176,17 +206,41 @@ if (!function_exists('bdtFormat')) {
 //SEND TELEGRAM MESSAGE
 if(!function_exists('sendTelegram')){
     function sendTelegram($message, $chat_id = null){
-        $chat_id = $chat_id ?? env('TELEGRAM_CHAT_ID');
-        $token = env('TELEGRAM_BOT_TOKEN');
+        $chat_id = $chat_id ?? config('services.telegram.chat_id');
+        $token = config('services.telegram.bot_token');
         $url = "https://api.telegram.org/bot$token/sendMessage";
 
-        $response = Http::post($url, [
-            'chat_id' => $chat_id,
-            'text' => $message,
-            'parse_mode' => 'HTML'
-        ]);
+        if (!$token || !$chat_id) {
+            Log::warning('Telegram send skipped: missing bot token or chat ID');
+            return false;
+        }
 
-        return $response->successful();
+        try {
+            $response = Http::timeout(10)->post($url, [
+                'chat_id' => $chat_id,
+                'text' => $message,
+            ]);
+
+            $result = $response->json();
+
+            if ($response->successful() && ($result['ok'] ?? false)) {
+                Log::info('Telegram message sent successfully', [
+                    'chat_id' => $chat_id,
+                    'message_length' => strlen($message),
+                ]);
+                return true;
+            }
+
+            Log::warning('Telegram send failed', [
+                'chat_id' => $chat_id,
+                'response' => $result,
+                'status' => $response->status(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::warning("Telegram send failed: " . $e->getMessage());
+            return false;
+        }
     }
 }
 

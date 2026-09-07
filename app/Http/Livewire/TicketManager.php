@@ -139,7 +139,7 @@ class TicketManager extends Component
         if ($this->send_telegram) {
             $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
             $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n ক্লায়েন্ট: {$client->name}\n🏠ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
-            $this->sendTelegram($text, env('TELEGRAM_GROUP_CHAT_ID'));
+            $this->sendTelegram($text, config('services.telegram.group_chat_id'));
         }
 
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
@@ -350,16 +350,38 @@ class TicketManager extends Component
     protected function sendTelegram($message, $recipientChatId = null)
     {
         try {
-            $botToken = env('TELEGRAM_BOT_TOKEN');
-            $chatId = $recipientChatId ?? env('TELEGRAM_CHAT_ID');
+            $botToken = config('services.telegram.bot_token');
+            $chatId = $recipientChatId ?? config('services.telegram.group_chat_id') ?? config('services.telegram.chat_id');
 
-            Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+            if (!$botToken || !$chatId) {
+                Log::warning('Telegram send skipped: missing bot token or chat ID');
+                return false;
+            }
+
+            $response = Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
                 'chat_id' => $chatId,
                 'text' => $message,
-                'parse_mode' => 'Markdown',
             ]);
+
+            $result = $response->json();
+
+            if ($response->successful() && ($result['ok'] ?? false)) {
+                Log::info('Telegram message sent successfully', [
+                    'chat_id' => $chatId,
+                    'message_length' => strlen($message),
+                ]);
+                return true;
+            }
+
+            Log::warning('Telegram send failed', [
+                'chat_id' => $chatId,
+                'response' => $result,
+                'status' => $response->status(),
+            ]);
+            return false;
         } catch (\Exception $e) {
             Log::warning("Telegram send failed: " . $e->getMessage());
+            return false;
         }
     }
 

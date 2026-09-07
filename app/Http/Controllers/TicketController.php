@@ -112,8 +112,8 @@ class TicketController extends Controller
             $msg = str_replace(['<br>', '<br/>', '<br />'], "\n", $msg);
             $msg = strip_tags($msg, '<b><strong><i><em><u><ins><s><strike><del><code><pre><a>');
 
-            $groupChatId = (string) env('TELEGRAM_GROUP_CHAT_ID');
-            $botToken    = env('TELEGRAM_BOT_TOKEN');
+            $groupChatId = (string) config('services.telegram.group_chat_id');
+            $botToken    = config('services.telegram.bot_token');
 
             if (!$groupChatId || !$botToken) {
                 return response()->json(['success' => false, 'message' => 'Telegram group config missing.'], 500);
