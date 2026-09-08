@@ -108,11 +108,27 @@ class DueBill extends Model
         $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
         $ispName = isp_name($ispCode, ucfirst($this->client->isp_code ?? 'Carnival'));
 
+        $previousDue = static::where('client_id', $this->client_id)
+            ->where('id', '!=', $this->id)
+            ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+            ->get()
+            ->sum(function ($b) {
+                return $b->amount - $b->paid_amount;
+            });
+
+        $totalDue = $this->remaining_balance + $previousDue;
+
         $message = "প্রিয় {$this->client->name},\n"
             . "গ্রাহক আইডি: {$this->client->username}\n"
             . $this->month_year . " মাসের বকেয়া: {$currency}"
-            . number_format($this->remaining_balance, 2)
-            . "\n" . $instruction . "\n"
+            . number_format($this->remaining_balance, 2) . "\n";
+
+        if ($previousDue > 0) {
+            $message .= "পূর্বের বকেয়া: {$currency}" . number_format($previousDue, 2)
+                . "\nসর্বমোট বকেয়া: {$currency}" . number_format($totalDue, 2) . "\n";
+        }
+
+        $message .= $instruction . "\n"
             . $methods . ': ' . $paymentNumber
             . "\n- " . $ispName;
 

@@ -230,10 +230,27 @@ class DueBillController extends Controller
             $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
             $ispName = isp_name($ispCode, ucfirst($client->isp_code ?? 'Carnival'));
 
+            $previousDue = DueBill::where('client_id', $client->id)
+                ->where('id', '!=', $bill->id)
+                ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                ->get()
+                ->sum(function ($b) {
+                    return $b->amount - $b->paid_amount;
+                });
+
+            $currentAmount = $validated['amount'];
+            $totalDue = $currentAmount + $previousDue;
+
             $message = "প্রিয় {$client->name},\n"
                 . "গ্রাহক আইডি: {$client->username}\n"
-                . "{$monthName} মাসের নতুন বিল: {$currency}" . number_format($validated['amount'], 2) . "\n"
-                . $instruction . "\n"
+                . "{$monthName} মাসের বিল: {$currency}" . number_format($currentAmount, 2) . "\n";
+
+            if ($previousDue > 0) {
+                $message .= "পূর্বের বকেয়া: {$currency}" . number_format($previousDue, 2) . "\n"
+                    . "সর্বমোট বকেয়া: {$currency}" . number_format($totalDue, 2) . "\n";
+            }
+
+            $message .= $instruction . "\n"
                 . $methods . ': ' . $paymentNumber
                 . "\n- " . $ispName;
 
@@ -350,12 +367,25 @@ class DueBillController extends Controller
         if ($bill->client && $bill->client->contact) {
             try {
                 $ispCode = $bill->client->isp_code ?? null;
+                $monthName = \Carbon\Carbon::createFromDate($bill->year, $bill->month, 1)->format('F Y');
                 $currency = isp_setting('currency_symbol', '৳', $ispCode);
+                $instruction = isp_setting('payment_instruction', config('sms.payment_instruction', 'Please pay through bKash/Nagad.'), $ispCode);
+                $methods = isp_setting('payment_methods', config('sms.payment_methods', 'bKash/Nagad'), $ispCode);
+                $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
                 $ispName = isp_name($ispCode, ucfirst($bill->client->isp_code ?? 'Carnival'));
+
+                $previousDue = DueBill::where('client_id', $bill->client_id)
+                    ->where('id', '!=', $bill->id)
+                    ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                    ->get()
+                    ->sum(function ($b) {
+                        return $b->amount - $b->paid_amount;
+                    });
+
                 $message = "প্রিয় {$bill->client->name},\n"
                     . "গ্রাহক আইডি: {$bill->client->username}\n"
-                    . $bill->month_year . " মাসের বিল: {$currency}" . number_format($bill->amount, 2)
-                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
+                    . "{$monthName} মাসের বিল: {$currency}" . number_format($bill->amount, 2) . "\n"
+                    . "বিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
                 sms($bill->client->contact, $message);
             } catch (\Exception $e) {
                 // Log error but don't fail

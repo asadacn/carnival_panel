@@ -204,17 +204,33 @@ class DueBillPaymentController extends Controller
             $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
             $ispName = isp_name($ispCode, ucfirst($client->isp_code ?? 'Carnival'));
 
+            $previousDue = DueBill::where('client_id', $bill->client_id)
+                ->where('id', '!=', $bill->id)
+                ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                ->get()
+                ->sum(function ($b) {
+                    return $b->amount - $b->paid_amount;
+                });
+
+            $totalDue = $remainingAmount + $previousDue;
+
             if ($remainingAmount <= 0) {
                 $message = "প্রিয় {$client->name}, পেমেন্ট নিশ্চিত হয়েছে।\n"
                     . "কাস্টমার আইডি: {$client->username}\n"
-                    . "{$monthName} মাসের বিল: {$currency}" . number_format($validated['amount'], 2)
-                    . "\nবিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
+                    . "{$monthName} মাসের বিল: {$currency}" . number_format($bill->amount, 2) . "\n"
+                    . "বিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
             } else {
                 $message = "প্রিয় {$client->name}, আংশিক পেমেন্ট নিশ্চিত হয়েছে।\n"
                     . "কাস্টমার আইডি: {$client->username}\n"
-                    . "{$monthName} মাসে জমা: {$currency}" . number_format($validated['amount'], 2)
-                    . "\nঅবশিষ্ট বকেয়া: {$currency}" . number_format($remainingAmount, 2)
-                    . "\n" . $instruction . "\n"
+                    . "{$monthName} মাসে জমা: {$currency}" . number_format($validated['amount'], 2) . "\n"
+                    . "{$monthName} মাসের বকেয়া: {$currency}" . number_format($remainingAmount, 2) . "\n";
+
+                if ($previousDue > 0) {
+                    $message .= "পূর্বের বকেয়া: {$currency}" . number_format($previousDue, 2) . "\n"
+                        . "সর্বমোট বকেয়া: {$currency}" . number_format($totalDue, 2) . "\n";
+                }
+
+                $message .= $instruction . "\n"
                     . $methods . ': ' . $paymentNumber
                     . "\n- " . $ispName;
             }
