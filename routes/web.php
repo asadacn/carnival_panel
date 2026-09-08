@@ -140,5 +140,22 @@ Route::post('isp-settings/{id}/default', [App\Http\Controllers\IspSettingControl
 Route::delete('isp-settings/{id}', [App\Http\Controllers\IspSettingController::class, 'destroy'])->name('isp-settings.destroy');
 
 Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPassword'])->middleware('throttle:5,1');
+
+Route::post('/locale', function (Request $request) {
+    $locale = $request->input('locale', 'en');
+    $supported = ['en', 'bn'];
+    
+    if (!in_array($locale, $supported)) {
+        $locale = 'en';
+    }
+    
+    session(['locale' => $locale]);
+    
+    if (Auth::check()) {
+        Auth::user()->update(['locale' => $locale]);
+    }
+    
+    return redirect()->back();
+})->name('locale.switch');
 });
 

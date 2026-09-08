@@ -17,8 +17,8 @@ if (!function_exists('report_header')) {
 if (!function_exists('sms')) {
 function sms($contacts, $message, $type = 'unicode')
 {
-    $api_key  = trim((string) env('MRAM_API_KEY'));
-    $senderid = trim((string) env('MRAM_SENDER_ID'));
+    $api_key  = trim((string) config('services.mram.api_key'));
+    $senderid = trim((string) config('services.mram.sender_id'));
 
     // -----------------------------
     // Number normalization

@@ -5,7 +5,7 @@
     <div class="section-header">
         <h3 class="page__heading font-weight-bold d-flex align-items-center">
             <i data-lucide="layout-dashboard" class="me-2" style="width:24px;height:24px"></i>
-            ISP Operations Dashboard
+            @lang('messages.dashboard_title')
         </h3>
     </div>
 
@@ -16,13 +16,13 @@
             @if($lastUpdated)
                 <p class="text-muted mb-0 small">
                     <i data-lucide="clock" class="me-1" style="width:16px;height:16px"></i>
-                    Data last refreshed: **{{ \Carbon\Carbon::parse($lastUpdated)->diffForHumans() }}**
+                    {{ __('messages.data_last_refreshed') }}: {{ \Carbon\Carbon::parse($lastUpdated)->diffForHumans() }}
                 </p>
             @else
-                <p class="text-muted mb-0 small"><i data-lucide="clock" class="me-1" style="width:16px;height:16px"></i> No data recorded yet.</p>
+                <p class="text-muted mb-0 small"><i data-lucide="clock" class="me-1" style="width:16px;height:16px"></i> {{ __('messages.no_data_recorded') }}</p>
             @endif
             <button class="btn btn-sm btn-outline-secondary" onclick="window.location.href = '?refresh=1';">
-                <i data-lucide="refresh-cw" style="width:14px;height:14px"></i> Refresh
+                <i data-lucide="refresh-cw" style="width:14px;height:14px"></i> {{ __('messages.refresh') }}
             </button>
         </div>
 
@@ -31,11 +31,11 @@
             @php
                 // FIX: Unknown routes are temporarily linked to clients.index to prevent RouteNotFoundException.
                 $metrics = [
-                    ['title'=>'Total Clients','count'=>$clients->count(),'bg'=>'linear-gradient(135deg,#1F2937,#374151)','icon'=>'users','link'=>route('clients.index')],
-                    ['title'=>'Expiring Soon','count'=>$expiring_soon->count(),'bg'=>'linear-gradient(135deg,#f97316,#fb923c)','icon'=>'alert-triangle','link'=>route('clients.index')],
-                    ['title'=>'Expired Today','count'=>$expired_today->count(),'bg'=>'linear-gradient(135deg,#dc2626,#f87171)','icon'=>'calendar-x','link'=>'#todaysExpiredClients'],
-                    ['title'=>'Monthly Expired','count'=>$expired_this_month->count(),'bg'=>'linear-gradient(135deg,#4b5563,#6b7280)','icon'=>'calendar-days','link'=>route('clients.index')],
-                    ['title'=>'SMS Balance (BDT)','count'=>sms_balance() . ' ৳','bg'=>'linear-gradient(135deg,#10b981,#34d399)','icon'=>'message-circle','link'=>route('clients.index')]
+                    ['title'=>__('messages.total_clients'),'count'=>$clients->count(),'bg'=>'linear-gradient(135deg,#1F2937,#374151)','icon'=>'users','link'=>route('clients.index')],
+                    ['title'=>__('messages.expiring_soon'),'count'=>$expiring_soon->count(),'bg'=>'linear-gradient(135deg,#f97316,#fb923c)','icon'=>'alert-triangle','link'=>route('clients.index')],
+                    ['title'=>__('messages.expired_today'),'count'=>$expired_today->count(),'bg'=>'linear-gradient(135deg,#dc2626,#f87171)','icon'=>'calendar-x','link'=>'#todaysExpiredClients'],
+                    ['title'=>__('messages.monthly_expired'),'count'=>$expired_this_month->count(),'bg'=>'linear-gradient(135deg,#4b5563,#6b7280)','icon'=>'calendar-days','link'=>route('clients.index')],
+                    ['title'=>__('messages.sms_balance'),'count'=>sms_balance() . ' ৳','bg'=>'linear-gradient(135deg,#10b981,#34d399)','icon'=>'message-circle','link'=>route('clients.index')]
                 ];
             @endphp
             @foreach($metrics as $metric)
@@ -81,25 +81,25 @@
                 <div class="card shadow-lg border-0 rounded-4">
                     <div class="card-header border-0 bg-white pt-4 pb-0">
                         <h5 class="mb-0 fw-bold d-flex align-items-center text-primary">
-                            <i data-lucide="activity" class="me-2"></i> Client Analytics & Value
+                            <i data-lucide="activity" class="me-2"></i> @lang('messages.client_analytics')
                         </h5>
 
                         {{-- Tab Navigation for Chart, Table, and Protected Data --}}
                         <ul class="nav nav-pills mt-3" id="clientAnalyticsTab" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="chart-tab" data-bs-toggle="pill" data-bs-target="#chart-content" type="button" role="tab" aria-controls="chart-content" aria-selected="true">
-                                    <i data-lucide="bar-chart-2" style="width:16px;height:16px" class="me-1"></i> Trend Chart
+                                    <i data-lucide="bar-chart-2" style="width:16px;height:16px" class="me-1"></i> @lang('messages.trend_chart')
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="table-tab" data-bs-toggle="pill" data-bs-target="#table-content" type="button" role="tab" aria-controls="table-content" aria-selected="false">
-                                    <i data-lucide="list-ordered" style="width:16px;height:16px" class="me-1"></i> Data Table ({{ $Active_clients }})
+                                    <i data-lucide="list-ordered" style="width:16px;height:16px" class="me-1"></i> @lang('messages.data_table') ({{ $Active_clients }})
                                 </button>
                             </li>
                             {{-- NEW PROTECTED TAB --}}
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="commission-tab" data-bs-toggle="pill" data-bs-target="#commission-content" type="button" role="tab" aria-controls="commission-content" aria-selected="false">
-                                    <i data-lucide="lock" style="width:16px;height:16px" class="me-1"></i> Protected Value
+                                    <i data-lucide="lock" style="width:16px;height:16px" class="me-1"></i> @lang('messages.protected_value')
                                 </button>
                             </li>
                         </ul>
@@ -110,7 +110,7 @@
 
                             {{-- Tab 1: Chart View (Existing) --}}
                             <div class="tab-pane fade show active" id="chart-content" role="tabpanel" aria-labelledby="chart-tab">
-                                <h6 class="text-muted mb-3 mt-2">Clients by Package & Value Trend</h6>
+                                <h6 class="text-muted mb-3 mt-2">@lang('messages.clients_by_package')</h6>
                                 <div style="height: 350px;">
                                     <canvas id="clientsChart"></canvas>
                                 </div>
@@ -118,14 +118,14 @@
 
                             {{-- Tab 2: Active Clients Table (Existing) --}}
                             <div class="tab-pane fade" id="table-content" role="tabpanel" aria-labelledby="table-tab">
-                                <h6 class="text-muted mb-3 mt-2">Active Clients Summary</h6>
+                                <h6 class="text-muted mb-3 mt-2">@lang('messages.active_clients_summary')</h6>
                                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                     <table class="table table-sm table-striped table-hover mb-0">
                                         <thead class="table-light sticky-top">
                                             <tr>
-                                                <th>Package</th>
-                                                <th>Clients</th>
-                                                <th>Value (৳)</th>
+                                                <th>@lang('messages.package')</th>
+                                                <th>@lang('messages.clients')</th>
+                                                <th>@lang('messages.value') (৳)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -142,42 +142,42 @@
                                     </table>
                                 </div>
                                 <div class="p-2 border-top mt-2 text-end">
-                                    <h6 class="mb-0 small fw-bold text-success">Total Monthly Value: {{ takaFormat($total) }} ৳</h6>
+                                    <h6 class="mb-0 small fw-bold text-success">@lang('messages.total_monthly_value'): {{ takaFormat($total) }} ৳</h6>
                                 </div>
                             </div>
 
                             {{-- Tab 3: Protected Commission View (NEW) --}}
                             <div class="tab-pane fade" id="commission-content" role="tabpanel" aria-labelledby="commission-tab">
 
-                                {{-- Protected Content Area (Hidden by default) --}}
-                                <div id="protected-commission-chart" style="display: none;">
-                                    <h6 class="text-muted mb-3 mt-2">Monthly Value & Commission Breakdown</h6>
-                                    <div class="row align-items-center">
-                                        <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
-                                            <div class="w-100" style="max-height: 350px;">
-                                                <canvas id="commissionPieChart"></canvas>
+                                    {{-- Protected Content Area (Hidden by default) --}}
+                                    <div id="protected-commission-chart" style="display: none;">
+                                        <h6 class="text-muted mb-3 mt-2">@lang('messages.monthly_value_commission_breakdown')</h6>
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6 d-flex flex-column justify-content-center align-items-center">
+                                                <div class="w-100" style="max-height: 350px;">
+                                                    <canvas id="commissionPieChart"></canvas>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="p-4 border rounded-4 bg-light text-center">
-                                                <p class="mb-1 small text-muted">Total Monthly Revenue (Gross):</p>
-                                                <h4 class="fw-bolder text-dark mb-3 display-6">{{ takaFormat($total) }} ৳</h4>
-                                                <div id="commission-details">
-                                                    {{-- Details will be populated here by JS --}}
+                                            <div class="col-md-6">
+                                                <div class="p-4 border rounded-4 bg-light text-center">
+                                                    <p class="mb-1 small text-muted">@lang('messages.total_monthly_revenue_gross'):</p>
+                                                    <h4 class="fw-bolder text-dark mb-3 display-6">{{ takaFormat($total) }} ৳</h4>
+                                                    <div id="commission-details">
+                                                        {{-- Details will be populated here by JS --}}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {{-- Unlock Button Area (Visible by default) --}}
-                                <div id="unlock-area" class="d-flex flex-column justify-content-center align-items-center p-5 text-center" style="height: 350px;">
-                                    <i data-lucide="lock" class="text-secondary mb-3" style="width:48px; height:48px;"></i>
-                                    <p class="text-muted mb-3">Sensitive value data is protected.</p>
-                                    <button class="btn btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#passwordModal">
-                                        <i data-lucide="key" style="width:18px;height:18px" class="me-2"></i> Unlock Commission Data
-                                    </button>
-                                </div>
+                                    {{-- Unlock Button Area (Visible by default) --}}
+                                    <div id="unlock-area" class="d-flex flex-column justify-content-center align-items-center p-5 text-center" style="height: 350px;">
+                                        <i data-lucide="lock" class="text-secondary mb-3" style="width:48px; height:48px;"></i>
+                                        <p class="text-muted mb-3">@lang('messages.sensitive_value_data_protected')</p>
+                                        <button class="btn btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                                            <i data-lucide="key" style="width:18px;height:18px" class="me-2"></i> @lang('messages.unlock_commission_data')
+                                        </button>
+                                    </div>
                             </div>
 
                         </div>
@@ -484,27 +484,27 @@
     +
 </a>
 
-<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-white">
-                <h5 class="modal-title" id="passwordModalLabel"><i data-lucide="key" class="me-2"></i> Unlock Commission Data</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-muted">Enter the password for your session account to view sensitive metrics.</p>
-                <div class="mb-3">
-                    <input type="password" class="form-control" id="accessPassword" placeholder="Session Password">
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="passwordModalLabel"><i data-lucide="key" class="me-2"></i> @lang('messages.unlock_commission_data')</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div id="passwordError" class="text-danger small" style="display:none;"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-warning btn-sm" id="checkPasswordBtn">Unlock</button>
+                <div class="modal-body">
+                    <p class="small text-muted">@lang('messages.enter_password')</p>
+                    <div class="mb-3">
+                        <input type="password" class="form-control" id="accessPassword" placeholder="@lang('messages.session_password')">
+                    </div>
+                    <div id="passwordError" class="text-danger small" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">@lang('messages.cancel')</button>
+                    <button type="button" class="btn btn-warning btn-sm" id="checkPasswordBtn">@lang('messages.unlock')</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <style>
     /* Custom utility for 5-column layout on large screens */
@@ -608,8 +608,8 @@ function initCommissionChart(commAmount, remAmount) {
 
     // Populate the details section
     commissionDetailsDiv.innerHTML = `
-        <p class="mb-2 small text-danger fw-bold border-bottom pb-1">40% Commission: <span class="float-end">${commAmount.toFixed(2)} ৳</span></p>
-        <p class="mb-2 small text-info fw-bold">60% Remaining: <span class="float-end">${remAmount.toFixed(2)} ৳</span></p>
+        <p class="mb-2 small text-danger fw-bold border-bottom pb-1">40% @lang('messages.commission'): <span class="float-end">${commAmount.toFixed(2)} ৳</span></p>
+        <p class="mb-2 small text-info fw-bold">60% @lang('messages.remaining'): <span class="float-end">${remAmount.toFixed(2)} ৳</span></p>
     `;
 }
 

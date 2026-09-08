@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title')
-    ISP Settings & Multi-Brand Management
+    @lang('messages.isp_settings_title')
 @endsection
 
 @section('css')
@@ -285,17 +285,17 @@
             <div>
                 <h1 class="settings-title">
                     <i class="fas fa-sliders-h text-primary"></i>
-                    ISP Settings & Multi-Brand Profiles
+                    @lang('messages.isp_settings_title')
                 </h1>
-                <p class="text-muted mb-0 mt-1">Configure distinct logos, contact information, addresses, and invoice branding for each ISP identifier.</p>
+                <p class="text-muted mb-0 mt-1">@lang('messages.configure_distinct_logos_contact_information')</p>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createIspModal" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-plus"></i> Add New ISP Profile
-                </button>
-                <a href="{{ route('due-bills.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-arrow-left"></i> Back to Bills
-                </a>
+                    <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#createIspModal" style="border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-plus"></i> @lang('messages.add_new_isp_profile')
+                    </button>
+                    <a href="{{ route('due-bills.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-arrow-left"></i> @lang('messages.back_to_bills')
+                    </a>
             </div>
         </div>
 
@@ -326,7 +326,7 @@
         @endif
 
         <!-- Available ISPs Card Selection Grid -->
-        <h6 class="text-uppercase fw-bold text-muted small mb-2"><i class="fas fa-network-wired me-1"></i> Configured ISP Brand Profiles ({{ $isps->count() }})</h6>
+        <h6 class="text-uppercase fw-bold text-muted small mb-2"><i class="fas fa-network-wired me-1"></i> @lang('messages.configured_isp_brand_profiles') ({{ $isps->count() }})</h6>
         <div class="isp-selector-wrapper">
             @foreach($isps as $isp)
                 <a href="{{ route('isp-settings.index', ['isp_id' => $isp->id]) }}" class="isp-card-item {{ $selectedIsp && $selectedIsp->id === $isp->id ? 'active' : '' }}">
@@ -355,17 +355,17 @@
             <ul class="nav nav-tabs nav-tabs-settings" id="settingsTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="branding-tab" data-bs-toggle="tab" data-bs-target="#branding" type="button" role="tab">
-                        <i class="fas fa-paint-brush"></i> Branding & Logo
+                        <i class="fas fa-paint-brush"></i> @lang('messages.branding_logo')
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab">
-                        <i class="fas fa-address-book"></i> Contact & Location
+                        <i class="fas fa-address-book"></i> @lang('messages.contact_location')
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="invoice-tab" data-bs-toggle="tab" data-bs-target="#invoice" type="button" role="tab">
-                        <i class="fas fa-file-invoice-dollar"></i> Invoice & Receipt
+                        <i class="fas fa-file-invoice-dollar"></i> @lang('messages.invoice_receipt')
                     </button>
                 </li>
             </ul>
@@ -376,16 +376,16 @@
                     <div class="settings-card">
                         <div class="settings-card-header">
                             <div>
-                                <h5>Logo & Brand Identity for <span class="text-primary">{{ $selectedIsp->isp_name }}</span></h5>
-                                <p>This logo and name will be automatically used for all clients with ISP identifier: <code>{{ $selectedIsp->isp_code }}</code></p>
+                                <h5>@lang('messages.logo_brand_identity_for') <span class="text-primary">{{ $selectedIsp->isp_name }}</span></h5>
+                                <p>@lang('messages.this_logo_and_name_will_be_automatically_used') <code>{{ $selectedIsp->isp_code }}</code></p>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 @if(!$selectedIsp->is_default)
                                     <button type="button" onclick="document.getElementById('set-default-form').submit()" class="btn btn-sm btn-outline-success">
-                                        <i class="fas fa-star me-1"></i> Set as Default ISP
+                                        <i class="fas fa-star me-1"></i> @lang('messages.set_as_default_isp')
                                     </button>
                                     <button type="button" onclick="confirmDeleteIsp()" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash-alt me-1"></i> Delete
+                                        <i class="fas fa-trash-alt me-1"></i> @lang('messages.delete')
                                     </button>
                                 @endif
                             </div>
@@ -393,7 +393,7 @@
                         <div class="settings-card-body">
                             <!-- Logo Upload -->
                             <div class="mb-4">
-                                <label class="form-label">ISP Brand Logo (for {{ $selectedIsp->isp_name }})</label>
+                                <label class="form-label">@lang('messages.isp_brand_logo') (@lang('messages.for') {{ $selectedIsp->isp_name }})</label>
                                 <div class="logo-upload-wrapper">
                                     <div class="logo-preview-box">
                                         <img id="logo-preview" src="{{ $selectedIsp->logo_url }}" alt="{{ $selectedIsp->isp_name }}" class="logo-preview-img">
@@ -401,13 +401,13 @@
                                     <div class="upload-action-box">
                                         <input type="file" name="isp_logo" id="isp_logo" class="form-control mb-2" accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp">
                                         <div class="helper-text mb-2">
-                                            Recommended format: <strong>Transparent PNG/SVG</strong> or high-resolution JPG (approx 300x120px).
+                                            @lang('messages.recommended_format'): <strong>@lang('messages.transparent_png_svg')</strong> @lang('messages.or_high_resolution_jpg')
                                         </div>
                                         @if($selectedIsp->isp_logo)
                                             <div class="form-check mt-2">
                                                 <input class="form-check-input" type="checkbox" name="remove_logo" value="1" id="remove_logo">
                                                 <label class="form-check-label text-danger small fw-semibold" for="remove_logo">
-                                                    <i class="fas fa-trash-alt me-1"></i> Remove custom logo & reset to system default
+                                                    <i class="fas fa-trash-alt me-1"></i> @lang('messages.remove_custom_logo_reset_to_system_default')
                                                 </label>
                                             </div>
                                         @endif
@@ -417,28 +417,28 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">ISP / Company Name <span class="text-danger">*</span></label>
+                                    <label class="form-label">@lang('messages.isp_company_name') <span class="text-danger">*</span></label>
                                     <input type="text" name="isp_name" class="form-control" value="{{ old('isp_name', $selectedIsp->isp_name) }}" placeholder="e.g. Bijoy Online" required>
-                                    <div class="helper-text">Printed as the main company header on invoices and statements.</div>
+                                    <div class="helper-text">@lang('messages.printed_as_the_main_company_header')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">ISP Identifier Code <span class="text-danger">*</span></label>
+                                    <label class="form-label">@lang('messages.isp_identifier_code') <span class="text-danger">*</span></label>
                                     <input type="text" name="isp_code" class="form-control font-monospace" value="{{ old('isp_code', $selectedIsp->isp_code) }}" placeholder="e.g. bijoy" required>
-                                    <div class="helper-text">Matches the client's <code>isp_code</code> in database (lowercase, e.g. <code>carnival</code>, <code>bijoy</code>, <code>icc</code>).</div>
+                                    <div class="helper-text">@lang('messages.matches_the_client_isp_code_in_database')</div>
                                 </div>
 
                                 <div class="col-md-12">
-                                    <label class="form-label">Tagline / Slogan</label>
+                                    <label class="form-label">@lang('messages.tagline_slogan')</label>
                                     <input type="text" name="isp_tagline" class="form-control" value="{{ old('isp_tagline', $selectedIsp->isp_tagline) }}" placeholder="e.g. High-Speed Broadband Internet & Network Solutions">
-                                    <div class="helper-text">Appears below the logo on printable invoices and statements.</div>
+                                    <div class="helper-text">@lang('messages.appears_below_the_logo_on_printable_invoices')</div>
                                 </div>
 
                                 <div class="col-md-12">
                                     <div class="form-check mt-2">
                                         <input class="form-check-input" type="checkbox" name="is_default" value="1" id="is_default" {{ $selectedIsp->is_default ? 'checked' : '' }}>
                                         <label class="form-check-label fw-semibold" for="is_default">
-                                            Make this the Default ISP profile (used when client has no ISP code specified)
+                                            @lang('messages.make_this_the_default_isp_profile')
                                         </label>
                                     </div>
                                 </div>
@@ -452,32 +452,32 @@
                     <div class="settings-card">
                         <div class="settings-card-header">
                             <div>
-                                <h5>Contact Numbers & Address for <span class="text-primary">{{ $selectedIsp->isp_name }}</span></h5>
-                                <p>Hotlines and billing support contacts specific to this ISP brand.</p>
+                                <h5>@lang('messages.contact_numbers_address_for') <span class="text-primary">{{ $selectedIsp->isp_name }}</span></h5>
+                                <p>@lang('messages.hotlines_and_billing_support_contacts_specific_to_this_isp_brand')</p>
                             </div>
                         </div>
                         <div class="settings-card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Support Hotline / Phone</label>
+                                    <label class="form-label">@lang('messages.support_hotline_phone')</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
                                         <input type="text" name="phone" class="form-control" value="{{ old('phone', $selectedIsp->phone) }}" placeholder="e.g. 017XXXXXXXX, 096XXXXXXXX">
                                     </div>
-                                    <div class="helper-text">Support phone printed on this ISP's invoices and statement headers.</div>
+                                    <div class="helper-text">@lang('messages.support_phone_printed_on_this_isp_invoices')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Billing Support / Mobile</label>
+                                    <label class="form-label">@lang('messages.billing_support_mobile')</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-money-check-alt"></i></span>
                                         <input type="text" name="billing_phone" class="form-control" value="{{ old('billing_phone', $selectedIsp->billing_phone) }}" placeholder="e.g. 018XXXXXXXX">
                                     </div>
-                                    <div class="helper-text">Dedicated billing query number.</div>
+                                    <div class="helper-text">@lang('messages.dedicated_billing_query_number')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Official Email</label>
+                                    <label class="form-label">@lang('messages.official_email')</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                         <input type="email" name="email" class="form-control" value="{{ old('email', $selectedIsp->email) }}" placeholder="e.g. support@isp.com.bd">
@@ -485,7 +485,7 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Website URL</label>
+                                    <label class="form-label">@lang('messages.website_url')</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-globe"></i></span>
                                         <input type="text" name="website" class="form-control" value="{{ old('website', $selectedIsp->website) }}" placeholder="e.g. www.carnival.com.bd">
@@ -493,9 +493,9 @@
                                 </div>
 
                                 <div class="col-md-12">
-                                    <label class="form-label">Office / Billing Address</label>
+                                    <label class="form-label">@lang('messages.office_billing_address')</label>
                                     <textarea name="address" rows="3" class="form-control" placeholder="Full street address, area, city, postal code">{{ old('address', $selectedIsp->address) }}</textarea>
-                                    <div class="helper-text">Physical address printed on official invoices for clients under this ISP.</div>
+                                    <div class="helper-text">@lang('messages.physical_address_printed_on_official_invoices')</div>
                                 </div>
                             </div>
                         </div>
@@ -507,49 +507,49 @@
                     <div class="settings-card">
                         <div class="settings-card-header">
                             <div>
-                                <h5>Invoice, Receipt & Payment Settings for <span class="text-primary">{{ $selectedIsp->isp_name }}</span></h5>
-                                <p>Custom money receipt headers, merchant numbers, instructions, and signatures for this ISP.</p>
+                                <h5>@lang('messages.invoice_receipt_payment_settings_for') <span class="text-primary">{{ $selectedIsp->isp_name }}</span></h5>
+                                <p>@lang('messages.custom_money_receipt_headers')</p>
                             </div>
                         </div>
                         <div class="settings-card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Invoice / Receipt Header Title</label>
+                                    <label class="form-label">@lang('messages.invoice_receipt_header_title')</label>
                                     <input type="text" name="invoice_title" class="form-control" value="{{ old('invoice_title', $selectedIsp->invoice_title) }}" placeholder="e.g. MONEY RECEIPT or INVOICE">
-                                    <div class="helper-text">Title shown on the printable invoice top corner.</div>
+                                    <div class="helper-text">@lang('messages.title_shown_on_the_printable_invoice_top_corner')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Currency Symbol</label>
+                                    <label class="form-label">@lang('messages.currency_symbol')</label>
                                     <input type="text" name="currency_symbol" class="form-control" value="{{ old('currency_symbol', $selectedIsp->currency_symbol) }}" placeholder="e.g. ৳ or BDT">
-                                    <div class="helper-text">Currency prefix used across bill amounts for this ISP.</div>
+                                    <div class="helper-text">@lang('messages.currency_prefix_used_across_bill_amounts')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Payment Methods</label>
+                                    <label class="form-label">@lang('messages.payment_methods')</label>
                                     <input type="text" name="payment_methods" class="form-control" value="{{ old('payment_methods', $selectedIsp->payment_methods) }}" placeholder="e.g. bKash / Nagad / Cash / Bank">
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Payment Merchant / Agent Number</label>
+                                    <label class="form-label">@lang('messages.payment_merchant_agent_number')</label>
                                     <input type="text" name="payment_number" class="form-control" value="{{ old('payment_number', $selectedIsp->payment_number) }}" placeholder="e.g. 017XXXXXXXX">
-                                    <div class="helper-text">bKash/Nagad number mentioned in SMS notifications and invoices.</div>
+                                    <div class="helper-text">@lang('messages.bkas_nagad_number_mentioned_in_sms_notifications')</div>
                                 </div>
 
                                 <div class="col-md-12">
-                                    <label class="form-label">Payment Instructions Note</label>
+                                    <label class="form-label">@lang('messages.payment_instructions_note')</label>
                                     <textarea name="payment_instruction" rows="2" class="form-control" placeholder="e.g. Please pay through bKash/Nagad Merchant or Cash within the due date.">{{ old('payment_instruction', $selectedIsp->payment_instruction) }}</textarea>
-                                    <div class="helper-text">Instruction message printed on invoices and sent in SMS reminders.</div>
+                                    <div class="helper-text">@lang('messages.instruction_message_printed_on_invoices')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Authorized Signatory Title</label>
+                                    <label class="form-label">@lang('messages.authorized_signatory_title')</label>
                                     <input type="text" name="signatory_title" class="form-control" value="{{ old('signatory_title', $selectedIsp->signatory_title) }}" placeholder="e.g. Authorized Signatory / Accounts Manager">
-                                    <div class="helper-text">Designation printed beneath the signature line.</div>
+                                    <div class="helper-text">@lang('messages.designation_printed_beneath_the_signature_line')</div>
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Invoice Footer Note / Disclaimer</label>
+                                    <label class="form-label">@lang('messages.invoice_footer_note_disclaimer')</label>
                                     <input type="text" name="invoice_footer" class="form-control" value="{{ old('invoice_footer', $selectedIsp->invoice_footer) }}" placeholder="e.g. Keep this invoice receipt for future reference. Thank you!">
                                 </div>
                             </div>
@@ -561,7 +561,7 @@
             <!-- Sticky / Bottom Submit Button -->
             <div class="d-flex justify-content-end align-items-center gap-3 mt-4 mb-5">
                 <button type="submit" class="btn-save-settings">
-                    <i class="fas fa-save"></i> Save {{ $selectedIsp->isp_name }} Settings
+                    <i class="fas fa-save"></i> @lang('messages.save') {{ $selectedIsp->isp_name }} @lang('messages.settings')
                 </button>
             </div>
         </form>
@@ -587,7 +587,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="createIspModalLabel"><i class="fas fa-plus-circle me-2"></i> Add New ISP Profile</h5>
+                <h5 class="modal-title" id="createIspModalLabel"><i class="fas fa-plus-circle me-2"></i> @lang('messages.add_new_isp_profile')</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('isp-settings.store') }}" method="POST" enctype="multipart/form-data">
@@ -595,51 +595,51 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">ISP Name <span class="text-danger">*</span></label>
+                            <label class="form-label">@lang('messages.isp_name') <span class="text-danger">*</span></label>
                             <input type="text" name="isp_name" class="form-control" placeholder="e.g. Link3 Technologies" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">ISP Identifier Code <span class="text-danger">*</span></label>
+                            <label class="form-label">@lang('messages.isp_identifier_code_required') <span class="text-danger">*</span></label>
                             <input type="text" name="isp_code" class="form-control font-monospace" placeholder="e.g. link3" required>
-                            <div class="helper-text">Unique code assigned to clients (e.g. <code>link3</code>, <code>amberit</code>).</div>
+                            <div class="helper-text">@lang('messages.unique_code_assigned_to_clients')</div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Tagline</label>
+                            <label class="form-label">@lang('messages.tagline')</label>
                             <input type="text" name="isp_tagline" class="form-control" placeholder="e.g. Connecting You to the World">
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">ISP Brand Logo</label>
+                            <label class="form-label">@lang('messages.isp_brand_logo')</label>
                             <input type="file" name="isp_logo" class="form-control" accept="image/*">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Support Hotline</label>
+                            <label class="form-label">@lang('messages.support_hotline')</label>
                             <input type="text" name="phone" class="form-control" placeholder="e.g. 017XXXXXXXX">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">@lang('messages.email_label')</label>
                             <input type="email" name="email" class="form-control" placeholder="e.g. support@isp.com.bd">
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Office Address</label>
+                            <label class="form-label">@lang('messages.office_address')</label>
                             <textarea name="address" rows="2" class="form-control" placeholder="Street, area, city"></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Payment Methods</label>
+                            <label class="form-label">@lang('messages.payment_methods')</label>
                             <input type="text" name="payment_methods" class="form-control" placeholder="e.g. bKash / Nagad / Cash" value="bKash / Nagad / Cash">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Payment Number</label>
+                            <label class="form-label">@lang('messages.payment_number')</label>
                             <input type="text" name="payment_number" class="form-control" placeholder="e.g. 01XXXXXXXXX">
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Payment Instructions Note</label>
+                            <label class="form-label">@lang('messages.payment_instructions_note')</label>
                             <input type="text" name="payment_instruction" class="form-control" value="Please pay through bKash/Nagad Merchant or Cash within the due date.">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Create ISP Profile</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('messages.cancel')</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> @lang('messages.create_isp_profile')</button>
                 </div>
             </form>
         </div>

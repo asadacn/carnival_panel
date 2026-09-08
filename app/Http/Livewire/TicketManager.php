@@ -305,8 +305,8 @@ class TicketManager extends Component
 
     function sendSMS($contacts, $message, $type = 'unicode')
     {
-        $api_key = env('MRAM_API_KEY');
-        $senderid = env('MRAM_SENDER_ID');
+        $api_key = config('services.mram.api_key');
+        $senderid = config('services.mram.sender_id');
 
         if ($contacts instanceof \Illuminate\Support\Collection) {
             $contacts = $contacts->toArray();

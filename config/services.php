@@ -30,6 +30,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'mram' => [
+        'api_key' => env('MRAM_API_KEY'),
+        'sender_id' => env('MRAM_SENDER_ID'),
+        'base_url' => env('MRAM_BASE_URL', 'https://sms.mram.com.bd'),
+    ],
+
     'elitcall' => [
         'key' => env('ELITCALL_API_KEY'),
         'base_url' => env('ELITCALL_BASE_URL', 'https://call.mram.com.bd'),

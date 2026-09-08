@@ -60,11 +60,11 @@
 
     <ul class="sidebar-menu">
 
-        <li class="menu-header">Core Operations</li>
+        <li class="menu-header">@lang('menu.core_operations')</li>
 
         <li class="side-menus menu-item-featured {{ Request::is('home*') || Request::is('/') ? 'active' : '' }}">
             <a class="nav-link" href="{{route('dashboard')}}">
-                <i class="fas fa-chart-line"></i><span>Dashboard</span>
+                <i class="fas fa-chart-line"></i><span>@lang('menu.dashboard')</span>
             </a>
         </li>
 
@@ -73,33 +73,33 @@
         </li>
 
         <li class="menu-item-featured {{ Request::is('clients/closed*') ? 'active' : '' }}">
-            <a href="{{ route('clients.closed') }}"><i class="fas fa-user-slash"></i><span>Closed Clients</span></a>
+            <a href="{{ route('clients.closed') }}"><i class="fas fa-user-slash"></i><span>@lang('menu.closed_clients')</span></a>
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('due-bills*', 'due-bill-payments*') ? 'active' : '' }}">
             <a href="#" class="nav-link has-dropdown">
-                <i class="fa fa-file-invoice-dollar"></i><span>Billing & Collections</span>
+                <i class="fa fa-file-invoice-dollar"></i><span>@lang('menu.billing_collections')</span>
             </a>
             <ul class="dropdown-menu">
                 <li class="{{ Request::is('due-bills*') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('due-bills.index') }}"><i class="fa fa-receipt"></i><span>Due Bills</span></a>
+                    <a class="nav-link" href="{{ route('due-bills.index') }}"><i class="fa fa-receipt"></i><span>@lang('menu.due_bills')</span></a>
                 </li>
                 <li class="{{ Request::is('due-bill-payments*') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('due-bill-payments.index') }}"><i class="fa fa-credit-card"></i><span>Payments</span></a>
+                    <a class="nav-link" href="{{ route('due-bill-payments.index') }}"><i class="fa fa-credit-card"></i><span>@lang('menu.payments')</span></a>
                 </li>
                 <li class="{{ Request::is('due-bills/report*') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('due-bills.report') }}"><i class="fa fa-chart-bar"></i><span>Billing Report</span></a>
+                    <a class="nav-link" href="{{ route('due-bills.report') }}"><i class="fa fa-chart-bar"></i><span>@lang('menu.billing_report')</span></a>
                 </li>
             </ul>
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('sMSTEMPALTES*', 'sms_log*', 'create_bulk_sms*') ? 'active' : '' }}">
             <a href="#" class="nav-link has-dropdown">
-                <i class="fa fa-comments"></i><span>SMS / Messaging</span>
+                <i class="fa fa-comments"></i><span>@lang('menu.sms_messaging')</span>
             </a>
             <ul class="dropdown-menu">
                 <li class="{{ Request::is('create_bulk_sms*') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('create_bulk_sms') }}"><i class="fa fa-sms"></i><span>Bulk SMS</span></a>
+                    <a class="nav-link" href="{{ route('create_bulk_sms') }}"><i class="fa fa-sms"></i><span>@lang('menu.bulk_sms')</span></a>
                 </li>
                 <li class="{{ Request::is('sMSTEMPALTES*') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('sMSTEMPALTES.index') }}"><i class="fa fa-file-alt"></i><span>@lang('models/sMSTEMPALTES.plural')</span></a>
@@ -111,13 +111,13 @@
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('tickets*') || Request::is('tickets') ? 'active' : '' }}">
-            <a href="#" class="nav-link has-dropdown"><i class="fa fa-ticket-alt"></i><span>Tickets</span></a>
+            <a href="#" class="nav-link has-dropdown"><i class="fa fa-ticket-alt"></i><span>@lang('menu.tickets')</span></a>
             <ul class="dropdown-menu">
                 <li class="{{ Request::is('tickets') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('tickets.live') }}"><i class="fa fa-list"></i><span>Active Tickets</span></a>
+                    <a class="nav-link" href="{{ route('tickets.live') }}"><i class="fa fa-list"></i><span>@lang('menu.active_tickets')</span></a>
                 </li>
                 <li class="{{ Request::is('tickets/analytics') ? 'active' : '' }}">
-                    <a class="nav-link" href="{{ route('tickets.analytics') }}"><i class="fa fa-chart-pie"></i><span>Ticket Analytics</span></a>
+                    <a class="nav-link" href="{{ route('tickets.analytics') }}"><i class="fa fa-chart-pie"></i><span>@lang('menu.ticket_analytics')</span></a>
                 </li>
             </ul>
         </li>
@@ -126,7 +126,7 @@
             <a href="{{ route('investments.index') }}"><i class="fa fa-money-bill-wave"></i><span>@lang('models/investments.plural')</span></a>
         </li>
 
-        <li class="menu-header">Network & Infrastructure</li>
+        <li class="menu-header">@lang('menu.network_infrastructure')</li>
 
         <li class="menu-item-featured {{ Request::is('packages*') ? 'active' : '' }}">
             <a href="{{ route('packages.index') }}"><i class="fa fa-box-open"></i><span>@lang('models/packages.plural')</span></a>
@@ -145,24 +145,24 @@
         </li>
 
 
-        <li class="menu-header">Staff & Collection</li>
+        <li class="menu-header">@lang('menu.staff_collection')</li>
 
         <li class="menu-item-featured {{ Request::is('collectors*') ? 'active' : '' }}">
             <a href="{{ route('collectors.index') }}"><i class="fa fa-user-tie"></i><span>@lang('models/collectors.plural')</span></a>
         </li>
 
         <li class="menu-item-featured {{ Request::is('technicians*') ? 'active' : '' }}">
-            <a href="{{ route('technicians') }}"><i class="fa fa-tools"></i><span>Technicians</span></a>
+            <a href="{{ route('technicians') }}"><i class="fa fa-tools"></i><span>@lang('menu.technicians')</span></a>
         </li>
 
         <li class="menu-item-featured {{ Request::is('cardSellers*') ? 'active' : '' }}">
             <a href="{{ route('cardSellers.index') }}"><i class="fa fa-credit-card"></i><span>@lang('models/cardSellers.plural')</span></a>
         </li>
 
-        <li class="menu-header">Settings</li>
+        <li class="menu-header">@lang('menu.settings')</li>
 
         <li class="menu-item-featured {{ Request::is('isp-settings*') ? 'active' : '' }}">
-            <a href="{{ route('isp-settings.index') }}"><i class="fa fa-sliders-h"></i><span>ISP Settings</span></a>
+            <a href="{{ route('isp-settings.index') }}"><i class="fa fa-sliders-h"></i><span>@lang('menu.isp_settings')</span></a>
         </li>
 
     </ul>
