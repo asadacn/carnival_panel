@@ -443,11 +443,20 @@ EOT;
             return redirect(route('clients.index'));
         }
 
-        $client->loadCount('comments');
+        $client->loadCount(['comments', 'smsLogs']);
         $templates = SMS_TEMPALTE::all();
         $packages  = Package::all();
 
-        return view('clients.show', compact('client', 'templates', 'packages'));
+        $clientSmsStats = [
+            'total'     => $client->sms_logs_count,
+            'delivered' => $client->smsLogs()->where('status', '1')->count(),
+            'failed'    => $client->smsLogs()->where('status', '0')->count(),
+        ];
+        $clientSmsLogs = $client->smsLogs()
+            ->with(['sender:id,name', 'campaign:id,title'])
+            ->paginate(15, ['*'], 'sms_page');
+
+        return view('clients.show', compact('client', 'templates', 'packages', 'clientSmsStats', 'clientSmsLogs'));
     }
 
     /**
@@ -983,4 +992,50 @@ EOT;
             'onu_return_status' => $client->fresh()->onu_return_status,
         ]);
     }
+
+    /**
+     * Get paginated SMS logs for this client (for AJAX tab refresh or filter).
+     */
+    public function smsLogs(Request $request, $id)
+    {
+        $client = $this->clientRepository->find($id);
+
+        if (empty($client)) {
+            return response()->json(['success' => false, 'message' => 'Client not found'], 404);
+        }
+
+        $query = $client->smsLogs()->with(['sender:id,name', 'campaign:id,title']);
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->search . '%';
+            $query->where(function ($q) use ($search) {
+                $q->where('sms', 'like', $search)
+                  ->orWhere('contact', 'like', $search);
+            });
+        }
+
+        $smsLogs = $query->paginate(15, ['*'], 'sms_page');
+
+        $stats = [
+            'total'     => $client->smsLogs()->count(),
+            'delivered' => $client->smsLogs()->where('status', '1')->count(),
+            'failed'    => $client->smsLogs()->where('status', '0')->count(),
+        ];
+
+        if ($request->ajax()) {
+            $view = view('clients.tabs.sms_logs_table', compact('client', 'smsLogs'))->render();
+            return response()->json([
+                'success' => true,
+                'html'    => $view,
+                'stats'   => $stats,
+            ]);
+        }
+
+        return view('clients.tabs.sms_logs_table', compact('client', 'smsLogs', 'stats'));
+    }
 }
+

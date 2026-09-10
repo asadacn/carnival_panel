@@ -60,6 +60,7 @@ Route::post('clients/{clientId}/unclose', [ClientController::class, 'removeFromC
 Route::post('clients/{clientId}/cable-return', [ClientController::class, 'updateCableReturn'])->name('clients.updateCableReturn');
 Route::post('clients/{clientId}/onu-return', [ClientController::class, 'updateOnuReturn'])->name('clients.updateOnuReturn');
 Route::get('clients/{clientId}/details', [ClientController::class, 'getClientDetails'])->name('clients.details');
+Route::get('clients/{clientId}/sms-logs', [ClientController::class, 'smsLogs'])->name('clients.sms-logs');
 
 // Client Comments (social-media style)
 Route::get('clients/{clientId}/comments', [ClientCommentController::class, 'index'])->name('clients.comments.index');

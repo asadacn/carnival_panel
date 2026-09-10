@@ -270,4 +270,13 @@ class Client extends Model
             ->unpaid()
             ->sum(\DB::raw('amount - paid_amount'));
     }
+
+    /**
+     * Get all SMS logs for this client.
+     */
+    public function smsLogs()
+    {
+        return $this->hasMany(SMSLOG::class, 'client_id', 'id')->latest();
+    }
 }
+

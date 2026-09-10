@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\SMS_TEMPALTE;
 use App\Models\SMSLOG;
+use App\Models\SmsCampaign;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,86 +17,157 @@ class SmsController extends Controller
     {
         $request->validate([
             'client_id' => 'required|integer|exists:clients,id',
-            'sms'       => 'required|string|max:500',
+            'sms'       => 'required|string|max:1000',
         ]);
 
         $client = Client::findOrFail($request->client_id);
+        $smsText = trim($request->sms);
+        $charCount = mb_strlen($smsText, 'UTF-8');
+        $smsParts = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
+
+        $isSent = sms($client->contact, $smsText, 'unicode');
 
         $smslog = new SMSLOG();
-        $smslog->client_id = $client->username;
-        $smslog->contact   = $client->contact;
-        $smslog->sms       = $request->sms;
+        $smslog->client_id         = $client->id;
+        $smslog->client_identifier = $client->username;
+        $smslog->user_id           = auth()->id();
+        $smslog->contact           = $client->contact;
+        $smslog->sms               = $smsText;
+        $smslog->character_count   = $charCount;
+        $smslog->sms_count         = $smsParts;
+        $smslog->message_type      = 'single';
+        $smslog->encoding          = 'unicode';
+        $smslog->gateway           = 'mram';
+        $smslog->status            = $isSent ? '1' : '0';
+        $smslog->error_message     = $isSent ? null : 'Failed to deliver to gateway';
+        $smslog->sent_at           = $isSent ? now() : null;
+        $smslog->save();
 
-        if (sms($client->contact, $request->sms)) {
-            $smslog->status = true;
-            $smslog->save();
+        if ($isSent) {
             return response()->json(['success' => true, 'message' => 'SMS sent successfully.']);
         } else {
-            $smslog->status = false;
-            $smslog->save();
             return response()->json(['success' => false, 'message' => 'SMS sending failed. Please check the API or contact number.'], 200);
         }
     }
 
     public function bulk_sms(Request $request)
     {
+        // Scenario 1: Selected clients array from UI/Datatables
         if ($request->has('clients')) {
             $request->validate([
-                'sms'       => 'required|string|max:500',
-                'clients'   => 'required|array|min:1|max:50',
+                'sms'       => 'required|string|max:1000',
+                'clients'   => 'required|array|min:1',
                 'clients.*' => 'integer|distinct|exists:clients,id',
             ]);
 
-            $clients = Client::whereIn('id', $request->input('clients'))
-                ->pluck('contact')
-                ->filter()
-                ->values();
+            $targetClients = Client::whereIn('id', $request->input('clients'))
+                ->whereNotNull('contact')
+                ->where('contact', '!=', '')
+                ->get(['id', 'username', 'contact']);
 
-            if ($clients->isEmpty()) {
+            if ($targetClients->isEmpty()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No valid contact numbers found for the selected clients.',
                 ], 422);
             }
 
-            if (!sms($clients, $request->input('sms'), 'unicode')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'SMS sending failed. Please check the API or contact numbers.',
-                ], 502);
-            }
+            $smsText = trim($request->input('sms'));
+            $charCount = mb_strlen($smsText, 'UTF-8');
+            $smsParts = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
+
+            // Create Master Campaign Record
+            $campaign = SmsCampaign::create([
+                'user_id'          => auth()->id(),
+                'title'            => 'Selected Clients SMS (' . $targetClients->count() . ')',
+                'target_group'     => 'selected',
+                'message_template' => $smsText,
+                'total_recipients' => $targetClients->count(),
+                'status'           => 'processing',
+            ]);
+
+            $successCount = 0;
+            $failedCount  = 0;
+            $now = now();
+
+            $targetClients->chunk(100)->each(function ($chunk) use ($campaign, $smsText, $charCount, $smsParts, $now, &$successCount, &$failedCount) {
+                $contacts = $chunk->pluck('contact')->toArray();
+                $isSent = false;
+                try {
+                    $isSent = sms($contacts, $smsText, 'unicode');
+                } catch (\Throwable $th) {
+                    $isSent = false;
+                }
+
+                $logRows = [];
+                foreach ($chunk as $cl) {
+                    $logRows[] = [
+                        'client_id'         => $cl->id,
+                        'client_identifier' => $cl->username,
+                        'campaign_id'       => $campaign->id,
+                        'user_id'           => auth()->id(),
+                        'contact'           => $cl->contact,
+                        'sms'               => $smsText,
+                        'character_count'   => $charCount,
+                        'sms_count'         => $smsParts,
+                        'message_type'      => 'bulk',
+                        'encoding'          => 'unicode',
+                        'gateway'           => 'mram',
+                        'status'            => $isSent ? '1' : '0',
+                        'error_message'     => $isSent ? null : 'Gateway dispatch failed',
+                        'sent_at'           => $isSent ? $now : null,
+                        'created_at'        => $now,
+                        'updated_at'        => $now,
+                    ];
+                }
+                SMSLOG::insert($logRows);
+
+                if ($isSent) {
+                    $successCount += count($chunk);
+                } else {
+                    $failedCount += count($chunk);
+                }
+            });
+
+            $campaign->update([
+                'successful_count' => $successCount,
+                'failed_count'     => $failedCount,
+                'status'           => $failedCount === 0 ? 'completed' : ($successCount > 0 ? 'partially_failed' : 'failed'),
+                'sent_at'          => now(),
+            ]);
 
             return response()->json([
-                'success' => true,
-                'message' => 'SMS sent successfully to ' . $clients->count() . ' client(s).',
+                'success' => $successCount > 0,
+                'message' => 'SMS sent successfully to ' . $successCount . ' client(s).' . ($failedCount > 0 ? " ({$failedCount} failed)" : ''),
             ]);
         }
 
-        // 1. Initial Validation
+        // Scenario 2: Target group selection from Bulk SMS create view
         if (!isset($request->client_status)) {
             Flash::error("Select a clients group please!");
             return redirect()->back();
         }
 
         $request->validate([
-            'sms_body' => 'required|string|max:250',
+            'sms_body'      => 'required|string|max:1000',
             'client_status' => 'required|string',
         ]);
 
-        $clients = collect();
+        $smsText = trim($request->sms_body);
+        $charCount = mb_strlen($smsText, 'UTF-8');
+        $smsParts = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
 
-        // 2. Build base query — optionally filter by ISP
         $ispCode = $request->isp_code;
-        $baseQuery = Client::query();
+        $baseQuery = Client::query()->whereNotNull('contact')->where('contact', '!=', '');
         if (!empty($ispCode)) {
             $baseQuery->where('isp_code', strtolower($ispCode));
         }
 
-        // 3. Get clients contacts based on the selected status
+        $clientsCollection = collect();
+
         if ($request->client_status === 'custom') {
             $request->validate(['custom_contacts' => 'required|string']);
 
-            // FIX: Use new line (\r\n|\r|\n) as separator
             $custom_numbers = array_filter(
                 array_map('trim', preg_split('/\r\n|\r|\n/', $request->custom_contacts))
             );
@@ -104,57 +176,112 @@ class SmsController extends Controller
                 Flash::error("No custom numbers were provided.");
                 return redirect()->back();
             }
-            $clients = collect($custom_numbers);
 
+            // Map custom numbers to objects with null client_id
+            $clientsCollection = collect($custom_numbers)->map(function ($phone) {
+                // If phone exists in clients, attempt to resolve client_id
+                $found = Client::where('contact', $phone)->first(['id', 'username']);
+                return (object)[
+                    'id'       => $found ? $found->id : null,
+                    'username' => $found ? $found->username : null,
+                    'contact'  => $phone,
+                ];
+            });
         } else {
-            // Existing logic for database groups
             switch ($request->client_status) {
                 case "expiring":
-                    $clients = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
+                    $clientsCollection = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->get(['id', 'username', 'contact']);
                     break;
                 case "registered":
-                    $clients = (clone $baseQuery)->where('status','registered')->pluck('contact');
+                    $clientsCollection = (clone $baseQuery)->where('status', 'registered')->get(['id', 'username', 'contact']);
                     break;
                 case "expired":
-                    $clients = (clone $baseQuery)->where('status','expired')->pluck('contact');
+                    $clientsCollection = (clone $baseQuery)->where('status', 'expired')->get(['id', 'username', 'contact']);
                     break;
                 case "expired_today":
-                    $clients = (clone $baseQuery)->where('expiration',Carbon::today('Asia/Dhaka'))->pluck('contact');
+                    $clientsCollection = (clone $baseQuery)->where('expiration', Carbon::today('Asia/Dhaka'))->get(['id', 'username', 'contact']);
                     break;
                 case "expired_this_month":
-                    $clients = (clone $baseQuery)->where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
+                    $clientsCollection = (clone $baseQuery)->where('status', 'expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->get(['id', 'username', 'contact']);
                     break;
-
                 default:
                     Flash::error("Invalid clients group selected!");
                     return redirect()->back();
             }
         }
 
-        if ($clients->isEmpty()) {
+        if ($clientsCollection->isEmpty()) {
             Flash::warning("No contacts found for the selected group or the custom list is empty.");
             return redirect()->back();
         }
 
+        // Create campaign header
+        $campaign = SmsCampaign::create([
+            'user_id'          => auth()->id(),
+            'title'            => ucfirst(str_replace('_', ' ', $request->client_status)) . ' (' . $clientsCollection->count() . ')' . (!empty($ispCode) ? ' - ' . strtoupper($ispCode) : ''),
+            'target_group'     => $request->client_status,
+            'isp_code'         => $ispCode,
+            'message_template' => $smsText,
+            'total_recipients' => $clientsCollection->count(),
+            'status'           => 'processing',
+        ]);
 
-        // 3. Send SMS
-        try {
-            if(!empty($request->sms_body)){
-                sms( $clients, $request->sms_body, 'unicode' );
+        $successCount = 0;
+        $failedCount  = 0;
+        $now = now();
 
-            }else{
-                Flash::error("SMS Body Empty!");
-                return redirect()->back();
+        $clientsCollection->chunk(100)->each(function ($chunk) use ($campaign, $smsText, $charCount, $smsParts, $now, &$successCount, &$failedCount) {
+            $contacts = $chunk->pluck('contact')->filter()->values()->toArray();
+            $isSent = false;
+            if (!empty($contacts)) {
+                try {
+                    $isSent = sms($contacts, $smsText, 'unicode');
+                } catch (\Throwable $th) {
+                    $isSent = false;
+                }
             }
 
-        } catch (\Throwable $th) {
-            Flash::error("SMS Sending Failed!");
-            return redirect()->back();
-        }
+            $logRows = [];
+            foreach ($chunk as $cl) {
+                $logRows[] = [
+                    'client_id'         => $cl->id,
+                    'client_identifier' => $cl->username,
+                    'campaign_id'       => $campaign->id,
+                    'user_id'           => auth()->id(),
+                    'contact'           => $cl->contact,
+                    'sms'               => $smsText,
+                    'character_count'   => $charCount,
+                    'sms_count'         => $smsParts,
+                    'message_type'      => 'bulk',
+                    'encoding'          => 'unicode',
+                    'gateway'           => 'mram',
+                    'status'            => $isSent ? '1' : '0',
+                    'error_message'     => $isSent ? null : 'Bulk gateway dispatch failed',
+                    'sent_at'           => $isSent ? $now : null,
+                    'created_at'        => $now,
+                    'updated_at'        => $now,
+                ];
+            }
+            SMSLOG::insert($logRows);
 
-        Flash::success("Bulk SMS successfully initiated to " . $clients->count() . " contacts" . (!empty($ispCode) ? " (ISP: " . ucfirst($ispCode) . ")" : "") . "!");
+            if ($isSent) {
+                $successCount += count($chunk);
+            } else {
+                $failedCount += count($chunk);
+            }
+        });
+
+        $campaign->update([
+            'successful_count' => $successCount,
+            'failed_count'     => $failedCount,
+            'status'           => $failedCount === 0 ? 'completed' : ($successCount > 0 ? 'partially_failed' : 'failed'),
+            'sent_at'          => now(),
+        ]);
+
+        Flash::success("Bulk SMS successfully processed: {$successCount} sent" . ($failedCount > 0 ? ", {$failedCount} failed." : "!"));
         return redirect()->back();
     }
+
 
     public function bulk_voice_campaign(Request $request)
     {

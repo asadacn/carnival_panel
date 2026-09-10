@@ -568,7 +568,9 @@
                 if (data === true || (data && data.success === true)) {
                     Swal.fire({ icon: 'success', title: 'SMS Sent!', showConfirmButton: false, timer: 1500 });
                     resetText(); $('#smsModal').modal('hide');
+                    if (typeof reloadClientSmsLogs === 'function') { reloadClientSmsLogs(1); }
                 } else { Swal.fire({ icon: 'error', title: 'Failed', text: (data && data.message) ? data.message : 'Unknown error.' }); }
+
             },
             error: function() { Swal.close(); Swal.fire({ icon: 'error', title: 'Error', text: 'Server error. Please try again.' }); }
         });

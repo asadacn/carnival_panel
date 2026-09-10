@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Package;
 use App\Models\HotspotClient;
+use App\Models\SMSLOG;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -140,6 +141,60 @@ class HomeController extends Controller
                 $previousYearDataFilled[$month] = $previousYearData[$month] ?? 0;
             }
 
+            // SMS Current Month Daily Trend Analytics
+            $smsStartDate = Carbon::now('Asia/Dhaka')->startOfMonth();
+            $smsEndDate   = Carbon::today('Asia/Dhaka');
+
+            $smsStatsRaw = SMSLOG::whereBetween('created_at', [
+                    $smsStartDate->copy()->startOfDay(),
+                    $smsEndDate->copy()->endOfDay()
+                ])
+                ->select(
+                    DB::raw('DATE(created_at) as log_date'),
+                    DB::raw("SUM(CASE WHEN status = '1' OR status = 'sent' OR status = 'delivered' THEN 1 ELSE 0 END) as sent_count"),
+                    DB::raw("SUM(CASE WHEN status = '0' OR status = 'failed' THEN 1 ELSE 0 END) as failed_count"),
+                    DB::raw('COUNT(*) as total_count')
+                )
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->get()
+                ->keyBy('log_date');
+
+            $smsDatesLabels  = [];
+            $smsSentSeries   = [];
+            $smsFailedSeries = [];
+
+            for ($date = $smsStartDate->copy(); $date->lte($smsEndDate); $date->addDay()) {
+                $dateStr = $date->format('Y-m-d');
+                $smsDatesLabels[] = $date->format('d M');
+
+                $sent   = isset($smsStatsRaw[$dateStr]) ? (int)$smsStatsRaw[$dateStr]->sent_count : 0;
+                $failed = isset($smsStatsRaw[$dateStr]) ? (int)$smsStatsRaw[$dateStr]->failed_count : 0;
+
+                $smsSentSeries[]   = $sent;
+                $smsFailedSeries[] = $failed;
+            }
+
+            // Running Month totals (current calendar month)
+            $runningMonthStart = Carbon::now('Asia/Dhaka')->startOfMonth();
+            $runningMonthStats = SMSLOG::where('created_at', '>=', $runningMonthStart)
+                ->select(
+                    DB::raw("SUM(CASE WHEN status = '1' OR status = 'sent' OR status = 'delivered' THEN 1 ELSE 0 END) as sent_count"),
+                    DB::raw("SUM(CASE WHEN status = '0' OR status = 'failed' THEN 1 ELSE 0 END) as failed_count"),
+                    DB::raw('COUNT(*) as total_count')
+                )
+                ->first();
+
+            $smsTodaySent = SMSLOG::whereDate('created_at', Carbon::today('Asia/Dhaka'))
+                ->where(function($q) {
+                    $q->where('status', '1')->orWhere('status', 'sent')->orWhere('status', 'delivered');
+                })
+                ->count();
+
+            $smsMonthSent   = (int)($runningMonthStats->sent_count ?? 0);
+            $smsMonthFailed = (int)($runningMonthStats->failed_count ?? 0);
+            $smsMonthTotal  = $smsMonthSent + $smsMonthFailed;
+            $smsDeliveryRate = $smsMonthTotal > 0 ? round(($smsMonthSent / $smsMonthTotal) * 100, 1) : 100;
+
             return [
                 'clients' => $clients,
                 'clients_by_package' => $clients_by_package,
@@ -155,10 +210,20 @@ class HomeController extends Controller
                     'current' => array_values($currentYearDataFilled),
                     'previous' => array_values($previousYearDataFilled),
                 ],
+                'smsChartData' => [
+                    'labels' => $smsDatesLabels,
+                    'sent'   => $smsSentSeries,
+                    'failed' => $smsFailedSeries,
+                ],
+                'smsTodaySent'    => $smsTodaySent,
+                'smsMonthSent'    => $smsMonthSent,
+                'smsMonthFailed'  => $smsMonthFailed,
+                'smsDeliveryRate' => $smsDeliveryRate,
                 'lastUpdated' => $lastUpdated ? Carbon::parse($lastUpdated)->format('d-m-Y H:i:s') : null,
                 'total' => $total,
             ];
         });
+
 
         return view('home', $dashboardData);
     }

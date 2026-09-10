@@ -78,7 +78,18 @@
                         @endif
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link tab-btn" id="sms-logs-tab" data-bs-toggle="tab" data-bs-target="#sms-logs" type="button" role="tab">
+                        <i class="fas fa-sms me-2"></i>SMS History
+                        @if($client->sms_logs_count ?? 0)
+                        <span class="badge bg-primary rounded-pill ms-1" id="clientSmsBadgeCount">{{ $client->sms_logs_count ?? 0 }}</span>
+                        @else
+                        <span class="badge bg-secondary rounded-pill ms-1" id="clientSmsBadgeCount">0</span>
+                        @endif
+                    </button>
+                </li>
             </ul>
+
         </div>
 
         <div class="card-body p-0">
@@ -407,7 +418,97 @@
                     </div>
                 </div>
 
+                <!-- ===== SMS LOGS TAB ===== -->
+                <div class="tab-pane fade" id="sms-logs" role="tabpanel">
+                    <div class="p-4">
+                        <!-- Top Header & Actions -->
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h6 class="section-title-modern mb-1">
+                                    <i class="fas fa-sms me-2"></i>SMS History & Delivery Reports
+                                </h6>
+                                <p class="text-muted small mb-0">Audit trail of all direct and bulk SMS messages sent to this client.</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshClientSmsBtn" onclick="reloadClientSmsLogs()">
+                                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                                </button>
+                                <button type="button" class="btn btn-sm btn-cta-primary" onclick="setSmsId({{ $client->id }})" data-bs-toggle="modal" data-bs-target="#smsModal">
+                                    <i class="fas fa-paper-plane me-1"></i> Send SMS
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Client SMS Metric Mini-Cards -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-4">
+                                <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center shadow-xs">
+                                    <div>
+                                        <div class="text-muted small fw-semibold">Total SMS Sent</div>
+                                        <h4 class="mb-0 fw-bold text-dark mt-1" id="statClientSmsTotal">{{ $clientSmsStats['total'] ?? ($client->sms_logs_count ?? 0) }}</h4>
+                                    </div>
+                                    <div class="bg-primary-subtle text-primary p-2 rounded-circle">
+                                        <i class="fas fa-paper-plane fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center shadow-xs">
+                                    <div>
+                                        <div class="text-muted small fw-semibold">Delivered / Sent</div>
+                                        <h4 class="mb-0 fw-bold text-success mt-1" id="statClientSmsDelivered">{{ $clientSmsStats['delivered'] ?? 0 }}</h4>
+                                    </div>
+                                    <div class="bg-success-subtle text-success p-2 rounded-circle">
+                                        <i class="fas fa-check-circle fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center shadow-xs">
+                                    <div>
+                                        <div class="text-muted small fw-semibold">Failed</div>
+                                        <h4 class="mb-0 fw-bold text-danger mt-1" id="statClientSmsFailed">{{ $clientSmsStats['failed'] ?? 0 }}</h4>
+                                    </div>
+                                    <div class="bg-danger-subtle text-danger p-2 rounded-circle">
+                                        <i class="fas fa-times-circle fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Bar -->
+                        <div class="row g-2 mb-3 align-items-center">
+                            <div class="col-md-5 col-sm-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control border-start-0" id="smsSearchInput" placeholder="Search message text or phone..." onkeyup="debounceSmsSearch()">
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <select class="form-select form-select-sm" id="smsStatusFilter" onchange="reloadClientSmsLogs()">
+                                    <option value="all">All Statuses</option>
+                                    <option value="1">Delivered / Sent</option>
+                                    <option value="0">Failed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- SMS Logs Feed Container -->
+                        <div id="clientSmsLogsContainer">
+                            @if(isset($clientSmsLogs))
+                                @include('clients.tabs.sms_logs_table', ['smsLogs' => $clientSmsLogs, 'client' => $client])
+                            @else
+                                <div class="text-center py-4">
+                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                    Loading SMS records...
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
         </div>
     </div>
 </div>
@@ -697,7 +798,67 @@
         html += '</div>';
         feed.html(html);
     }
+
+    // ===== SMS LOGS MANAGEMENT =====
+    let smsSearchTimeout = null;
+
+    function debounceSmsSearch() {
+        clearTimeout(smsSearchTimeout);
+        smsSearchTimeout = setTimeout(function() {
+            reloadClientSmsLogs(1);
+        }, 350);
+    }
+
+    function reloadClientSmsLogs(page = 1) {
+        const container = $('#clientSmsLogsContainer');
+        const refreshBtn = $('#refreshClientSmsBtn');
+        const status = $('#smsStatusFilter').val() || 'all';
+        const search = $('#smsSearchInput').val() || '';
+
+        refreshBtn.find('i').addClass('fa-spin');
+        container.css('opacity', '0.6');
+
+        $.ajax({
+            url: `{{ url('clients/' . $client->id . '/sms-logs') }}`,
+            type: 'GET',
+            data: {
+                sms_page: page,
+                status: status,
+                search: search
+            },
+            success: function(res) {
+                refreshBtn.find('i').removeClass('fa-spin');
+                container.css('opacity', '1');
+
+                if (res && res.html !== undefined) {
+                    container.html(res.html);
+                    if (res.stats) {
+                        $('#statClientSmsTotal').text(res.stats.total || 0);
+                        $('#statClientSmsDelivered').text(res.stats.delivered || 0);
+                        $('#statClientSmsFailed').text(res.stats.failed || 0);
+                        $('#clientSmsBadgeCount').text(res.stats.total || 0);
+                    }
+                }
+            },
+            error: function() {
+                refreshBtn.find('i').removeClass('fa-spin');
+                container.css('opacity', '1');
+                container.html('<div class="alert alert-danger my-3"><i class="fas fa-exclamation-triangle me-2"></i>Failed to load SMS logs. Please try again.</div>');
+            }
+        });
+    }
+
+    // Intercept pagination clicks inside SMS log table
+    $(document).on('click', '#clientSmsLogsContainer .sms-pagination-links a', function(e) {
+        e.preventDefault();
+        const href = $(this).attr('href');
+        if (!href) return;
+        const urlParams = new URLSearchParams(href.split('?')[1]);
+        const page = urlParams.get('sms_page') || 1;
+        reloadClientSmsLogs(page);
+    });
 </script>
+
 @endpush
 
 <style>
