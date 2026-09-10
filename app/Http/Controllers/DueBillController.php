@@ -255,7 +255,7 @@ class DueBillController extends Controller
                 . "\n- " . $ispName;
 
             if ($client->contact) {
-                sms($client->contact, $message);
+                logSms($client->contact, $message, 'unicode', $client->id, $client->username, 'bill');
             }
         } catch (\Exception $e) {
             // Log error but don't fail the bill creation
@@ -386,7 +386,7 @@ class DueBillController extends Controller
                     . "গ্রাহক আইডি: {$bill->client->username}\n"
                     . "{$monthName} মাসের বিল: {$currency}" . number_format($bill->amount, 2) . "\n"
                     . "বিলটি সম্পূর্ণ পরিশোধ হয়েছে। ধন্যবাদ।\n- " . $ispName;
-                sms($bill->client->contact, $message);
+                logSms($bill->client->contact, $message, 'unicode', $bill->client->id, $bill->client->username, 'bill_payment');
             } catch (\Exception $e) {
                 // Log error but don't fail
             }

@@ -236,7 +236,7 @@ class DueBillPaymentController extends Controller
             }
 
             if ($client->contact) {
-                sms($client->contact, $message);
+                logSms($client->contact, $message, 'unicode', $client->id, $client->username, 'bill_payment');
             }
         } catch (\Exception $e) {
             // Log error but don't fail the payment creation

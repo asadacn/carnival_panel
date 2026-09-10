@@ -509,9 +509,55 @@ class SmsController extends Controller
 
     public function sms_log()
     {
-        $SMSLOGS = SMSLOG::latest()->simplePaginate(25);
+        $query = SMSLOG::query();
 
-        return view('s_m_s_l_o_g_s.index',compact('SMSLOGS'));
+        // Filters
+        if ($request = request()) {
+            if ($request->filled('client_search')) {
+                $search = $request->client_search;
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('client', function ($c) use ($search) {
+                        $c->where('name', 'like', "%{$search}%")
+                          ->orWhere('username', 'like', "%{$search}%")
+                          ->orWhere('contact', 'like', "%{$search}%");
+                    })->orWhere('contact', 'like', "%{$search}%")
+                      ->orWhere('client_identifier', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('status')) {
+                if ($request->status === 'sent') {
+                    $query->where('status', '1');
+                } elseif ($request->status === 'failed') {
+                    $query->where('status', '0');
+                }
+            }
+
+            if ($request->filled('message_type')) {
+                $query->where('message_type', $request->message_type);
+            }
+
+            if ($request->filled('date_range')) {
+                $dates = explode(' to ', $request->date_range);
+                if (count($dates) === 2) {
+                    $query->whereBetween('created_at', [
+                        Carbon::parse($dates[0])->startOfDay(),
+                        Carbon::parse($dates[1])->endOfDay(),
+                    ]);
+                }
+            }
+        }
+
+        $SMSLOGS = $query->latest()->simplePaginate(25);
+
+        $stats = [
+            'total'   => SMSLOG::count(),
+            'sent'    => SMSLOG::where('status', '1')->count(),
+            'failed'  => SMSLOG::where('status', '0')->count(),
+            'today'   => SMSLOG::whereDate('created_at', today())->count(),
+        ];
+
+        return view('s_m_s_l_o_g_s.index', compact('SMSLOGS', 'stats'));
     }
 
     public function create_bulk_sms(){

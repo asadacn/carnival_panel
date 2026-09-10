@@ -132,7 +132,7 @@ class DueBill extends Model
             . $methods . ': ' . $paymentNumber
             . "\n- " . $ispName;
 
-        if (!sms($this->client->contact, $message)) {
+        if (!logSms($this->client->contact, $message, 'unicode', $this->client_id, $this->client->username ?? null, 'reminder')) {
             Log::warning('Due bill reminder SMS failed', ['due_bill_id' => $this->id]);
             return false;
         }

@@ -94,6 +94,50 @@ function sms($contacts, $message, $type = 'unicode')
     }
 }}
 
+
+if (!function_exists('logSms')) {
+    /**
+     * Send SMS and persist a log entry in the sms_logs table.
+     *
+     * @param string|array $contacts
+     * @param string       $message
+     * @param string       $type       'unicode' | 'text'
+     * @param int|null     $clientId   Optional client id
+     * @param string|null  $username   Optional client username (used as client_identifier)
+     * @param string|null  $messageType 'single' | 'bulk' | 'bill' | 'bill_payment' | 'reminder'
+     * @return bool
+     */
+    function logSms($contacts, $message, $type = 'unicode', $clientId = null, $username = null, $messageType = 'single')
+    {
+        $isSent = sms($contacts, $message, $type);
+
+        try {
+            $charCount = mb_strlen($message, 'UTF-8');
+            $smsParts  = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
+
+            $log = new \App\Models\SMSLOG();
+            $log->client_id         = $clientId;
+            $log->client_identifier = $username;
+            $log->user_id           = auth()->id();
+            $log->contact           = is_array($contacts) ? implode(',', $contacts) : $contacts;
+            $log->sms               = $message;
+            $log->character_count   = $charCount;
+            $log->sms_count         = $smsParts;
+            $log->message_type      = $messageType;
+            $log->encoding          = $type;
+            $log->gateway           = 'mram';
+            $log->status            = $isSent ? '1' : '0';
+            $log->error_message     = $isSent ? null : 'Gateway dispatch failed';
+            $log->sent_at           = $isSent ? now() : null;
+            $log->save();
+        } catch (\Throwable $e) {
+            Log::error('SMS log persistence failed: ' . $e->getMessage());
+        }
+
+        return $isSent;
+    }
+}
+
 //SMS BALANCE CHECKER
 
 if (!function_exists('sms_balance')) {
