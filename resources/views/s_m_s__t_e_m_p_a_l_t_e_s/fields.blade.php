@@ -1,25 +1,27 @@
 <!-- Title Field -->
-<div class="form-group col-sm-6">
+<div class="form-group col-sm-12">
     {!! Form::label('title', __('models/sMSTEMPALTES.fields.title').':') !!}
-    {!! Form::text('title', null, ['class' => 'form-control']) !!}
+    {!! Form::text('title', null, ['class' => 'form-control', 'placeholder' => __('models/sMSTEMPALTES.labels.title_placeholder')]) !!}
 </div>
 
 <!-- Sms Template Field -->
-<div  class="form-group col-sm-12 col-lg-10">
+<div class="form-group col-sm-12">
     {!! Form::label('sms_template', __('models/sMSTEMPALTES.fields.sms_template').':') !!}
-    <label for="">  ( <small id="sms-counter">
-        {{-- <li>Encoding: <span class="encoding"></span></li> --}}
-        {{-- <li>Length: <span class="length"></span></li> --}}
-        <span>Messages: <span class="messages"></span></span> /
-        {{-- <li>Per Message: <span class="per_message"></span></li> --}}
-        <span>Remaining: <span class="remaining"></span></span>
-    </small> )
-</label>
-    {!! Form::textarea('sms_template', null, ['class' => 'form-control' , 'style'=>'min-height:135px','id'=>'sms-body']) !!}
+    {!! Form::textarea('sms_template', null, ['class' => 'form-control', 'style' => 'min-height:150px', 'id' => 'sms-body', 'placeholder' => __('models/sMSTEMPALTES.labels.template_placeholder')]) !!}
+    <div id="sms-counter" class="sms-counter-inline">
+        <span class="encoding"></span>
+        <span class="length"></span>
+        <span class="messages"><strong>0</strong> @lang('models/sMSTEMPALTES.labels.parts')</span>
+        <span class="remaining"><strong>0</strong> @lang('models/sMSTEMPALTES.labels.remaining')</span>
+    </div>
 </div>
 
 <!-- Submit Field -->
 <div class="form-group col-sm-12">
-    {!! Form::submit(__('crud.save'), ['class' => 'btn btn-primary']) !!}
-    <a href="{{ route('sMSTEMPALTES.index') }}" class="btn btn-light">@lang('crud.cancel')</a>
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save me-1"></i> @lang('crud.save')
+    </button>
+    <a href="{{ route('sMSTEMPALTES.index') }}" class="btn btn-light">
+        <i class="fas fa-times me-1"></i> @lang('crud.cancel')
+    </a>
 </div>

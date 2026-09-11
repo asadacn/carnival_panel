@@ -509,9 +509,8 @@ class SmsController extends Controller
 
     public function sms_log()
     {
-        $query = SMSLOG::query();
+        $query = SMSLOG::query()->with(['client', 'campaign', 'sender']);
 
-        // Filters
         if ($request = request()) {
             if ($request->filled('client_search')) {
                 $search = $request->client_search;
@@ -526,10 +525,11 @@ class SmsController extends Controller
             }
 
             if ($request->filled('status')) {
-                if ($request->status === 'sent') {
-                    $query->where('status', '1');
-                } elseif ($request->status === 'failed') {
-                    $query->where('status', '0');
+                $status = strtolower((string) $request->status);
+                if (in_array($status, ['sent', '1'], true)) {
+                    $query->whereIn('status', ['1', 'sent', 'delivered']);
+                } elseif (in_array($status, ['failed', '0'], true)) {
+                    $query->whereIn('status', ['0', 'failed']);
                 }
             }
 
@@ -537,24 +537,43 @@ class SmsController extends Controller
                 $query->where('message_type', $request->message_type);
             }
 
-            if ($request->filled('date_range')) {
-                $dates = explode(' to ', $request->date_range);
+            if ($request->filled('from_date')) {
+                try {
+                    $query->whereDate('created_at', '>=', Carbon::parse($request->from_date, 'Asia/Dhaka')->startOfDay());
+                } catch (\Exception $e) {
+                }
+            }
+
+            if ($request->filled('to_date')) {
+                try {
+                    $query->whereDate('created_at', '<=', Carbon::parse($request->to_date, 'Asia/Dhaka')->endOfDay());
+                } catch (\Exception $e) {
+                }
+            }
+
+            if (!$request->filled('from_date') && !$request->filled('to_date') && $request->filled('date_range')) {
+                $dates = explode(' to ', trim($request->date_range));
                 if (count($dates) === 2) {
-                    $query->whereBetween('created_at', [
-                        Carbon::parse($dates[0])->startOfDay(),
-                        Carbon::parse($dates[1])->endOfDay(),
-                    ]);
+                    try {
+                        $query->whereBetween('created_at', [
+                            Carbon::parse($dates[0], 'Asia/Dhaka')->startOfDay(),
+                            Carbon::parse($dates[1], 'Asia/Dhaka')->endOfDay(),
+                        ]);
+                    } catch (\Exception $e) {
+                    }
                 }
             }
         }
 
-        $SMSLOGS = $query->latest()->simplePaginate(25);
+        $SMSLOGS = $query->latest()->paginate(25);
 
+        $successfulStatuses = ['1', 'sent', 'delivered'];
+        $failedStatuses = ['0', 'failed'];
         $stats = [
-            'total'   => SMSLOG::count(),
-            'sent'    => SMSLOG::where('status', '1')->count(),
-            'failed'  => SMSLOG::where('status', '0')->count(),
-            'today'   => SMSLOG::whereDate('created_at', today())->count(),
+            'total'  => SMSLOG::query()->count(),
+            'sent'   => SMSLOG::query()->whereIn('status', $successfulStatuses)->count(),
+            'failed' => SMSLOG::query()->whereIn('status', $failedStatuses)->count(),
+            'today'  => SMSLOG::query()->whereDate('created_at', today('Asia/Dhaka'))->count(),
         ];
 
         return view('s_m_s_l_o_g_s.index', compact('SMSLOGS', 'stats'));

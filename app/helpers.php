@@ -94,6 +94,71 @@ function sms($contacts, $message, $type = 'unicode')
     }
 }}
 
+if (!function_exists('sms_count')) {
+    function sms_count($text)
+    {
+        $text = (string) $text;
+        $charCount = mb_strlen($text, 'UTF-8');
+
+        $gsm7bit = "@£\$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
+        $gsm7bitEx = "^{}\\[~]|€";
+
+        $isGsm7bit = true;
+        $isGsm7bitEx = true;
+        $exCount = 0;
+
+        for ($i = 0; $i < $charCount; $i++) {
+            $char = mb_substr($text, $i, 1, 'UTF-8');
+            if (strpos($gsm7bit, $char) === false) {
+                $isGsm7bit = false;
+            }
+            if (strpos($gsm7bit . $gsm7bitEx, $char) === false) {
+                $isGsm7bitEx = false;
+            }
+            if (strpos($gsm7bitEx, $char) !== false) {
+                $exCount++;
+            }
+            if (!$isGsm7bit && !$isGsm7bitEx) {
+                break;
+            }
+        }
+
+        if ($isGsm7bit) {
+            $encoding = 'GSM_7BIT';
+            $perMessage = 160;
+            $multiPerMessage = 153;
+            $length = strlen($text);
+        } elseif ($isGsm7bitEx) {
+            $encoding = 'GSM_7BIT_EX';
+            $perMessage = 160;
+            $multiPerMessage = 153;
+            $length = strlen($text) + $exCount;
+        } else {
+            $encoding = 'UTF16';
+            $perMessage = 70;
+            $multiPerMessage = 67;
+            $length = $charCount;
+        }
+
+        if ($length > $perMessage) {
+            $perMessage = $multiPerMessage;
+        }
+
+        $messages = $length == 0 ? 0 : (int) ceil($length / $perMessage);
+        $remaining = $perMessage * $messages - $length;
+        if ($remaining == 0 && $messages == 0) {
+            $remaining = $perMessage;
+        }
+
+        return [
+            'encoding' => $encoding,
+            'length' => $length,
+            'per_message' => $perMessage,
+            'remaining' => $remaining,
+            'messages' => $messages,
+        ];
+    }
+}
 
 if (!function_exists('logSms')) {
     /**

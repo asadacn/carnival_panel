@@ -29,10 +29,25 @@ class SMS_TEMPALTEController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $sMSTEMPALTES = $this->sMSTEMPALTERepository->all();
+        $modelClass = $this->sMSTEMPALTERepository->model();
+        $query = $modelClass::query();
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('sms_template', 'like', "%{$search}%");
+            });
+        }
+
+        $sort = in_array($request->input('sort'), ['title', 'updated_at'], true) ? $request->input('sort') : 'updated_at';
+        $direction = $request->input('direction') === 'asc' ? 'asc' : 'desc';
+        $sMSTEMPALTES = $query->orderBy($sort, $direction)->paginate(15);
+        $latestTemplate = $query->latest('updated_at')->value('updated_at');
 
         return view('s_m_s__t_e_m_p_a_l_t_e_s.index')
-            ->with('sMSTEMPALTES', $sMSTEMPALTES);
+            ->with('sMSTEMPALTES', $sMSTEMPALTES)
+            ->with('latestTemplate', $latestTemplate);
     }
 
     /**
