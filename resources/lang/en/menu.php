@@ -18,4 +18,5 @@ return [
     'technicians' => 'Technicians',
     'settings' => 'Settings',
     'isp_settings' => 'ISP Settings',
+    'daily_expenses' => 'Daily Expenses',
 ];

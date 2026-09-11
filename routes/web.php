@@ -9,6 +9,7 @@ use App\Http\Controllers\SmsController;
 use App\Http\Controllers\HotspotClientController;
 use App\Http\Controllers\DueBillController;
 use App\Http\Controllers\DueBillPaymentController;
+use App\Http\Controllers\OfficeExpenseController;
 use App\Models\CardSeller;
 use App\Models\Client;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +76,12 @@ Route::post('hotspot/erase/', [HotspotZoneController::class, 'erase'])->name('ho
 
 Route::resource('packages', App\Http\Controllers\PackageController::class);
 Route::resource('investments', App\Http\Controllers\InvestmentController::class);
+
+// Daily Office Expense Management
+Route::get('office-expenses/report', [OfficeExpenseController::class, 'report'])->name('office-expenses.report');
+Route::get('office-expenses/export', [OfficeExpenseController::class, 'export'])->name('office-expenses.export');
+Route::get('office-expenses/{officeExpense}/receipt', [OfficeExpenseController::class, 'downloadReceipt'])->name('office-expenses.receipt');
+Route::resource('office-expenses', OfficeExpenseController::class);
 
 Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
 

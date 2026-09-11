@@ -18,4 +18,5 @@ return [
     'technicians' => 'টেকনিশিয়ান',
     'settings' => 'সেটিংস',
     'isp_settings' => 'আইএসপি সেটিংস',
+    'daily_expenses' => 'দৈনিক ব্যয়',
 ];

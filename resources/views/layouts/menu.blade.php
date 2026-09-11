@@ -126,6 +126,10 @@
             <a href="{{ route('investments.index') }}"><i class="fa fa-money-bill-wave"></i><span>@lang('models/investments.plural')</span></a>
         </li>
 
+        <li class="menu-item-featured {{ Request::is('office-expenses*') ? 'active' : '' }}">
+            <a href="{{ route('office-expenses.index') }}"><i class="fa fa-file-invoice-dollar"></i><span>@lang('menu.daily_expenses')</span></a>
+        </li>
+
         <li class="menu-header">@lang('menu.network_infrastructure')</li>
 
         <li class="menu-item-featured {{ Request::is('packages*') ? 'active' : '' }}">
