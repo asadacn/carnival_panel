@@ -29,6 +29,8 @@ class OfficeExpenseController extends Controller
             ->limit(6)
             ->get();
 
+        $currentYear = Carbon::today('Asia/Dhaka')->year;
+
         return view('expenses.index', [
             'expenses' => $query->orderBy('expense_date', 'desc')->orderBy('id', 'desc')->paginate(15)->withQueryString(),
             'filters' => $this->filterValues($request),
@@ -117,6 +119,16 @@ class OfficeExpenseController extends Controller
             ->paginate(20)->withQueryString();
         $stats = $this->expenseStats($query);
 
+        $currentYear = Carbon::today('Asia/Dhaka')->year;
+        $monthlyExpenses = OfficeExpense::select(
+            DB::raw('MONTH(expense_date) as month'),
+            DB::raw('SUM(amount) as total')
+        )
+            ->whereYear('expense_date', $currentYear)
+            ->groupBy(DB::raw('MONTH(expense_date)'))
+            ->orderBy('month')
+            ->get();
+
         return view('expenses.report', [
             'expenses' => $expenses,
             'filters' => $this->filterValues($request),
@@ -125,6 +137,7 @@ class OfficeExpenseController extends Controller
             'paymentBreakdown' => $this->paymentBreakdown($query),
             'categories' => OfficeExpense::categories(),
             'paymentMethods' => OfficeExpense::paymentMethods(),
+            'monthlyExpenses' => $monthlyExpenses,
         ]);
     }
 
