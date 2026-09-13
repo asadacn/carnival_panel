@@ -61,6 +61,48 @@
             transform: translateX(2px);
         }
 
+        .navbar-page-title {
+            min-width: 0;
+            max-width: 340px;
+            padding: 0.38rem 0.72rem;
+            border-radius: 12px;
+            background: rgba(105, 118, 252, 0.06);
+            border: 1px solid rgba(105, 118, 252, 0.08);
+            gap: 0.42rem;
+            transition: all 0.2s ease;
+        }
+
+        .navbar-page-title-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.22);
+        }
+
+        .navbar-page-title-icon i {
+            font-size: 12px;
+        }
+
+        .navbar-page-title-text {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--navbar-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.1px;
+        }
+
+        .navbar-page-title:hover {
+            background: rgba(105, 118, 252, 0.10);
+            border-color: rgba(105, 118, 252, 0.22);
+        }
+
         :root {
             --navbar-height: 64px;
             --navbar-bg: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 50%, #f5f3ff 100%);
@@ -76,11 +118,13 @@
         }
 
         .main-navbar {
+            min-height: var(--navbar-height);
             height: var(--navbar-height);
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--navbar-border);
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            margin-bottom: 0;
         }
 
         .main-content {
@@ -88,28 +132,53 @@
         }
 
         .navbar-inner {
+            min-height: var(--navbar-height);
             height: var(--navbar-height);
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
+            padding-left: 0.9rem !important;
+            padding-right: 0.9rem !important;
+            width: 100%;
+            display: flex !important;
+            align-items: center;
+            justify-content: space-between !important;
+        }
+
+        .navbar-left {
+            min-width: 210px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar-right {
+            align-self: stretch;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            flex-wrap: nowrap;
+            min-width: 160px;
         }
 
         .navbar-icon-btn {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.22s ease, background-color 0.22s ease, color 0.22s ease;
             background: rgba(106, 102, 235, 0.06);
             color: var(--navbar-text) !important;
-            border: 1px solid rgba(106, 102, 235, 0.1);
+            border: 1px solid rgba(106, 102, 235, 0.08);
+            font-size: 1rem;
         }
 
         .navbar-icon-btn:hover {
-            background: rgba(106, 102, 235, 0.12);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(106, 102, 235, 0.1);
+            background: rgba(106, 102, 235, 0.14);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 102, 235, 0.14);
+            color: var(--navbar-accent) !important;
         }
 
         .navbar-icon-btn:focus {
@@ -117,14 +186,62 @@
             color: var(--navbar-text) !important;
         }
 
-         .navbar-page-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--navbar-text);
+        .navbar-icon-btn.menu-toggle {
+            background: var(--navbar-accent);
+            color: #ffffff !important;
+            border-color: var(--navbar-accent);
+            box-shadow: 0 4px 12px rgba(106, 102, 235, 0.20);
         }
 
-        .navbar-page-title span {
-            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+        .navbar-icon-btn.menu-toggle:hover {
+            background: var(--navbar-accent);
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+
+        .navbar-page-title {
+            min-width: 0;
+            max-width: 340px;
+            padding: 0.44rem 0.84rem;
+            border-radius: 12px;
+            background: rgba(105, 118, 252, 0.06);
+            border: 1px solid rgba(105, 118, 252, 0.08);
+            gap: 0.46rem;
+            transition: all 0.2s ease;
+            color: var(--navbar-text);
+            font-size: 0.96rem;
+            font-weight: 800;
+        }
+
+        .navbar-page-title-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.22);
+        }
+
+        .navbar-page-title-icon i {
+            font-size: 12px;
+        }
+
+        .navbar-page-title-text {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--navbar-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.1px;
+        }
+
+        .navbar-page-title:hover {
+            background: rgba(105, 118, 252, 0.10);
+            border-color: rgba(105, 118, 252, 0.22);
         }
 
         .nav-link.nav-link-user {
@@ -133,8 +250,63 @@
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             height: auto;
             background: rgba(106, 102, 235, 0.06);
-            border: 1px solid rgba(106, 102, 235, 0.1);
+            border: 1px solid rgba(106, 102, 235, 0.12);
             margin-right: 4px;
+            color: var(--navbar-text);
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .nav-link.nav-link-user:hover {
+            background: rgba(106, 102, 235, 0.12);
+            box-shadow: 0 4px 12px rgba(106, 102, 235, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .nav-link.nav-link-user .user-name {
+            font-weight: 700;
+            color: var(--navbar-text);
+            font-size: 0.89rem;
+        }
+
+        .user-avatar {
+            width: 34px !important;
+            height: 34px !important;
+            object-fit: cover;
+            border: 2px solid rgba(106, 102, 235, 0.12);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .user-avatar-lg {
+            width: 56px !important;
+            height: 56px !important;
+            object-fit: cover;
+            border: 3px solid rgba(106, 102, 235, 0.15);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .navbar-caret {
+            font-size: 10px;
+            color: var(--navbar-text-muted);
+            transition: transform 0.22s ease;
+        }
+
+        .nav-link-user[aria-expanded="true"] .navbar-caret {
+            transform: rotate(180deg);
         }
 
         .nav-link.nav-link-user:hover {
@@ -235,6 +407,118 @@
             transform: translateY(-1px);
         }
 
+        /* Keep action controls consistent with the compact dashboard UX */
+        .btn {
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.84rem;
+            padding: 0.56rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            border-color: transparent;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #4338ca);
+            color: #ffffff !important;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.28);
+        }
+
+        .btn-outline-secondary {
+            background: #ffffff;
+            color: #475569 !important;
+            border-color: #cbd5e1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .btn-outline-secondary:hover {
+            background: #f8fafc;
+            color: #0f172a !important;
+            border-color: #94a3b8;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border-color: transparent;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.22);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #b91c1c, #dc2626);
+            color: #ffffff !important;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.28);
+        }
+
+        .btn-light {
+            background: #f8fafc;
+            color: #475569;
+            border-color: #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .btn-light:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .btn-back,
+        .btn-filter,
+        .btn-reset {
+            border-radius: 8px;
+            padding: 0.54rem 1rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .btn-back {
+            background: #ffffff;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-back:hover {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .btn-filter {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.22);
+        }
+
+        .btn-filter:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.28);
+        }
+
+        .btn-reset {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-reset:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
          @media (max-width: 575.98px) {
             .navbar-page-title {
                 display: none;
@@ -258,6 +542,20 @@
             display: flex;
             align-items: center;
             gap: 0.6rem;
+        }
+
+        /* Keep the visible page header under the navbar instead of pulling it upward */
+        .section > *:first-child {
+            margin-top: 0 !important;
+        }
+
+        .main-wrapper-1 .section .section-header {
+            margin-top: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            border-radius: 8px;
+            padding-left: 16px;
+            padding-right: 16px;
         }
 
         .section-page-header .header-actions {

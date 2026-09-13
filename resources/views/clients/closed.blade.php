@@ -32,66 +32,58 @@
         <div class="section-body">
 
             <div class="kpi-band">
-                <div class="kpi-card kpi-primary">
-                    <div class="kpi-card-inner">
-                        <div class="kpi-icon-wrap"><i class="fas fa-user-slash"></i></div>
-                        <div class="kpi-meta">
-                            <span class="kpi-label">Total Closed</span>
-                            <span class="kpi-value">{{ $totalClosed }}</span>
-                            <span class="kpi-foot">Accounts in queue</span>
-                        </div>
+                <div class="db-kpi-card" style="--kpi-accent:#4f46e5; --kpi-soft:rgba(79,70,229,.10);">
+                    <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(79,70,229,.10)); color: var(--kpi-accent, #4f46e5);">
+                        <i class="fas fa-user-slash"></i>
                     </div>
-                    <div class="kpi-glow"></div>
+                    <div class="db-kpi-body">
+                        <span class="db-kpi-label">Total Closed</span>
+                        <span class="db-kpi-value">{{ $totalClosed }}</span>
+                        <span class="db-kpi-value" style="font-size:.74rem;font-weight:700;color:#64748b;">Accounts in queue</span>
+                    </div>
+                    <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                 </div>
 
                 @php
                     $cablePct   = $totalClosed > 0 ? round(($cableReturnedCount / $totalClosed) * 100) : 0;
-                    $cableClass = $cablePct >= 80 ? 'kpi-success' : ($cablePct >= 50 ? 'kpi-warning' : 'kpi-danger');
                 @endphp
-                <div class="kpi-card {{ $cableClass }}">
-                    <div class="kpi-card-inner">
-                        <div class="kpi-icon-wrap"><i class="fas fa-plug"></i></div>
-                        <div class="kpi-meta">
-                            <span class="kpi-label">Cable Returned</span>
-                            <span class="kpi-value">{{ $cableReturnedCount }}<small>/{{ $totalClosed }}</small></span>
-                            <div class="kpi-progress">
-                                <div class="kpi-progress-bar" style="width: {{ $cablePct }}%"></div>
-                            </div>
-                            <span class="kpi-foot">{{ $cablePct }}% reconciliation complete</span>
-                        </div>
+                <div class="db-kpi-card" style="--kpi-accent:#10b981; --kpi-soft:rgba(16,185,129,.10);">
+                    <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(16,185,129,.10)); color: var(--kpi-accent, #10b981);">
+                        <i class="fas fa-plug"></i>
                     </div>
-                    <div class="kpi-glow"></div>
+                    <div class="db-kpi-body">
+                        <span class="db-kpi-label">Cable Returned</span>
+                        <span class="db-kpi-value">{{ $cableReturnedCount }}<small>/{{ $totalClosed }}</small></span>
+                        <span class="db-kpi-value" style="font-size:.74rem;font-weight:700;color:#64748b;">{{ $cablePct }}% complete</span>
+                    </div>
+                    <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                 </div>
 
-                <div class="kpi-card kpi-danger">
-                    <div class="kpi-card-inner">
-                        <div class="kpi-icon-wrap"><i class="fas fa-exclamation-triangle"></i></div>
-                        <div class="kpi-meta">
-                            <span class="kpi-label">Cable Pending</span>
-                            <span class="kpi-value">{{ $cablePendingCount }}</span>
-                            <span class="kpi-foot">Awaiting return</span>
-                        </div>
+                <div class="db-kpi-card" style="--kpi-accent:#ef4444; --kpi-soft:rgba(239,68,68,.10);">
+                    <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(239,68,68,.10)); color: var(--kpi-accent, #ef4444);">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <div class="kpi-glow"></div>
+                    <div class="db-kpi-body">
+                        <span class="db-kpi-label">Cable Pending</span>
+                        <span class="db-kpi-value">{{ $cablePendingCount }}</span>
+                        <span class="db-kpi-value" style="font-size:.74rem;font-weight:700;color:#64748b;">Awaiting return</span>
+                    </div>
+                    <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                 </div>
 
                 @php
                     $onuPct   = $totalClosed > 0 ? round(($onuReturnedCount / $totalClosed) * 100) : 0;
-                    $onuClass = $onuPct >= 80 ? 'kpi-success' : ($onuPct >= 50 ? 'kpi-warning' : 'kpi-danger');
                 @endphp
-                <div class="kpi-card {{ $onuClass }}">
-                    <div class="kpi-card-inner">
-                        <div class="kpi-icon-wrap"><i class="fas fa-router"></i></div>
-                        <div class="kpi-meta">
-                            <span class="kpi-label">ONU Returned</span>
-                            <span class="kpi-value">{{ $onuReturnedCount }}<small>/{{ $totalClosed }}</small></span>
-                            <div class="kpi-progress">
-                                <div class="kpi-progress-bar" style="width: {{ $onuPct }}%"></div>
-                            </div>
-                            <span class="kpi-foot">{{ $onuPct }}% reconciliation complete</span>
-                        </div>
+                <div class="db-kpi-card" style="--kpi-accent:#8b5cf6; --kpi-soft:rgba(139,92,246,.10);">
+                    <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(139,92,246,.10)); color: var(--kpi-accent, #8b5cf6);">
+                        <i class="fas fa-router"></i>
                     </div>
-                    <div class="kpi-glow"></div>
+                    <div class="db-kpi-body">
+                        <span class="db-kpi-label">ONU Returned</span>
+                        <span class="db-kpi-value">{{ $onuReturnedCount }}<small>/{{ $totalClosed }}</small></span>
+                        <span class="db-kpi-value" style="font-size:.74rem;font-weight:700;color:#64748b;">{{ $onuPct }}% complete</span>
+                    </div>
+                    <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                 </div>
             </div>
 

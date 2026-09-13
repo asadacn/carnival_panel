@@ -5,9 +5,12 @@
 @section('content')
     <section class="section">
         <div class="section-header d-flex justify-content-between align-items-center">
-            <h1>Hotspot Clients</h1>
+            <h1 class="page-title-heading">
+                <span class="page-title-icon"><i class="fas fa-wifi"></i></span>
+                Hotspot Clients
+            </h1>
             <div class="section-header-breadcrumb m-0">
-                <a href="{{ route('hotspotClients.create') }}" class="btn btn-primary shadow-sm rounded-pill px-4 fw-bold">
+                <a href="{{ route('hotspotClients.create') }}" class="btn btn-primary shadow-sm">
                     <i class="fas fa-plus me-2"></i> Add New Client
                 </a>
             </div>
@@ -77,14 +80,29 @@
             background: #fff;
             margin-bottom: 30px;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            transition: all 0.3s ease;
+
+        .page-title-heading {
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--crm-ink, #0f172a);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.01em;
         }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4) !important;
+
+        .page-title-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+            color: #fff;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(79,70,229,.25);
         }
     </style>
 @endsection

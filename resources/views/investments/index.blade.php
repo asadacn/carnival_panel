@@ -25,44 +25,41 @@
         <!-- Dashboard Section -->
         <div id="dashboard-section" class="mb-4">
             <!-- Top Stats Row -->
-            <div class="row mb-4">
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div class="card stat-card shadow-sm h-100" style="border-top: 4px solid #175ddc;">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-primary-light text-primary">
-                                <i class="fas fa-money-bill-wave"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h6 class="text-uppercase text-muted mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">Total Invested</h6>
-                                <h3 class="mb-0 fw-bold" style="color: #1e293b;">৳ {{ number_format($totalInvestment, 0) }}</h3>
-                            </div>
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="db-kpi-card" style="--kpi-accent:#1d4ed8; --kpi-soft:rgba(59,130,246,.10);">
+                        <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(59,130,246,.10)); color: var(--kpi-accent, #1d4ed8);">
+                            <i class="fas fa-money-bill-wave"></i>
                         </div>
+                        <div class="db-kpi-body">
+                            <span class="db-kpi-label">Total Invested</span>
+                            <span class="db-kpi-value">৳ {{ number_format($totalInvestment, 0) }}</span>
+                        </div>
+                        <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div class="card stat-card shadow-sm h-100" style="border-top: 4px solid #10b981;">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-success-light text-success">
-                                <i class="fas fa-calendar-alt"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h6 class="text-uppercase text-muted mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">This Month</h6>
-                                <h3 class="mb-0 fw-bold" style="color: #1e293b;">৳ {{ number_format($thisMonthInvestment, 0) }}</h3>
-                            </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="db-kpi-card" style="--kpi-accent:#10b981; --kpi-soft:rgba(16,185,129,.10);">
+                        <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(16,185,129,.10)); color: var(--kpi-accent, #10b981);">
+                            <i class="fas fa-calendar-alt"></i>
                         </div>
+                        <div class="db-kpi-body">
+                            <span class="db-kpi-label">This Month</span>
+                            <span class="db-kpi-value">৳ {{ number_format($thisMonthInvestment, 0) }}</span>
+                        </div>
+                        <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-12 mb-3">
-                    <div class="card stat-card shadow-sm h-100" style="border-top: 4px solid #8b5cf6;">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon bg-purple-light text-purple">
-                                <i class="fas fa-chart-pie"></i>
-                            </div>
-                            <div class="ms-3">
-                                <h6 class="text-uppercase text-muted mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px; font-weight: 600;">This Year</h6>
-                                <h3 class="mb-0 fw-bold" style="color: #1e293b;">৳ {{ number_format($thisYearInvestment, 0) }}</h3>
-                            </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="db-kpi-card" style="--kpi-accent:#8b5cf6; --kpi-soft:rgba(139,92,246,.10);">
+                        <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(139,92,246,.10)); color: var(--kpi-accent, #8b5cf6);">
+                            <i class="fas fa-chart-pie"></i>
                         </div>
+                        <div class="db-kpi-body">
+                            <span class="db-kpi-label">This Year</span>
+                            <span class="db-kpi-value">৳ {{ number_format($thisYearInvestment, 0) }}</span>
+                        </div>
+                        <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
                     </div>
                 </div>
             </div>

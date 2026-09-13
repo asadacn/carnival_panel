@@ -2,10 +2,97 @@
 @section('title')
     @lang('models/clients.plural')
 @endsection
+@section('css')
+<style>
+    .client-metric-row {
+        gap: 1rem;
+    }
+
+    .client-metric-card {
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 14px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 108px;
+        color: #1f2937;
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        height: 100%;
+    }
+
+    .client-metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 26px -8px rgba(0,0,0,.14);
+        border-color: var(--metric-accent, #6366f1);
+    }
+
+    .client-metric-card::after {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -20%;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: var(--metric-soft, rgba(99,102,241,.06));
+        filter: blur(12px);
+        pointer-events: none;
+    }
+
+    .client-metric-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--metric-soft, rgba(99,102,241,.08));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--metric-accent, #6366f1);
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+    }
+
+    .client-metric-icon i {
+        font-size: 18px;
+    }
+
+    .client-metric-content {
+        flex: 1;
+        min-width: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .client-metric-content h6 {
+        font-weight: 700;
+        font-size: 0.73rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        opacity: 0.96;
+        margin-bottom: 0.45rem;
+    }
+
+    .client-metric-content h3 {
+        font-weight: 800;
+        font-size: 1.45rem;
+        line-height: 1.2;
+        margin: 0;
+        color: #111827;
+        white-space: nowrap;
+    }
+</style>
+@endsection
 @section('content')
     <section class="section">
         <!-- Top Workspace Header -->
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom" style="border-bottom-color: rgba(0,0,0,0.05) !important;">
             <div>
                 <h4 class="fw-bold mb-1 text-dark d-flex align-items-center gap-2">
                     <i class="fas fa-users text-primary"></i> Client Workspace
@@ -62,67 +149,67 @@
         <!-- Collapsible Dashboard Section -->
         <div id="dashboard-section" class="collapse dashboard-section mb-3">
             <!-- All Stats in one compact row -->
-            <div class="row mb-2">
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Total number of active clients">
-                        <div class="card-icon bg-primary mini-icon"><i class="fas fa-user-check"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Active Clients</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $ActiveClientsCount }}</span></div>
+            <div class="row client-metric-row g-3 mb-2">
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Total number of active clients" style="--metric-accent:#3b82f6; --metric-soft:rgba(59,130,246,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-user-check"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Active Clients</h6>
+                            <h3>{{ $ActiveClientsCount }}</h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients with expired subscriptions">
-                        <div class="card-icon bg-danger mini-icon"><i class="fas fa-user-clock"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Expired Clients</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $expiredClientsCount }}</span></div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Clients with expired subscriptions" style="--metric-accent:#f43f5e; --metric-soft:rgba(244,63,94,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-user-clock"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Expired Clients</h6>
+                            <h3>{{ $expiredClientsCount }}</h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients added to the closed list for cable return management">
-                        <div class="card-icon bg-secondary mini-icon"><i class="fas fa-user-slash"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Closed Clients</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $closedClientsCount }}</span></div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Clients added to the closed list for cable return management" style="--metric-accent:#64748b; --metric-soft:rgba(100,116,139,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-user-slash"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Closed Clients</h6>
+                            <h3>{{ $closedClientsCount }}</h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients with free ONU equipment">
-                        <div class="card-icon bg-info mini-icon"><i class="fas fa-gift"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Free ONU</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $freeOnuClientsCount }}</span></div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Clients with free ONU equipment" style="--metric-accent:#06b6d4; --metric-soft:rgba(6,182,212,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-gift"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Free ONU</h6>
+                            <h3>{{ $freeOnuClientsCount }}</h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Clients with returned cables">
-                        <div class="card-icon bg-success mini-icon"><i class="fas fa-plug"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Cable Returned</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $cableReturnedClientsCount }}</span></div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Clients with returned cables" style="--metric-accent:#10b981; --metric-soft:rgba(16,185,129,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-plug"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Cable Returned</h6>
+                            <h3>{{ $cableReturnedClientsCount }}</h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Total outstanding bills amount">
-                        <div class="card-icon bg-warning mini-icon"><i class="fas fa-money-bill-wave"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Total Due</h4></div>
-                            <div class="card-body"><span class="mini-stat-number" style="font-size:0.95rem;">৳{{ number_format($totalDueAmount, 0) }}</span></div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Total outstanding bills amount" style="--metric-accent:#f59e0b; --metric-soft:rgba(245,158,11,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Total Due</h6>
+                            <h3>৳{{ number_format($totalDueAmount, 0) }}</h3>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-4 col-sm-6 mb-2">
-                    <div class="card card-statistic-1 shadow-sm mini-stat-card" data-toggle="tooltip" title="Number of unpaid bills">
-                        <div class="card-icon bg-danger mini-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                        <div class="card-wrap">
-                            <div class="card-header"><h4>Unpaid Bills</h4></div>
-                            <div class="card-body"><span class="mini-stat-number">{{ $unpaidBillsCount }}</span></div>
+                <div class="col-lg-2 col-md-4 col-sm-6">
+                    <div class="client-metric-card" data-toggle="tooltip" title="Number of unpaid bills" style="--metric-accent:#dc2626; --metric-soft:rgba(220,38,38,.10);">
+                        <div class="client-metric-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="client-metric-content">
+                            <h6>Unpaid Bills</h6>
+                            <h3>{{ $unpaidBillsCount }}</h3>
                         </div>
                     </div>
                 </div>

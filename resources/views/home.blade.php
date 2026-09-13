@@ -1,30 +1,10 @@
 @extends('layouts.app')
 
+@section('title', __('messages.dashboard_title'))
+
 @section('content')
 <section class="section">
-    <div class="section-header">
-        <h3 class="page__heading font-weight-bold d-flex align-items-center gap-2">
-            <i data-lucide="layout-dashboard" style="width:22px;height:22px"></i>
-            @lang('messages.dashboard_title')
-        </h3>
-    </div>
-
     <div class="section-body">
-
-        {{-- ── TOP BAR: Last Updated + Refresh ─────────────────────────── --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <p class="text-muted mb-0 small d-flex align-items-center gap-1">
-                <i data-lucide="clock-3" style="width:14px;height:14px"></i>
-                @if($lastUpdated)
-                    Data refreshed {{ \Carbon\Carbon::parse($lastUpdated)->diffForHumans() }}
-                @else
-                    No data recorded yet
-                @endif
-            </p>
-            <a href="?refresh=1" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i data-lucide="refresh-cw" style="width:13px;height:13px"></i> Refresh
-            </a>
-        </div>
 
         {{-- ── KPI METRIC CARDS ──────────────────────────────────────────── --}}
         <div class="row g-3 mb-4">

@@ -1,51 +1,39 @@
 {{-- Metrics Cards --}}
-<div class="row mb-4">
+<div class="row g-4 mb-4">
     <div class="col-lg-4 col-md-6">
-        <div class="card premium-card card-active mb-3 border-0 shadow-sm rounded-4 position-relative overflow-hidden">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase text-muted fw-bold mb-2 tracking-wide">Active Clients</h6>
-                        <h2 class="mb-0 fw-bolder text-dark">{{ $hotspotClients->where('status', 'active')->count() }}</h2>
-                    </div>
-                    <div class="icon-shape bg-success-soft text-success rounded-circle p-3">
-                        <i class="fas fa-user-check fa-2x"></i>
-                    </div>
-                </div>
+        <div class="db-kpi-card" style="--kpi-accent:#10b981; --kpi-soft:rgba(16,185,129,.10);">
+            <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(16,185,129,.10)); color: var(--kpi-accent, #10b981);">
+                <i class="fas fa-user-check"></i>
             </div>
-            <div class="card-progress bg-success" style="height: 4px; width: 100%; position: absolute; bottom: 0;"></div>
+            <div class="db-kpi-body">
+                <span class="db-kpi-label">Active Clients</span>
+                <span class="db-kpi-value">{{ $hotspotClients->where('status', 'active')->count() }}</span>
+            </div>
+            <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
     </div>
     <div class="col-lg-4 col-md-6">
-        <div class="card premium-card card-expired mb-3 border-0 shadow-sm rounded-4 position-relative overflow-hidden">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase text-muted fw-bold mb-2 tracking-wide">Expired Clients</h6>
-                        <h2 class="mb-0 fw-bolder text-dark">{{ $hotspotClients->filter(fn($c) => $c->status == 'active' && $c->isExpired())->count() }}</h2>
-                    </div>
-                    <div class="icon-shape bg-danger-soft text-danger rounded-circle p-3">
-                        <i class="fas fa-user-clock fa-2x"></i>
-                    </div>
-                </div>
+        <div class="db-kpi-card" style="--kpi-accent:#ef4444; --kpi-soft:rgba(239,68,68,.10);">
+            <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(239,68,68,.10)); color: var(--kpi-accent, #ef4444);">
+                <i class="fas fa-user-clock"></i>
             </div>
-            <div class="card-progress bg-danger" style="height: 4px; width: 100%; position: absolute; bottom: 0;"></div>
+            <div class="db-kpi-body">
+                <span class="db-kpi-label">Expired Clients</span>
+                <span class="db-kpi-value">{{ $hotspotClients->filter(fn($c) => $c->status == 'active' && $c->isExpired())->count() }}</span>
+            </div>
+            <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
     </div>
     <div class="col-lg-4 col-md-6">
-        <div class="card premium-card card-inactive mb-3 border-0 shadow-sm rounded-4 position-relative overflow-hidden">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-uppercase text-muted fw-bold mb-2 tracking-wide">Inactive Clients</h6>
-                        <h2 class="mb-0 fw-bolder text-dark">{{ $hotspotClients->where('status', 'inactive')->count() }}</h2>
-                    </div>
-                    <div class="icon-shape bg-secondary-soft text-secondary rounded-circle p-3">
-                        <i class="fas fa-user-slash fa-2x"></i>
-                    </div>
-                </div>
+        <div class="db-kpi-card" style="--kpi-accent:#64748b; --kpi-soft:rgba(100,116,139,.10);">
+            <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(100,116,139,.10)); color: var(--kpi-accent, #64748b);">
+                <i class="fas fa-user-slash"></i>
             </div>
-            <div class="card-progress bg-secondary" style="height: 4px; width: 100%; position: absolute; bottom: 0;"></div>
+            <div class="db-kpi-body">
+                <span class="db-kpi-label">Inactive Clients</span>
+                <span class="db-kpi-value">{{ $hotspotClients->where('status', 'inactive')->count() }}</span>
+            </div>
+            <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
         </div>
     </div>
 </div>

@@ -326,70 +326,77 @@
 @section('content')
 <div class="hz-page">
 
-    {{-- ── Hero Header ── --}}
-    <div class="hz-hero">
-        <div style="display:flex;align-items:center;gap:16px;">
-            <div class="hz-hero-icon"><i class="fas fa-wifi"></i></div>
-            <div class="hz-hero-text">
-                <h1>Hotspot Zones</h1>
-                <p>Manage all network hotspot zones &amp; device assignments</p>
-            </div>
-        </div>
-        <div class="hz-hero-actions">
-            <a href="{{ route('hotspotZones.create') }}" class="hz-btn hz-btn-primary">
-                <i class="fas fa-plus"></i> Add Zone
+    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
+        <h1 class="page-title-heading">
+            <span class="page-title-icon"><i class="fas fa-wifi"></i></span>
+            Hotspot Zones
+        </h1>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('hotspotZones.create') }}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus me-2"></i>Add Zone
             </a>
-            <a href="{{ route('hotspots.export') }}" class="hz-btn hz-btn-outline">
-                <i class="fas fa-file-export"></i> Export
+            <a href="{{ route('hotspots.export') }}" class="btn btn-outline-primary">
+                <i class="fas fa-file-export me-2"></i>Export
             </a>
-            <a href="{{ route('hotspots.import.create') }}" class="hz-btn hz-btn-outline">
-                <i class="fas fa-file-import"></i> Import
+            <a href="{{ route('hotspots.import.create') }}" class="btn btn-outline-primary">
+                <i class="fas fa-file-import me-2"></i>Import
             </a>
             <form action="{{ route('hotspots.erase') }}" method="POST" class="d-inline" onsubmit="return confirm('WARNING: This will erase ALL hotspot zone records. Continue?')">
                 @csrf
-                <button type="submit" class="hz-btn hz-btn-danger">
-                    <i class="fas fa-trash-alt"></i> Erase All
+                <button type="submit" class="btn btn-danger shadow-sm">
+                    <i class="fas fa-trash-alt me-2"></i>Erase All
                 </button>
             </form>
         </div>
     </div>
 
-    {{-- ── Stats Row ── --}}
-    <div class="hz-stats" id="hz-stats-row">
-        <div class="hz-stat">
-            <div class="hz-stat-icon indigo"><i class="fas fa-layer-group"></i></div>
-            <div>
-                <div class="hz-stat-val" id="stat-total">
-                    <span class="hz-skeleton" style="width:36px;height:24px;">&nbsp;</span>
+    <div class="row g-4 mb-4" id="hz-stats-row">
+        <div class="col-lg-3 col-md-6">
+            <div class="db-kpi-card" style="--kpi-accent:#4f46e5; --kpi-soft:rgba(79,70,229,.10);">
+                <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(79,70,229,.10)); color: var(--kpi-accent, #4f46e5);">
+                    <i class="fas fa-layer-group"></i>
                 </div>
-                <div class="hz-stat-lbl">Total Zones</div>
+                <div class="db-kpi-body">
+                    <span class="db-kpi-label">Total Zones</span>
+                    <span class="db-kpi-value" id="stat-total"><span class="hz-skeleton" style="width:36px;height:24px;">&nbsp;</span></span>
+                </div>
+                <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
             </div>
         </div>
-        <div class="hz-stat">
-            <div class="hz-stat-icon green"><i class="fas fa-check-circle"></i></div>
-            <div>
-                <div class="hz-stat-val" id="stat-enabled">
-                    <span class="hz-skeleton" style="width:30px;height:24px;">&nbsp;</span>
+        <div class="col-lg-3 col-md-6">
+            <div class="db-kpi-card" style="--kpi-accent:#10b981; --kpi-soft:rgba(16,185,129,.10);">
+                <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(16,185,129,.10)); color: var(--kpi-accent, #10b981);">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="hz-stat-lbl">Enabled</div>
+                <div class="db-kpi-body">
+                    <span class="db-kpi-label">Enabled</span>
+                    <span class="db-kpi-value" id="stat-enabled"><span class="hz-skeleton" style="width:30px;height:24px;">&nbsp;</span></span>
+                </div>
+                <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
             </div>
         </div>
-        <div class="hz-stat">
-            <div class="hz-stat-icon red"><i class="fas fa-times-circle"></i></div>
-            <div>
-                <div class="hz-stat-val" id="stat-disabled">
-                    <span class="hz-skeleton" style="width:30px;height:24px;">&nbsp;</span>
+        <div class="col-lg-3 col-md-6">
+            <div class="db-kpi-card" style="--kpi-accent:#ef4444; --kpi-soft:rgba(239,68,68,.10);">
+                <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(239,68,68,.10)); color: var(--kpi-accent, #ef4444);">
+                    <i class="fas fa-times-circle"></i>
                 </div>
-                <div class="hz-stat-lbl">Disabled</div>
+                <div class="db-kpi-body">
+                    <span class="db-kpi-label">Disabled</span>
+                    <span class="db-kpi-value" id="stat-disabled"><span class="hz-skeleton" style="width:30px;height:24px;">&nbsp;</span></span>
+                </div>
+                <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
             </div>
         </div>
-        <div class="hz-stat">
-            <div class="hz-stat-icon cyan"><i class="fas fa-plug"></i></div>
-            <div>
-                <div class="hz-stat-val" id="stat-ups">
-                    <span class="hz-skeleton" style="width:30px;height:24px;">&nbsp;</span>
+        <div class="col-lg-3 col-md-6">
+            <div class="db-kpi-card" style="--kpi-accent:#06b6d4; --kpi-soft:rgba(6,182,212,.10);">
+                <div class="db-kpi-icon" style="background: var(--kpi-soft, rgba(6,182,212,.10)); color: var(--kpi-accent, #06b6d4);">
+                    <i class="fas fa-plug"></i>
                 </div>
-                <div class="hz-stat-lbl">With UPS</div>
+                <div class="db-kpi-body">
+                    <span class="db-kpi-label">With UPS</span>
+                    <span class="db-kpi-value" id="stat-ups"><span class="hz-skeleton" style="width:30px;height:24px;">&nbsp;</span></span>
+                </div>
+                <span class="db-kpi-arrow"><i class="fas fa-arrow-right"></i></span>
             </div>
         </div>
     </div>

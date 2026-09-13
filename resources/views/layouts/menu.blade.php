@@ -4,7 +4,7 @@
         margin: 0.25rem 0.45rem 0.55rem;
         padding: 0.78rem 0.95rem;
         color: #0f172a;
-        transition: all 0.2s ease;
+        transition: all 0.24s ease, transform 0.2s ease, background-color 0.24s ease, border-color 0.24s ease;
     }
 
     .sidebar-menu .menu-item-featured > a i {
@@ -36,20 +36,40 @@
         border-radius: 10px;
         border: 1px solid rgba(148, 163, 184, 0.16);
         box-shadow: 0 10px 20px -12px rgba(15, 23, 42, 0.25);
+        background: #ffffff;
     }
 
     .sidebar-menu .menu-item-featured .dropdown-menu li a {
         border-radius: 8px;
         margin: 0.2rem;
+        padding: 0.62rem 0.8rem;
+        font-size: 0.84rem;
     }
 
     .sidebar-menu li.dropdown.menu-item-featured > .dropdown-menu {
         display: none;
     }
 
+    .sidebar-menu li.dropdown.menu-item-featured:hover > .dropdown-menu,
     .sidebar-menu li.dropdown.menu-item-featured.active > .dropdown-menu,
     .sidebar-menu li.dropdown.menu-item-featured:has(.dropdown-menu li.active) > .dropdown-menu {
         display: block;
+        animation: sidebarDropdownIn 420ms cubic-bezier(.22,1,.36,1);
+    }
+
+    .sidebar-menu li.dropdown.menu-item-featured > a {
+        cursor: pointer;
+    }
+
+    @keyframes sidebarDropdownIn {
+        from {
+            opacity: 0;
+            transform: scaleY(0.94) translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: scaleY(1) translateY(0);
+        }
     }
 </style>
 
@@ -77,7 +97,7 @@
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('due-bills*', 'due-bill-payments*') ? 'active' : '' }}">
-            <a href="#" class="nav-link has-dropdown">
+            <a href="{{ route('due-bills.index') }}" class="nav-link has-dropdown">
                 <i class="fa fa-file-invoice-dollar"></i><span>@lang('menu.billing_collections')</span>
             </a>
             <ul class="dropdown-menu">
@@ -94,7 +114,7 @@
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('sMSTEMPALTES*', 'sms_log*', 'create_bulk_sms*') ? 'active' : '' }}">
-            <a href="#" class="nav-link has-dropdown">
+            <a href="{{ route('create_bulk_sms') }}" class="nav-link has-dropdown">
                 <i class="fa fa-comments"></i><span>@lang('menu.sms_messaging')</span>
             </a>
             <ul class="dropdown-menu">
@@ -111,7 +131,7 @@
         </li>
 
         <li class="dropdown menu-item-featured {{ Request::is('tickets*') || Request::is('tickets') ? 'active' : '' }}">
-            <a href="#" class="nav-link has-dropdown"><i class="fa fa-ticket-alt"></i><span>@lang('menu.tickets')</span></a>
+            <a href="{{ route('tickets.live') }}" class="nav-link has-dropdown"><i class="fa fa-ticket-alt"></i><span>@lang('menu.tickets')</span></a>
             <ul class="dropdown-menu">
                 <li class="{{ Request::is('tickets') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('tickets.live') }}"><i class="fa fa-list"></i><span>@lang('menu.active_tickets')</span></a>

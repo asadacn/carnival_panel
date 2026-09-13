@@ -7,9 +7,10 @@
 @section('css')
 <style>
     .payments-container { background: #f8f9fa; padding: 2rem 0; }
-    .payments-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; padding: 0 1rem; }
-    .payments-header h1 { font-size: 2rem; font-weight: 600; color: #1f2937; margin: 0; }
-    .btn-create { background: #10b981; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); text-decoration: none; }
+    .payments-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; padding: 0 1rem; }
+    .payments-header h1 { font-size: 1.5rem; font-weight: 700; color: #1f2937; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    .header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; flex-wrap: wrap; margin-left: auto; }
+    .btn-create { background: #10b981; color: white; padding: 0.45rem 0.95rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); text-decoration: none; }
     .btn-create:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); color: white; }
     .payments-table-wrapper { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
     .payments-table { margin: 0; }
@@ -37,16 +38,13 @@
     .client-info { min-width: 0; }
     .client-name { font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .client-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
-    .metric-card { border-radius: 1rem; border: none; padding: 1.5rem; color: white; transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; overflow: hidden; }
-    .metric-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px -5px rgba(0,0,0,0.2); }
-    .metric-card::after { content: ''; position: absolute; top: -50%; right: -30%; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; pointer-events: none; }
-    .metric-bg-emerald { background: linear-gradient(135deg, #10b981, #047857); }
-    .metric-bg-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-    .metric-bg-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .metric-bg-violet { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    .metric-content h6 { font-weight: 500; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 0.5rem; }
-    .metric-content h3 { font-weight: 800; font-size: 2rem; margin: 0; }
-    .metric-icon { position: absolute; right: 1.5rem; bottom: 1.5rem; opacity: 0.2; }
+    .metric-card { background: #ffffff; border: 1px solid #e9ecef; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; min-height: 108px; color: #1f2937; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; position: relative; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .metric-card:hover { transform: translateY(-3px); box-shadow: 0 14px 26px -8px rgba(0,0,0,.14); border-color: var(--metric-accent, #6366f1); }
+    .metric-card::after { content: ''; position: absolute; top: -30%; right: -20%; width: 120px; height: 120px; border-radius: 50%; background: var(--metric-soft, rgba(99,102,241,.06)); filter: blur(12px); pointer-events: none; }
+    .metric-content { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .metric-content h6 { font-weight: 700; font-size: 0.73rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.96; margin-bottom: 0.45rem; }
+    .metric-content h3 { font-weight: 800; font-size: 1.45rem; line-height: 1.2; margin: 0; color: #111827; white-space: nowrap; }
+    .metric-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--metric-soft, rgba(99,102,241,.08)); display: flex; align-items: center; justify-content: center; color: var(--metric-accent, #6366f1); position: relative; z-index: 1; flex-shrink: 0; }
     .filter-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
     .dt-action-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
     .transaction-id { font-family: 'Courier New', monospace; font-weight: 600; font-size: 0.85rem; color: #4b5563; }
@@ -59,59 +57,59 @@
 <div class="payments-container">
     <div class="container-lg">
         <div class="payments-header">
-            <h1>Payment Records</h1>
+            <h1><i data-lucide="wallet" style="width:24px;height:24px;color:#10b981;"></i> Payments</h1>
             <div class="header-actions">
-                <a href="{{ route('due-bill-payments.report') }}" class="btn btn-outline-primary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 600; text-decoration: none; padding: 0.6rem 1.2rem;">
-                    <i data-lucide="bar-chart-3" style="width:18px;height:18px;"></i> View Report
+                <a href="{{ route('due-bill-payments.report') }}" class="btn btn-outline-primary d-flex align-items-center gap-2" style="border-radius: 8px; font-weight: 600; text-decoration: none; padding: 0.45rem 0.9rem;">
+                    <i data-lucide="bar-chart-3" style="width:16px;height:16px;"></i> Report
                 </a>
                 <a href="{{ route('due-bill-payments.create') }}" class="btn-create">
-                    <i data-lucide="plus" style="width:18px;height:18px;"></i> Record Payment
+                    <i data-lucide="plus" style="width:16px;height:16px;"></i> Add
                 </a>
             </div>
         </div>
 
         <div class="row g-4 mb-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="metric-card metric-bg-emerald">
+                <div class="metric-card" style="--metric-accent:#10b981; --metric-soft:rgba(16,185,129,.10);">
                     <div class="metric-content">
                         <h6>Total Collected</h6>
                         <h3>৳ {{ number_format($totalCollected ?? 0, 0) }}</h3>
                     </div>
                     <div class="metric-icon">
-                        <i data-lucide="wallet" style="width:64px; height:64px;"></i>
+                        <i data-lucide="wallet" style="width:24px; height:24px;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="metric-card metric-bg-blue">
+                <div class="metric-card" style="--metric-accent:#3b82f6; --metric-soft:rgba(59,130,246,.10);">
                     <div class="metric-content">
                         <h6>This Month</h6>
                         <h3>৳ {{ number_format($monthCollections ?? 0, 0) }}</h3>
                     </div>
                     <div class="metric-icon">
-                        <i data-lucide="calendar" style="width:64px; height:64px;"></i>
+                        <i data-lucide="calendar" style="width:24px; height:24px;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="metric-card metric-bg-amber">
+                <div class="metric-card" style="--metric-accent:#f59e0b; --metric-soft:rgba(245,158,11,.10);">
                     <div class="metric-content">
                         <h6>Today</h6>
                         <h3>৳ {{ number_format($todayCollections ?? 0, 0) }}</h3>
                     </div>
                     <div class="metric-icon">
-                        <i data-lucide="sun" style="width:64px; height:64px;"></i>
+                        <i data-lucide="sun" style="width:24px; height:24px;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-sm-6 col-xl-3">
-                <div class="metric-card metric-bg-violet">
+                <div class="metric-card" style="--metric-accent:#8b5cf6; --metric-soft:rgba(139,92,246,.10);">
                     <div class="metric-content">
                         <h6>Total Payments</h6>
                         <h3>{{ number_format($totalPayments ?? 0) }}</h3>
                     </div>
                     <div class="metric-icon">
-                        <i data-lucide="receipt" style="width:64px; height:64px;"></i>
+                        <i data-lucide="receipt" style="width:24px; height:24px;"></i>
                     </div>
                 </div>
             </div>
