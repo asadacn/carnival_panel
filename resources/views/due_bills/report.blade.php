@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
 <style>
     .report-container { padding: 2rem 0; }
-    
+
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -28,7 +28,7 @@
         gap: 0.55rem;
         white-space: nowrap;
     }
-    
+
     .filter-card {
         background: white;
         border-radius: 1rem;
@@ -115,7 +115,7 @@
         padding: 1.5rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
-    
+
     .dt-buttons {
         margin-bottom: 1.5rem;
         display: flex;
@@ -133,7 +133,7 @@
     .buttons-csv { background: #3b82f6 !important; color: white !important; }
     .buttons-pdf { background: #f43f5e !important; color: white !important; }
     .buttons-print { background: #64748b !important; color: white !important; }
-    
+
     .badge {
         padding: 0.45rem 0.8rem;
         border-radius: 999px;
@@ -160,7 +160,7 @@
 @section('content')
 <div class="container-fluid py-4">
     <div class="report-container">
-        
+
         <div class="page-header">
             <h1 class="page-title">
                 <i data-lucide="bar-chart-3" style="width:24px; height:24px; color:#3b82f6;"></i>
@@ -287,7 +287,7 @@
                 </table>
             </div>
         </div>
-        
+
     </div>
 </div>
 @endsection
@@ -372,8 +372,8 @@
                 { data: 'month_year', name: 'month_year', searchable: false },
                 { data: 'amount', name: 'amount', render: function(data) { return `৳ ${data}`; } },
                 { data: 'paid_amount', name: 'paid_amount', render: function(data) { return `৳ ${data}`; } },
-                { data: 'remaining', name: 'remaining', render: function(data) { 
-                    return `<span class="fw-bold ${data > 0 ? 'text-danger' : 'text-success'}">৳ ${data}</span>`; 
+                { data: 'remaining', name: 'remaining', render: function(data) {
+                    return `<span class="fw-bold ${data > 0 ? 'text-danger' : 'text-success'}">৳ ${data}</span>`;
                 }},
                 { data: 'status_badge', name: 'status', orderable: false, searchable: false }
             ],
@@ -407,7 +407,7 @@
             var parts = [];
             if ($('#client_id').val()) parts.push("Client: " + client);
             if ($('#status').val()) parts.push("Status: " + status);
-            
+
             var period = "";
             if ($('#month').val() && $('#year').val()) {
                 period = "Period: " + month + " " + year;
@@ -416,7 +416,7 @@
             } else if ($('#month').val()) {
                 period = "Month: " + month;
             }
-            
+
             if (period) parts.push(period);
 
             var subtitle = parts.length > 0 ? parts.join(" | ") : "Showing all records";

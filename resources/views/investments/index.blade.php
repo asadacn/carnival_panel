@@ -21,7 +21,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Dashboard Section -->
         <div id="dashboard-section" class="mb-4">
             <!-- Top Stats Row -->
@@ -81,7 +81,7 @@
                                     $colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
                                 @endphp
                                 @foreach($investmentsByType as $index => $typeData)
-                                    @php 
+                                    @php
                                         $percentage = $totalInvestment > 0 ? round(($typeData->total / $totalInvestment) * 100, 1) : 0;
                                         $color = $colors[$index % count($colors)];
                                     @endphp
@@ -122,7 +122,7 @@
                                     $investorColors = ['#0ea5e9', '#84cc16', '#f97316', '#a855f7', '#ec4899', '#14b8a6', '#64748b'];
                                 @endphp
                                 @foreach($investmentsByInvestor->take(6) as $index => $investorData)
-                                    @php 
+                                    @php
                                         $percentage = $totalInvestment > 0 ? round(($investorData->total / $totalInvestment) * 100, 1) : 0;
                                         $color = $investorColors[$index % count($investorColors)];
                                     @endphp
@@ -243,7 +243,7 @@
             transition: all 0.2s ease;
             border: 1px solid #f1f5f9;
         }
-        
+
         .distribution-item {
             padding: 6px;
             border-radius: 6px;
@@ -279,7 +279,7 @@
                     $(this).css('width', $(this).data('width') + '%');
                 });
             }, 300);
-            
+
             // Initialize DataTable if table ID exists
             if($('#investments-table').length) {
                 $('#investments-table').DataTable({

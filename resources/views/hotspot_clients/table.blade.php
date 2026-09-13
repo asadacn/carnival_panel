@@ -195,7 +195,7 @@
     .bg-secondary-soft { background-color: rgba(108, 117, 125, 0.1); }
     .bg-primary-soft { background-color: rgba(0, 123, 255, 0.1); }
     .bg-info-soft { background-color: rgba(23, 162, 184, 0.1); }
-    
+
     .tracking-wide { letter-spacing: 1px; }
 
     /* Table Styling */
@@ -215,7 +215,7 @@
     .table-row-hover:hover {
         background-color: #f8f9fa;
     }
-    
+
     /* Search Group */
     .search-group {
         border: 1px solid #e9ecef;
@@ -224,7 +224,7 @@
         border-color: #667eea;
         box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     }
-    
+
     /* Dropdown */
     .btn-icon {
         width: 32px;
@@ -234,7 +234,7 @@
         justify-content: center;
         padding: 0;
     }
-    
+
     /* Pagination Wrapper */
     .pagination-wrapper .pagination {
         margin-bottom: 0;
