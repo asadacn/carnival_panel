@@ -137,9 +137,21 @@ class TicketManager extends Component
 
         // 3. Send Telegram notification to the main group
         if ($this->send_telegram) {
-            $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
-            $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n ক্লায়েন্ট: {$client->name}\n🏠ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
-            $this->sendTelegram($text, config('services.telegram.group_chat_id'));
+            try {
+                $complainType = ComplainType::find($this->complain_type_id)->name ?? 'N/A';
+                $text = "🔔 নতুন টিকেট তৈরি হয়েছে!\n\n📄 টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n ক্লায়েন্ট: {$client->name}\n🏠ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100);
+                $groupChatId = config('services.telegram.group_chat_id');
+                if ($groupChatId) {
+                    $this->sendTelegram($text, $groupChatId);
+                } else {
+                    Log::warning('Telegram group send skipped: missing TELEGRAM_GROUP_CHAT_ID');
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Telegram group send error during ticket creation: ' . $e->getMessage(), [
+                    'ticket_id' => $ticket->id,
+                    'client_id' => $client->id,
+                ]);
+            }
         }
 
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
@@ -209,7 +221,8 @@ class TicketManager extends Component
 
         // 3. Send Telegram to Tech (if telegram_id exists)
         if ($this->send_telegram && $technician->telegram_id) {
-            $text_to_tech = "🛠 আপনাকে একটি নতুন টিকেট অ্যাসাইন করা হয়েছে!\n\n📄টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n ক্লায়েন্ট: {$client->name}\n🏠ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 100) . "\n⏱ ETA: {$eta}";
+            $complainType = $ticket->complainType?->name ?? 'N/A';
+            $text_to_tech = "🛠 আপনাকে একটি নতুন টিকেট অ্যাসাইন করা হয়েছে!\n\n📄টিকেট ID: {$ticket->id}\n👤ক্লায়েন্ট আইডি: {$client->username}\n👤 ক্লায়েন্ট: {$client->name}\n🏠 ঠিকানাঃ {$client->address}\n📞 {$client->contact}\n⚙️ ধরন: {$complainType}\n🔥 Priority: " . ucfirst($ticket->priority) . "\n📝 বর্ণনা: " . Str::limit($ticket->description, 120) . "\n⏱ ETA: {$eta}";
             $this->sendTelegram($text_to_tech, $technician->telegram_id);
         }
 
@@ -351,17 +364,19 @@ class TicketManager extends Component
     {
         try {
             $botToken = config('services.telegram.bot_token');
-            $chatId = $recipientChatId ?? config('services.telegram.group_chat_id') ?? config('services.telegram.chat_id');
+            $chatId = $recipientChatId ?: config('services.telegram.group_chat_id') ?: config('services.telegram.chat_id');
 
             if (!$botToken || !$chatId) {
                 Log::warning('Telegram send skipped: missing bot token or chat ID');
                 return false;
             }
 
-            $response = Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $message,
-            ]);
+            $response = Http::timeout(10)
+                ->acceptJson()
+                ->post("https://api.telegram.org/bot{$botToken}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $message,
+                ]);
 
             $result = $response->json();
 
@@ -379,8 +394,10 @@ class TicketManager extends Component
                 'status' => $response->status(),
             ]);
             return false;
-        } catch (\Exception $e) {
-            Log::warning("Telegram send failed: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::warning('Telegram send failed: ' . $e->getMessage(), [
+                'chat_id' => $recipientChatId ?: config('services.telegram.group_chat_id') ?: config('services.telegram.chat_id'),
+            ]);
             return false;
         }
     }
