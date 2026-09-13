@@ -1,4 +1,4 @@
-<div class="container py-5">
+<div class="container py-4 ticket-ui-wrap">
     <style>
         /* Base Modern Styles */
         :root {
@@ -99,16 +99,166 @@
             line-height: 1;
         }
         .ticket-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s;
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            background: linear-gradient(180deg, #ffffff 0%, #fffefb 100%);
+            border: 1px solid #dceaf7;
+            transition: all 0.2s ease;
+            border-radius: 1.2rem;
+            box-shadow: 0 10px 26px rgba(31, 41, 55, 0.06);
+            position: relative;
+            overflow: visible;
+            z-index: 1;
+        }
+        .ticket-card::before {
+            content: '';
+            position: absolute;
+            top: 0.65rem;
+            bottom: 0.65rem;
+            left: 0.45rem;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #7dd3fc, #34d399);
+            opacity: 0.95;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.7);
+        }
+        .ticket-card.status-open::before {
+            background: linear-gradient(180deg, #dc2626, #f97316);
+        }
+        .ticket-card.status-pending::before {
+            background: linear-gradient(180deg, #eab308, #fbbf24);
+        }
+        .ticket-card.status-assigned::before,
+        .ticket-card.status-in_progress::before {
+            background: linear-gradient(180deg, #8b5cf6, #6366f1);
+        }
+        .ticket-card.status-closed::before {
+            background: linear-gradient(180deg, #10b981, #34d399);
         }
         .ticket-card:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #99d4ff;
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.12);
             transform: translateY(-2px);
+            z-index: 20;
+        }
+        .ticket-card .ticket-info-panel {
+            border-right: 1px solid #dcebe7;
+            padding-right: 1rem;
+        }
+        .ticket-card .ticket-action-panel {
+            background: linear-gradient(180deg, #f9fdff 0%, #eefaf7 100%);
+            border: 1px solid #bce4da;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            min-height: 100%;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9);
+            min-width: 230px;
+            overflow: visible;
+        }
+        .ticket-card .ticket-action-panel .dropdown-menu {
+            border-radius: 0.8rem;
+            box-shadow: 0 12px 30px rgba(31, 41, 55, 0.12);
+            min-width: 210px;
+            margin-top: 0.5rem;
+            transition: opacity 250ms ease, transform 250ms ease;
+            transform: translateY(-4px);
+            opacity: 0;
+            z-index: 2000;
+            position: absolute;
+        }
+        .ticket-card .ticket-action-panel .dropdown-menu.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .ticket-card .ticket-action-panel .dropdown {
+            position: relative;
+            z-index: 1060;
+        }
+        .ticket-card .ticket-card-client {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #244064;
+            letter-spacing: 0.01em;
+        }
+        .ticket-card .ticket-card-meta {
+            font-size: 0.8rem;
+            color: var(--muted-color);
+            letter-spacing: 0.02em;
+        }
+        .ticket-card .ticket-card-description {
+            color: #526278;
+            font-size: 0.88rem;
+            border-left: 2px dashed #9bd8b7;
+            padding-left: 0.75rem;
+            line-height: 1.6;
+            background: #f8fcf9;
+            border-radius: 0.55rem;
+            padding-top: 0.4rem;
+            padding-bottom: 0.4rem;
+        }
+        .ticket-card .ticket-card-actions {
+            min-width: 170px;
+        }
+        .ticket-card .ticket-card-action-btn {
+            border-radius: 999px;
+            padding: 0.45rem 1rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .ticket-card .assign-control-wrap {
+            padding: 0.65rem 0.75rem;
+            background: rgba(255,255,255,0.78);
+            border: 1px solid #cfe8e1;
+            border-radius: 0.85rem;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.95);
+        }
+        .ticket-card .assign-dropdown-wrap {
+            min-width: 160px;
+        }
+        .ticket-card .assign-select {
+            border-radius: 999px 0 0 999px !important;
+            border-color: #bdd6cb;
+            color: #344054;
+            background: #fff;
+            font-size: 0.78rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+        .ticket-card .assign-button {
+            border-radius: 0 999px 999px 0 !important;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.45rem 0.85rem;
+            background: linear-gradient(135deg, #0d6efd, #1e88e5);
+            border: none;
+        }
+        .ticket-card .ticket-card-id {
+            min-width: 88px;
+            width: 88px;
+            background: #eaf8f6;
+            border-radius: 1rem;
+            border: 1px solid #bce9dd;
+            color: #075e55;
+            font-weight: 800;
+            padding: 0.8rem 0.7rem;
+            text-align: center;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9);
+        }
+        .ticket-card .ticket-card-id .ticket-id {
+            display: block;
+            font-size: 1rem;
+            line-height: 1.2;
+            color: #0f766e;
+        }
+        .ticket-card .ticket-card-footer {
+            border-top: 1px solid #eef7ee;
+            background: #fdfdfc;
+            padding-top: 0.8rem;
+            margin-top: 0.8rem;
+        }
+        .ticket-list-panel {
+            border: 1px solid #dceaf7;
+            border-radius: 1rem;
+            background: #ffffff;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
         }
         .timeline-item {
             border-left: 2px solid #e0e0e0;
@@ -134,6 +284,158 @@
              min-height: 110px;
         }
 
+        /* Ticket UI Redesign */
+        .ticket-ui-wrap {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .ticket-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #eef4ff, #ffffff);
+            border: 1px solid rgba(99, 102, 241, 0.08);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+        }
+
+        .ticket-page-title {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .ticket-page-title-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(13, 110, 253, 0.20);
+        }
+
+        .ticket-page-title h4 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 0.2rem;
+        }
+
+        .ticket-page-title .muted-small {
+            font-size: 0.79rem;
+        }
+
+        .ticket-topbar .btn {
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 0.62rem 1rem;
+        }
+
+        .ticket-kpi-grid {
+            margin-bottom: 1.25rem;
+        }
+
+        .ticket-kpi-card {
+            min-height: 116px;
+            background: #fff;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 16px;
+            padding: 1rem;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .ticket-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .ticket-kpi-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .ticket-kpi-card .ticket-kpi-label {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #64748b;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .ticket-kpi-card .ticket-kpi-value {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin-top: 0.2rem;
+            line-height: 1.2;
+        }
+
+        .ticket-create-wrap {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .ticket-create-wrap .card-body {
+            padding: 1.3rem;
+        }
+
+        .ticket-create-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 0.9rem;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            margin-bottom: 1rem;
+        }
+
+        .ticket-create-head h5 {
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #1d4ed8;
+            margin: 0;
+        }
+
+        .ticket-create-head small {
+            color: #64748b;
+            font-size: 0.78rem;
+        }
+
+        .ticket-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .ticket-form-grid .form-floating,
+        .ticket-form-grid .full {
+            grid-column: span 1;
+        }
+
+        @media (max-width: 991px) {
+            .ticket-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 
     {{-- Alerts for success/error messages --}}
@@ -150,96 +452,59 @@
         </div>
     @endif
 
-    <div class="d-flex gap-3 mb-4 align-items-center p-3 rounded">
-        <h4 class="mb-0 fw-bold text-dark">Ticket Management Dashboard 🚀</h4>
-        <a href="{{ route('tickets.analytics') }}" class="btn btn-outline-primary btn-sm rounded-pill ms-3 shadow-sm"><i class="fas fa-chart-pie me-1"></i> View Analytics 📊</a>
+    <div class="ticket-topbar">
+        <div class="ticket-page-title">
+            <span class="ticket-page-title-icon"><i class="bi bi-ticket-perforated-fill"></i></span>
+            <div>
+                <h4>Ticket Management</h4>
+                <div class="muted-small">Operations center</div>
+            </div>
+        </div>
+        <a href="{{ route('tickets.analytics') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-chart-pie me-1"></i> Analytics
+        </a>
     </div>
 
     {{-- TICKET STATUS DASHBOARD COUNTERS --}}
-    <div class="row mb-5 g-4">
-
-        {{-- Pending Count Card --}}
+    <div class="row ticket-kpi-grid g-3">
         <div class="col-lg-4 col-md-6">
-            <div class="card stats-card p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-soft-warning me-3">
-                        <i class="bi bi-clock-fill"></i>
-                    </div>
-                    <div>
-                        <div class="muted-small fw-semibold text-warning">Pending Tickets</div>
-                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['pending'] }}</h3>
-                    </div>
+            <div class="ticket-kpi-card">
+                <span class="ticket-kpi-icon bg-soft-warning text-warning"><i class="bi bi-clock-fill"></i></span>
+                <div>
+                    <div class="ticket-kpi-label text-warning">Pending Tickets</div>
+                    <div class="ticket-kpi-value">{{ $ticketCounts['pending'] }}</div>
                 </div>
             </div>
         </div>
-
-        {{-- In Progress/Assigned Count Card --}}
         <div class="col-lg-4 col-md-6">
-            <div class="card stats-card p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-soft-primary me-3">
-                        <i class="bi bi-tools"></i>
-                    </div>
-                    <div>
-                        <div class="muted-small fw-semibold text-primary">In Progress (Assigned)</div>
-                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['progress'] }}</h3>
-                    </div>
+            <div class="ticket-kpi-card">
+                <span class="ticket-kpi-icon bg-soft-primary text-primary"><i class="bi bi-tools"></i></span>
+                <div>
+                    <div class="ticket-kpi-label text-primary">In Progress</div>
+                    <div class="ticket-kpi-value">{{ $ticketCounts['progress'] }}</div>
                 </div>
             </div>
         </div>
-
-        {{-- Closed Count Card --}}
         <div class="col-lg-4 col-md-12">
-            <div class="card stats-card p-3">
-                <div class="d-flex align-items-center">
-                    <div class="icon-box bg-soft-success me-3">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div>
-                        <div class="muted-small fw-semibold text-success">Closed Tickets</div>
-                        <h3 class="mb-0 fw-bold text-dark">{{ $ticketCounts['closed'] }}</h3>
-                    </div>
+            <div class="ticket-kpi-card">
+                <span class="ticket-kpi-icon bg-soft-success text-success"><i class="bi bi-check-circle-fill"></i></span>
+                <div>
+                    <div class="ticket-kpi-label text-success">Closed Tickets</div>
+                    <div class="ticket-kpi-value">{{ $ticketCounts['closed'] }}</div>
                 </div>
             </div>
         </div>
     </div>
     {{-- END TICKET STATUS DASHBOARD COUNTERS --}}
 
-    {{-- ============================================================ --}}
-    {{--  TICKET ANALYTICS CHARTS                                      --}}
-    {{-- ============================================================ --}}
-    <div class="row g-4 mb-5" id="ticketChartsSection">
-
-        {{-- Category / Complain-Type Bar Chart (full width) --}}
-        <div class="col-12">
-            <div class="card card-modern p-4" style="background: linear-gradient(135deg,#0f172a,#1e293b); color:#fff;">
-                <div class="d-flex align-items-center mb-3">
-                    <span style="font-size:1.4rem; margin-right:.5rem;">📊</span>
-                    <h6 class="mb-0 fw-bold" style="color:#e2e8f0; letter-spacing:.03em;">Tickets by Category</h6>
-                    <span class="ms-auto badge rounded-pill" style="background:#3b82f6; font-size:.7rem;">Complain Types</span>
-                </div>
-                <div style="position:relative; height:260px;">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    {{-- ============================================================ --}}
-    {{-- END TICKET ANALYTICS CHARTS                                   --}}
-    {{-- ============================================================ --}}
-
-    {{-- Pass PHP chart data to JS --}}
-    <script>
-        window._ticketCategoryData = @json($complainTypeStats);
-    </script>
+    {{-- Ticket charts removed to keep the operations UI compact. --}}
 
     {{-- Create Ticket Card --}}
-    <div class="card card-modern mb-5">
+    <div class="card ticket-create-wrap mb-4">
         <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-3">
+            <div class="ticket-create-head">
                 <div>
-                    <h5 class="mb-0 fw-bold text-primary">➕ নতুন টিকেট তৈরি করুন</h5>
+                    <h5><i class="bi bi-plus-circle me-2"></i> Create New Ticket</h5>
                     <small class="muted-small">Please ensure client details are correct before submission.</small>
                 </div>
                 <button wire:click="reset(['search', 'selectedClient', 'complain_type_id', 'description', 'priority'])" class="btn btn-sm btn-outline-secondary" title="Reset form">
@@ -429,246 +694,200 @@
         </div>
 
     </div>
-    {{-- Active Tickets List (modern cards) --}}
-    <div class="card card-modern">
+    {{-- Active Tickets List (customer-friendly split structure) --}}
+    <div class="card ticket-list-panel">
 
         <div class="card-body p-4 pt-2">
             @forelse ($tickets as $ticket)
-                <div class="ticket-card d-flex gap-3 mb-4 p-4 align-items-start">
+                @php
+                    $statusClass = 'status-open';
+                    if ($ticket->status === 'pending') {
+                        $statusClass = 'status-pending';
+                    } elseif ($ticket->status === 'assigned' || $ticket->status === 'in_progress' || $ticket->status === 'in-progress') {
+                        $statusClass = 'status-assigned';
+                    } elseif ($ticket->status === 'closed') {
+                        $statusClass = 'status-closed';
+                    }
+                @endphp
+                <div class="ticket-card mb-4 p-4 {{ $statusClass }}">
+                    <div class="row g-3 align-items-stretch">
 
-                    {{-- Left Side: Ticket ID & Client Info --}}
-                    <div class="flex-shrink-0 text-center">
-                        <div
-                            class="avatar-circle status-{{ $ticket->status }}"
-                            style="width:50px; height:50px; font-size:1.1rem; margin-bottom: 0.5rem;">
-                            #{{ $ticket->id }}
-                        </div>
-                        <div class="muted-small" title="Complain Type">{{ $ticket->complainType->name ?? 'N/A' }}</div>
-                    </div>
+                        <div class="col-lg-8">
+                            <div class="ticket-info-panel h-100">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="ticket-card-id">
+                                        <span class="ticket-id">#{{ $ticket->id }}</span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                            <div class="ticket-card-client">
+                                                {{ $ticket->client->name }} <span class="muted-small">({{ $ticket->client->username }})</span>
+                                            </div>
+                                            <span class="badge badge-priority @if($ticket->priority=='high') bg-danger @elseif($ticket->priority=='medium') bg-warning text-dark @else bg-secondary @endif">
+                                                {{ ucfirst($ticket->priority) }} Priority
+                                            </span>
+                                        </div>
+                                        <div class="ticket-card-meta mt-1">
+                                            <span><i class="bi bi-telephone"></i> {{ $ticket->client->contact }}</span>
+                                            <span class="mx-2">•</span>
+                                            <span title="Client Address"><i class="bi bi-geo-alt"></i> {{ Str::limit($ticket->client->address, 30) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                    {{-- Middle: Description, Status, Technician --}}
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0 fw-bold">{{ $ticket->client->name }} ({{ $ticket->client->username }})</h6>
-                            <span class="badge badge-priority @if($ticket->priority=='high') bg-danger @elseif($ticket->priority=='medium') bg-warning text-dark @else bg-secondary @endif">
-                                {{ ucfirst($ticket->priority) }} Priority
-                            </span>
-                        </div>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <span class="chip bg-light-info text-primary border border-info-subtle">
+                                        <i class="bi bi-tag-fill me-1"></i>
+                                        <span class="fw-bold">Complain Type:</span>
+                                        <span>{{ $ticket->complainType->name ?? 'N/A' }}</span>
+                                    </span>
+                                </div>
 
-                        <div class="muted-small mb-2">
-                            {{ Str::limit($ticket->description, 160) }}
-                        </div>
+                                <div class="ticket-card-description mb-3">
+                                    {{ Str::limit($ticket->description, 160) }}
+                                </div>
 
-                        <div class="d-flex flex-wrap gap-3 align-items-center">
-                             <span class="chip bg-light-info text-primary border border-info-subtle">
-                                 <i class="bi bi-person-fill"></i> Status: <strong class="text-dark">{{ ucfirst($ticket->status) }}</strong>
-                            </span>
-                            @if($ticket->technician)
-                                 <span class="chip bg-light-warning text-warning border border-warning-subtle">
-                                     👨‍🔧 Assigned: <strong>{{ $ticket->technician->name }}</strong>
-                                 </span>
-                            @endif
-                            <span class="muted-small ms-auto">Created: {{ $ticket->created_at->diffForHumans() }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Right Side: Contact & Primary Actions --}}
-                    <div class="flex-shrink-0 text-end d-flex flex-column align-items-end gap-2">
-                        <small class="fw-bold text-dark">📞 {{ $ticket->client->contact }}</small>
-                        <small class="muted-small" title="Client Address">🏠 {{ Str::limit($ticket->client->address, 30) }}</small>
-
-                        <div class="btn-group mt-2">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Actions
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li>
-                                    <button class="dropdown-item" data-bs-toggle="collapse" data-bs-target="#timeline-{{ $ticket->id }}">
-                                        <i class="bi bi-clock-history me-2"></i>Timeline
-                                    </button>
-                                </li>
-                                <li>
-                                    <button class="dropdown-item" data-bs-toggle="collapse" data-bs-target="#comment-{{ $ticket->id }}">
-                                        <i class="bi bi-chat-dots me-2"></i> Add Comment
-                                    </button>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <button
-                                        onclick="confirm('Are you sure you want to CLOSE this ticket?') || event.stopImmediatePropagation()"
-                                        wire:click="updateStatus({{ $ticket->id }}, 'closed')"
-                                        class="dropdown-item text-success"
-                                        @if($ticket->status == 'closed') disabled @endif>
-                                        <i class="bi bi-check-circle-fill me-2"></i> Close Ticket
-                                    </button>
-                                </li>
-                                <li>
-                                     <button
-                                         onclick="confirm('Are you absolutely sure you want to PERMANENTLY DELETE ticket #{{ $ticket->id }}?') || event.stopImmediatePropagation()"
-                                         wire:click="deleteTicket({{ $ticket->id }})"
-                                         class="dropdown-item text-danger">
-                                         <i class="bi bi-trash-fill me-2"></i> Delete Ticket
-                                     </button>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Collapsible Footer (Actions, Comment, Timeline) --}}
-                <div class="row g-3 px-3 mb-4">
-                    {{-- Technician Assignment --}}
-                    <div class="col-lg-3">
-                        <div class="input-group input-group-sm">
-                            <select wire:model="technician_map.{{ $ticket->id }}" class="form-select rounded-start-pill">
-                                <option value="">-- Assign Technician --</option>
-                                @foreach ($technicians as $tech)
-                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                @endforeach
-                            </select>
-                            <button
-                                onclick="confirm('Confirm assignment to the selected technician?') || event.stopImmediatePropagation()"
-                                wire:click="assignTechnician({{ $ticket->id }})"
-                                class="btn btn-primary rounded-end-pill flex-shrink-0"
-                                wire:loading.attr="disabled">
-                                Assign
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Quick Comment --}}
-                    <div class="col-lg-6">
-                         <div class="collapse w-100" id="comment-{{ $ticket->id }}" data-bs-parent=".ticket-card">
-                            <div class="input-group input-group-sm">
-                                <input type="text" wire:model.defer="technician_map.comment-{{ $ticket->id }}" class="form-control rounded-start-pill" placeholder="Add a quick note to the timeline...">
-                                <button wire:click="quickComment({{ $ticket->id }})" class="btn btn-success rounded-end-pill" wire:loading.attr="disabled">Save Note</button>
+                                <div class="ticket-card-footer d-flex flex-wrap gap-3 align-items-center">
+                                    <span class="chip bg-light-info text-primary border border-info-subtle">
+                                        <i class="bi bi-person-fill"></i> Status: <strong class="text-dark">{{ ucfirst($ticket->status) }}</strong>
+                                    </span>
+                                    @if($ticket->technician)
+                                        @php
+                                            $priorityEtaHours = $ticket->priority === 'high' ? 1 : ($ticket->priority === 'medium' ? 1.5 : 2);
+                                            $etaText = $ticket->priority === 'high' ? '1 hour' : ($ticket->priority === 'medium' ? '1.5 hours' : '2 hours');
+                                        @endphp
+                                        <span class="chip bg-light-warning text-warning border border-warning-subtle">
+                                            👨‍🔧 Assigned: <strong>{{ $ticket->technician->name }}</strong>
+                                        </span>
+                                        <span class="chip bg-light-success text-success border border-success-subtle">
+                                            ⏱ ETA: <strong>{{ $etaText }}</strong>
+                                        </span>
+                                    @endif
+                                    <span class="muted-small ms-auto">Created: {{ $ticket->created_at->diffForHumans() }}</span>
+                                </div>
                             </div>
-                         </div>
-                    </div>
+                        </div>
 
-                    {{-- Collapsible Timeline --}}
-                    <div class="col-12">
-                         <div class="collapse" id="timeline-{{ $ticket->id }}" data-bs-parent=".ticket-card">
-                            <div class="card bg-light p-3 mt-3 shadow-sm border-0" style="max-height:300px; overflow-y:auto; border-radius:0.75rem;">
-                                <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">Ticket Timeline 📜</h6>
-                                @php
-                                     // NOTE: You must ensure TicketTimeline model exists and has the correct relationships/data
-                                    $timeline = \App\Models\TicketTimeline::where('ticket_id', $ticket->id)->latest()->get();
-                                @endphp
+                        <div class="col-lg-4">
+                            <div class="ticket-action-panel h-100 d-flex flex-column justify-content-between">
+                                <div class="ticket-action-head">
+                                    <div class="small fw-bold text-uppercase text-muted mb-2">Operations</div>
+                                </div>
 
-                                @if($timeline->isEmpty())
-                                    <div class="muted-small text-center py-2">No timeline entries yet.</div>
-                                @else
-                                    <ul class="list-unstyled mb-0">
-                                        @foreach($timeline as $item)
-                                            <li class="d-flex mb-3 timeline-item">
-                                                <div class="me-3 flex-shrink-0">
-                                                    <div class="avatar-circle" style="width:30px; height:30px; font-size:.7rem; background:#6c757d;">
-                                                        {{ strtoupper(substr(($item->performed_by ?? 'S'), 0, 1)) }}
-                                                    </div>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <div class="d-flex justify-content-between align-items-start">
-                                                        <div class="fw-semibold text-dark">{{ ucfirst($item->action) }}</div>
-                                                        <small class="text-muted text-nowrap" title="{{ $item->created_at }}">{{ $item->created_at->diffForHumans() }}</small>
-                                                    </div>
-                                                    <div class="small">{{ \Illuminate\Support\Str::limit($item->note, 220) }}</div>
-                                                    <small class="muted-small">by {{ $item->performed_by ?? 'System' }}</small>
-                                                </div>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle ticket-card-action-btn w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-list-check me-2"></i>Actions
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                            <li>
+                                                <button class="dropdown-item" data-bs-toggle="collapse" data-bs-target="#timeline-{{ $ticket->id }}">
+                                                    <i class="bi bi-clock-history me-2"></i>Timeline
+                                                </button>
                                             </li>
-                                        @endforeach
-                                    </ul>
-                                @endif
+                                            <li>
+                                                <button class="dropdown-item" data-bs-toggle="collapse" data-bs-target="#comment-{{ $ticket->id }}">
+                                                    <i class="bi bi-chat-dots me-2"></i>Add Comment
+                                                </button>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <button
+                                                    onclick="confirm('Are you sure you want to CLOSE this ticket?') || event.stopImmediatePropagation()"
+                                                    wire:click="updateStatus({{ $ticket->id }}, 'closed')"
+                                                    class="dropdown-item text-success"
+                                                    @if($ticket->status == 'closed') disabled @endif>
+                                                    <i class="bi bi-check-circle-fill me-2"></i>Close Ticket
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button
+                                                    onclick="confirm('Are you absolutely sure you want to PERMANENTLY DELETE ticket #{{ $ticket->id }}?') || event.stopImmediatePropagation()"
+                                                    wire:click="deleteTicket({{ $ticket->id }})"
+                                                    class="dropdown-item text-danger">
+                                                    <i class="bi bi-trash-fill me-2"></i>Delete Ticket
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="assign-control-wrap">
+                                        <div class="small fw-bold text-uppercase text-muted mb-1">Assign Technician</div>
+                                        <div class="input-group input-group-sm assign-dropdown-wrap">
+                                            <select wire:model="technician_map.{{ $ticket->id }}" class="form-select rounded-start-pill assign-select">
+                                                <option value="">Select technician</option>
+                                                @foreach ($technicians as $tech)
+                                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button
+                                                onclick="confirm('Confirm assignment to the selected technician?') || event.stopImmediatePropagation()"
+                                                wire:click="assignTechnician({{ $ticket->id }})"
+                                                class="btn btn-primary rounded-end-pill flex-shrink-0 assign-button"
+                                                wire:loading.attr="disabled">
+                                                <i class="bi bi-person-check-fill me-1"></i>Assign
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="collapse w-100" id="comment-{{ $ticket->id }}" data-bs-parent=".ticket-card">
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" wire:model.defer="technician_map.comment-{{ $ticket->id }}" class="form-control rounded-start-pill" placeholder="Add a quick note...">
+                                            <button wire:click="quickComment({{ $ticket->id }})" class="btn btn-success rounded-end-pill" wire:loading.attr="disabled">Save</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="collapse mt-3" id="timeline-{{ $ticket->id }}" data-bs-parent=".ticket-card">
+                                    <div class="card bg-light p-3 shadow-sm border-0" style="max-height:300px; overflow-y:auto; border-radius:0.75rem;">
+                                        <h6 class="fw-bold mb-3 text-dark border-bottom pb-2">Ticket Timeline 📜</h6>
+                                        @php
+                                            $timeline = \App\Models\TicketTimeline::where('ticket_id', $ticket->id)->latest()->get();
+                                        @endphp
+
+                                        @if($timeline->isEmpty())
+                                            <div class="muted-small text-center py-2">No timeline entries yet.</div>
+                                        @else
+                                            <ul class="list-unstyled mb-0">
+                                                @foreach($timeline as $item)
+                                                    <li class="d-flex mb-3 timeline-item">
+                                                        <div class="me-3 flex-shrink-0">
+                                                            <div class="avatar-circle" style="width:30px; height:30px; font-size:.7rem; background:#6c757d;">
+                                                                {{ strtoupper(substr(($item->performed_by ?? 'S'), 0, 1)) }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div class="fw-semibold text-dark">{{ ucfirst($item->action) }}</div>
+                                                                <small class="text-muted text-nowrap" title="{{ $item->created_at }}">{{ $item->created_at->diffForHumans() }}</small>
+                                                            </div>
+                                                            <div class="small">{{ \Illuminate\Support\Str::limit($item->note, 220) }}</div>
+                                                            <small class="muted-small">by {{ $item->performed_by ?? 'System' }}</small>
+                                                        </div>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
-                         </div>
+                        </div>
                     </div>
                 </div>
             @empty
                 <p class="text-center p-5 muted-small">🎉 Great job! No tickets found matching the current filters.</p>
             @endforelse
 
-            {{-- Pagination Links --}}
             <div class="mt-4 d-flex justify-content-center">
                 {{ $tickets->links() }}
             </div>
-            {{-- END Pagination Links --}}
         </div>
     </div>
 
-    {{-- Chart.js + Initialization --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    {{-- Chart.js removed with the chart panel, leaving the ticket share popup logic intact. --}}
     <script>
     (function () {
-        const CAT_COLORS = [
-            '#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444',
-            '#06b6d4','#ec4899','#a3e635','#f97316','#14b8a6',
-        ];
-
-        let catChart = null;
-
-        function renderCharts() {
-            const catData   = window._ticketCategoryData || [];
-            const catLabels = catData.map(d => d.label);
-            const catCounts = catData.map(d => d.count);
-            const catColors = catLabels.map((_, i) => CAT_COLORS[i % CAT_COLORS.length]);
-
-            const catCanvas = document.getElementById('categoryChart');
-            if (catCanvas) {
-                if (catChart) catChart.destroy();
-                catChart = new Chart(catCanvas, {
-                    type: 'bar',
-                    data: {
-                        labels: catLabels,
-                        datasets: [{
-                            label: 'Tickets',
-                            data: catCounts,
-                            backgroundColor: catColors,
-                            borderColor: catColors.map(c => c + 'cc'),
-                            borderWidth: 1,
-                            borderRadius: 8,
-                            borderSkipped: false,
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: ctx => ` ${ctx.parsed.x} ticket${ctx.parsed.x !== 1 ? 's' : ''}`
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: { color: 'rgba(255,255,255,0.06)' },
-                                ticks: { color: '#94a3b8', font: { size: 11 } },
-                                beginAtZero: true,
-                                precision: 0,
-                            },
-                            y: {
-                                grid: { display: false },
-                                ticks: { color: '#cbd5e1', font: { size: 11 } },
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', renderCharts);
-
-        document.addEventListener('livewire:load', function () {
-            Livewire.hook('message.processed', () => {
-                setTimeout(renderCharts, 50);
-            });
-        });
-
-        // Ticket Created: Show share popup (Livewire v2)
-        document.addEventListener('livewire:load', function () {
-            Livewire.on('ticket-created', function (id, clientName, clientId, contact, address, complainType, priority, description) {
+        Livewire.on('ticket-created', function (id, clientName, clientId, contact, address, complainType, priority, description) {
                 const d = { id, clientName, clientId, contact, address, complainType, priority, description };
 
                 window._ticketShareText = '🔔 *নতুন টিকেট তৈরি হয়েছে* 🔔\n' +

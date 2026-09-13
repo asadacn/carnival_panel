@@ -114,6 +114,7 @@ Route::post('hotspotClients/{id}/send-sms', [HotspotClientController::class, 'se
 Route::post('hotspotClients/{id}/activate', [HotspotClientController::class, 'activatePackage'])->name('hotspotClients.activate');
 
 Route::get('/tickets/analytics', [App\Http\Controllers\TicketAnalyticsController::class, 'index'])->name('tickets.analytics');
+Route::resource('complain-types', App\Http\Controllers\ComplainTypeController::class);
 
 Route::get('/tickets', TicketManager::class)->name('tickets.live');
 Route::post('/tickets/send-telegram', [App\Http\Controllers\TicketController::class, 'sendTelegramToGroup'])->name('tickets.send-telegram');

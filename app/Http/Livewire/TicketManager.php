@@ -47,7 +47,27 @@ class TicketManager extends Component
 
     public function mount()
     {
-        $this->complain_types = ComplainType::all();
+        $this->complain_types = ComplainType::whereIn('name', [
+            'টিভি সেটিং সমস্যা / TV Setting Issue',
+            'লাল বাতি জ্বলে / LOS Red Light',
+            'অনু বন্ধ / ONU Offline (Power issue)',
+            'স্লো ইন্টারনেট / Slow Speed',
+            'লাইন কাটা / Cable Cut',
+            'রাউটার রিসেট / Router Configuration',
+            'কানেকশন ড্রপ / Connection Drop',
+            'ওয়াইফাই পাসওয়ার্ড পরিবর্তন / Wifi Password Change',
+            'বিলিং বা পেমেন্ট সমস্যা / Billing & Payment',
+            'PPPoE লগইন সমস্যা / PPPoE Login Fail',
+            'নতুন কানেকশন অনুরোধ / New Connection Request',
+            'রুম ট্রান্সফার / রুম ট্রান্সফার',
+            'লাইন ট্রান্সফার / লাইনের পরিবর্তন',
+            'ক্যামেরা সমস্যা / ক্যামেরা সমস্যা',
+            'প্যাচ কর্ড সমস্যা / প্যাচ কর্ড সমস্যা',
+            'LAN ক্যাবল সমস্যা / LAN ক্যাবল সমস্যা',
+            'ONU অ্যাডাপ্টার সমস্যা / ONU অ্যাডাপ্টার সমস্যা',
+            'রাউটার অ্যাডাপ্টার সমস্যা / রাউটার অ্যাডাপ্টার সমস্যা',
+            'ইন্টারনেট নেই / ইন্টারনেট নেই',
+        ])->orderBy('name')->get(['id', 'name']);
         $this->technicians = Technician::where('status', 'active')->get(['id', 'name', 'phone', 'telegram_id']);
 
         // Pre-fill client if arriving from clients list "Open Ticket" shortcut
@@ -195,6 +215,7 @@ class TicketManager extends Component
 
         $ticket->technician_id = $technician->id;
         $ticket->status = 'in_progress';
+        $ticket->assigned_at = now();
         $ticket->save();
 
         if ($ticket->priority == 'high') {

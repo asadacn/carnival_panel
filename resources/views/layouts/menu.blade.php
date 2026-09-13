@@ -130,7 +130,7 @@
             </ul>
         </li>
 
-        <li class="dropdown menu-item-featured {{ Request::is('tickets*') || Request::is('tickets') ? 'active' : '' }}">
+        <li class="dropdown menu-item-featured {{ Request::is('tickets*') || Request::is('tickets') || Request::is('complain-types*') ? 'active' : '' }}">
             <a href="{{ route('tickets.live') }}" class="nav-link has-dropdown"><i class="fa fa-ticket-alt"></i><span>@lang('menu.tickets')</span></a>
             <ul class="dropdown-menu">
                 <li class="{{ Request::is('tickets') ? 'active' : '' }}">
@@ -138,6 +138,9 @@
                 </li>
                 <li class="{{ Request::is('tickets/analytics') ? 'active' : '' }}">
                     <a class="nav-link" href="{{ route('tickets.analytics') }}"><i class="fa fa-chart-pie"></i><span>@lang('menu.ticket_analytics')</span></a>
+                </li>
+                <li class="{{ Request::is('complain-types*') ? 'active' : '' }}">
+                    <a class="nav-link" href="{{ route('complain-types.index') }}"><i class="fa fa-tags"></i><span>Complaint Categories</span></a>
                 </li>
             </ul>
         </li>

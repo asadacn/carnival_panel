@@ -16,6 +16,7 @@ class Ticket extends Model
         'description',
         'priority',
         'status',
+        'assigned_at',
     ];
 
     public function client()
