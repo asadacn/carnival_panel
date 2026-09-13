@@ -153,17 +153,17 @@ Route::post('/api/check-master-password', [HomeController::class, 'checkMasterPa
 Route::post('/locale', function (Request $request) {
     $locale = $request->input('locale', 'en');
     $supported = ['en', 'bn'];
-    
+
     if (!in_array($locale, $supported)) {
         $locale = 'en';
     }
-    
+
     session(['locale' => $locale]);
-    
+
     if (Auth::check()) {
         Auth::user()->update(['locale' => $locale]);
     }
-    
+
     return redirect()->back();
 })->name('locale.switch');
 });
