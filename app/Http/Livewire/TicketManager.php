@@ -21,6 +21,7 @@ class TicketManager extends Component
     public $clients = [], $complain_types, $technicians;
     public $selectedClient, $complain_type_id, $description, $priority = 'low', $technician_id;
     public $search = '';
+    public $showCreateForm = false;
 
     // Technician assignment mapping for the ticket list and comment storage
     public $technician_map = [];
@@ -79,6 +80,7 @@ class TicketManager extends Component
                 $this->selectedClient = $client->id;
                 $this->search         = $client->name;
                 $this->autoOpenModal  = true;
+                $this->showCreateForm = true;
             }
         }
     }
@@ -115,6 +117,11 @@ class TicketManager extends Component
     {
         $this->reset(['filterStatus', 'filterTicketId']);
         $this->resetPage();
+    }
+
+    public function toggleCreateForm()
+    {
+        $this->showCreateForm = !$this->showCreateForm;
     }
     // ----------------------------------------------------
 
@@ -175,6 +182,7 @@ class TicketManager extends Component
         }
 
         $this->reset(['complain_type_id', 'description', 'priority', 'selectedClient', 'search']);
+        $this->showCreateForm = false;
         session()->flash('success', 'Ticket created successfully!');
         $this->resetPage();
 

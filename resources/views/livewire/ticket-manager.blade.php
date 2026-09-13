@@ -391,6 +391,7 @@
             border-radius: 16px;
             border: 1px solid rgba(148, 163, 184, 0.16);
             box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+            animation: ticketCreateSlideIn 420ms ease;
         }
 
         .ticket-create-wrap .card-body {
@@ -436,6 +437,17 @@
             }
         }
 
+        @keyframes ticketCreateSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-12px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
     </style>
 
     {{-- Alerts for success/error messages --}}
@@ -460,9 +472,14 @@
                 <div class="muted-small">Operations center</div>
             </div>
         </div>
-        <a href="{{ route('tickets.analytics') }}" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-chart-pie me-1"></i> Analytics
-        </a>
+        <div class="d-flex gap-2 align-items-center">
+            <button type="button" wire:click="toggleCreateForm" class="btn btn-primary btn-sm rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Ticket
+            </button>
+            <a href="{{ route('tickets.analytics') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-chart-pie me-1"></i> Analytics
+            </a>
+        </div>
     </div>
 
     {{-- TICKET STATUS DASHBOARD COUNTERS --}}
@@ -500,6 +517,7 @@
     {{-- Ticket charts removed to keep the operations UI compact. --}}
 
     {{-- Create Ticket Card --}}
+    @if($showCreateForm)
     <div class="card ticket-create-wrap mb-4">
         <div class="card-body p-4">
             <div class="ticket-create-head">
@@ -507,9 +525,14 @@
                     <h5><i class="bi bi-plus-circle me-2"></i> Create New Ticket</h5>
                     <small class="muted-small">Please ensure client details are correct before submission.</small>
                 </div>
-                <button wire:click="reset(['search', 'selectedClient', 'complain_type_id', 'description', 'priority'])" class="btn btn-sm btn-outline-secondary" title="Reset form">
-                    <i class="bi bi-x-circle me-1"></i> Reset
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button wire:click="reset(['search', 'selectedClient', 'complain_type_id', 'description', 'priority'])" class="btn btn-sm btn-outline-secondary" title="Reset form">
+                        <i class="bi bi-x-circle me-1"></i> Reset
+                    </button>
+                    <button type="button" wire:click="toggleCreateForm" class="btn btn-sm btn-outline-danger" title="Close form">
+                        <i class="bi bi-x-lg me-1"></i> Close
+                    </button>
+                </div>
             </div>
 
             {{-- Client Search & Selection --}}
@@ -643,8 +666,7 @@
             </button>
         </div>
     </div>
-
-
+    @endif
 
     {{-- IMPROVED ACTIVE TICKETS HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
