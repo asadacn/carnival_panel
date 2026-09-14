@@ -13,6 +13,94 @@ use Laracasts\Flash\Flash;
 
 class SmsController extends Controller
 {
+    private function requestedMonths(Request $request): array
+    {
+        $months = $request->input('months', []);
+
+        if (!is_array($months)) {
+            $months = is_string($months) ? preg_split('/[,\s]+/', trim($months)) : [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(function ($month) {
+            $month = (int) trim((string) $month);
+            return $month >= 1 && $month <= 12 ? $month : null;
+        }, (array) $months))));
+    }
+
+    private function requestedIspCodes(Request $request): array
+    {
+        $raw = $request->input('isp_code', []);
+
+        if (is_array($raw)) {
+            $codes = $raw;
+        } elseif (is_string($raw)) {
+            $codes = preg_split('/[,\s]+/', trim($raw)) ?: [];
+        } else {
+            $codes = [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(function ($code) {
+            $code = strtolower(trim((string) $code));
+            return $code !== '' ? $code : null;
+        }, (array) $codes))));
+    }
+
+    private function requestedAreas(Request $request): array
+    {
+        $raw = $request->input('area', []);
+
+        if (is_array($raw)) {
+            $areas = $raw;
+        } elseif (is_string($raw)) {
+            $areas = preg_split('/[,\s]+/', trim($raw)) ?: [];
+        } else {
+            $areas = [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(function ($area) {
+            $area = strtolower(trim((string) $area));
+            return $area !== '' ? $area : null;
+        }, (array) $areas))));
+    }
+
+    private function areaFilterQuery($baseQuery, array $areas)
+    {
+        $areas = array_values(array_unique(array_filter(array_map(function ($area) {
+            return strtolower(trim((string) $area));
+        }, $areas))));
+
+        if (empty($areas)) {
+            return (clone $baseQuery);
+        }
+
+        return (clone $baseQuery)->where(function ($q) use ($areas) {
+            foreach ($areas as $area) {
+                $q->orWhereRaw('LOWER(address) LIKE ?', ['%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $area) . '%']);
+            }
+        });
+    }
+
+    private function expiredSelectedMonthsQuery($baseQuery, array $months)
+    {
+        $months = array_values(array_unique(array_filter(array_map(function ($month) {
+            $month = (int) trim((string) $month);
+            return $month >= 1 && $month <= 12 ? $month : null;
+        }, $months))));
+
+        if (empty($months)) {
+            return (clone $baseQuery)->where('status', 'expired')->whereRaw('0 = 1');
+        }
+
+        // Support multiple month selections by OR-ing month predicates instead of forcing one fixed month or one fixed year.
+        return (clone $baseQuery)
+            ->where('status', 'expired')
+            ->where(function ($q) use ($months) {
+                foreach ($months as $month) {
+                    $q->orWhereMonth('expiration', $month);
+                }
+            });
+    }
+
     public function send_sms(Request $request)
     {
         $request->validate([
@@ -157,10 +245,14 @@ class SmsController extends Controller
         $charCount = mb_strlen($smsText, 'UTF-8');
         $smsParts = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
 
-        $ispCode = $request->isp_code;
+        $ispCodes = $this->requestedIspCodes($request);
+        $areaIds = $this->requestedAreas($request);
         $baseQuery = Client::query()->whereNotNull('contact')->where('contact', '!=', '');
-        if (!empty($ispCode)) {
-            $baseQuery->where('isp_code', strtolower($ispCode));
+        if (!empty($ispCodes)) {
+            $baseQuery->whereIn('isp_code', $ispCodes);
+        }
+        if (!empty($areaIds)) {
+            $baseQuery = $this->areaFilterQuery($baseQuery, $areaIds);
         }
 
         $clientsCollection = collect();
@@ -193,16 +285,35 @@ class SmsController extends Controller
                     $clientsCollection = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->get(['id', 'username', 'contact']);
                     break;
                 case "registered":
-                    $clientsCollection = (clone $baseQuery)->where('status', 'registered')->get(['id', 'username', 'contact']);
+                    $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['registered'])->get(['id', 'username', 'contact']);
+                    break;
+                case "active":
+                    $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['active'])->get(['id', 'username', 'contact']);
                     break;
                 case "expired":
-                    $clientsCollection = (clone $baseQuery)->where('status', 'expired')->get(['id', 'username', 'contact']);
+                    $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->get(['id', 'username', 'contact']);
                     break;
                 case "expired_today":
                     $clientsCollection = (clone $baseQuery)->where('expiration', Carbon::today('Asia/Dhaka'))->get(['id', 'username', 'contact']);
                     break;
                 case "expired_this_month":
-                    $clientsCollection = (clone $baseQuery)->where('status', 'expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->get(['id', 'username', 'contact']);
+                    $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->get(['id', 'username', 'contact']);
+                    break;
+                case "expired_selected_months":
+                    $months = $this->requestedMonths($request);
+                    if (empty($months)) {
+                        Flash::error("Please choose at least one expired month.");
+                        return redirect()->back();
+                    }
+
+                    $clientsCollection = $this->expiredSelectedMonthsQuery($baseQuery, $months)
+                        ->get(['id', 'username', 'contact']);
+                    break;
+                case "area_wise":
+                    $clientsCollection = (clone $baseQuery)
+                        ->whereNotNull('contact')
+                        ->where('contact', '!=', '')
+                        ->get(['id', 'username', 'contact']);
                     break;
                 default:
                     Flash::error("Invalid clients group selected!");
@@ -216,11 +327,12 @@ class SmsController extends Controller
         }
 
         // Create campaign header
+        $ispCodeLabel = !empty($ispCodes) ? implode(',', $ispCodes) : null;
         $campaign = SmsCampaign::create([
             'user_id'          => auth()->id(),
-            'title'            => ucfirst(str_replace('_', ' ', $request->client_status)) . ' (' . $clientsCollection->count() . ')' . (!empty($ispCode) ? ' - ' . strtoupper($ispCode) : ''),
+            'title'            => ucfirst(str_replace('_', ' ', $request->client_status)) . ' (' . $clientsCollection->count() . ')' . (!empty($ispCodeLabel) ? ' - ' . strtoupper($ispCodeLabel) : ''),
             'target_group'     => $request->client_status,
-            'isp_code'         => $ispCode,
+            'isp_code'         => $ispCodeLabel,
             'message_template' => $smsText,
             'total_recipients' => $clientsCollection->count(),
             'status'           => 'processing',
@@ -301,10 +413,14 @@ class SmsController extends Controller
         $clients = collect();
 
         // 2. Build base query — optionally filter by ISP
-        $ispCode = $request->isp_code;
+        $ispCodes = $this->requestedIspCodes($request);
+        $areaIds = $this->requestedAreas($request);
         $baseQuery = Client::query();
-        if (!empty($ispCode)) {
-            $baseQuery->where('isp_code', strtolower($ispCode));
+        if (!empty($ispCodes)) {
+            $baseQuery->whereIn('isp_code', $ispCodes);
+        }
+        if (!empty($areaIds)) {
+            $baseQuery = $this->areaFilterQuery($baseQuery, $areaIds);
         }
 
         // 3. Get clients contacts based on the selected status
@@ -329,16 +445,34 @@ class SmsController extends Controller
                     $clients = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
                     break;
                 case "registered":
-                    $clients = (clone $baseQuery)->where('status', 'registered')->pluck('contact');
+                    $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['registered'])->pluck('contact');
+                    break;
+                case "active":
+                    $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['active'])->pluck('contact');
                     break;
                 case "expired":
-                    $clients = (clone $baseQuery)->where('status', 'expired')->pluck('contact');
+                    $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->pluck('contact');
                     break;
                 case "expired_today":
                     $clients = (clone $baseQuery)->where('expiration', Carbon::today('Asia/Dhaka'))->pluck('contact');
                     break;
                 case "expired_this_month":
-                    $clients = (clone $baseQuery)->where('status', 'expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
+                    $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
+                    break;
+                case "expired_selected_months":
+                    $months = $this->requestedMonths($request);
+                    if (empty($months)) {
+                        Flash::error("Please choose at least one expired month.");
+                        return redirect()->back();
+                    }
+
+                    $clients = $this->expiredSelectedMonthsQuery($baseQuery, $months)->pluck('contact');
+                    break;
+                case "area_wise":
+                    $clients = (clone $baseQuery)
+                        ->whereNotNull('contact')
+                        ->where('contact', '!=', '')
+                        ->pluck('contact');
                     break;
                 default:
                     Flash::error("Invalid clients group selected!");
@@ -402,7 +536,7 @@ class SmsController extends Controller
 
             if ($result['success']) {
                 $count = count($numbers);
-                $ispLabel = !empty($ispCode) ? " (ISP: " . ucfirst($ispCode) . ")" : "";
+                $ispLabel = !empty($ispCodes) ? " (ISP: " . implode(', ', array_map('ucfirst', $ispCodes)) . ")" : "";
                 $campIdInfo = is_array($result['data']['campaign_id'])
                     ? implode(', ', $result['data']['campaign_id'])
                     : $result['data']['campaign_id'];
@@ -452,8 +586,10 @@ class SmsController extends Controller
      */
     public function preview_bulk_contacts(Request $request)
     {
-        $status  = $request->input('client_status', '');
-        $ispCode = $request->input('isp_code', '');
+        $status = $request->input('client_status', '');
+        $ispCodes = $this->requestedIspCodes($request);
+        $areas = $this->requestedAreas($request);
+        $months = $this->requestedMonths($request);
 
         if (empty($status)) {
             return response()->json(['count' => 0, 'label' => '—', 'error' => 'No group selected.']);
@@ -466,44 +602,62 @@ class SmsController extends Controller
             return response()->json([
                 'count' => count($lines),
                 'label' => 'Custom Numbers',
-                'isp'   => $ispCode ?: 'All ISPs',
+                'isp'   => !empty($ispCodes) ? implode(', ', array_map('ucfirst', $ispCodes)) : 'All ISPs',
+                'months' => $months,
+                'areas' => $areas,
+                'status' => $status,
             ]);
         }
 
-        // Build base query with optional ISP filter
+        // Build base query with optional ISP and area filters
         $query = Client::query();
-        if (!empty($ispCode)) {
-            $query->where('isp_code', strtolower($ispCode));
+        if (!empty($ispCodes)) {
+            $query->whereIn('isp_code', $ispCodes);
+        }
+        if (!empty($areas)) {
+            $query = $this->areaFilterQuery($query, $areas);
         }
 
-        $count = match ($status) {
-            'expiring'          => (clone $query)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->count(),
-            'registered'        => (clone $query)->where('status', 'registered')->count(),
-            'expired'           => (clone $query)->where('status', 'expired')->count(),
-            'expired_today'     => (clone $query)->where('expiration', Carbon::today('Asia/Dhaka'))->count(),
-            'expired_this_month'=> (clone $query)->where('status', 'expired')
-                                        ->whereYear('expiration', date('Y'))
-                                        ->whereMonth('expiration', date('m'))
-                                        ->count(),
-            default             => null,
-        };
+        if ($status === 'expired_selected_months') {
+            $count = empty($months) ? 0 : $this->expiredSelectedMonthsQuery($query, $months)->count();
+        } else {
+            $count = match ($status) {
+                'expiring'           => (clone $query)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->count(),
+                'registered'         => (clone $query)->whereRaw('LOWER(status) = ?', ['registered'])->count(),
+                'active'             => (clone $query)->whereRaw('LOWER(status) = ?', ['active'])->count(),
+                'expired'            => (clone $query)->whereRaw('LOWER(status) = ?', ['expired'])->count(),
+                'expired_today'      => (clone $query)->where('expiration', Carbon::today('Asia/Dhaka'))->count(),
+                'expired_this_month' => (clone $query)->whereRaw('LOWER(status) = ?', ['expired'])
+                                            ->whereYear('expiration', date('Y'))
+                                            ->whereMonth('expiration', date('m'))
+                                            ->count(),
+                'area_wise'          => (clone $query)->whereNotNull('contact')->where('contact', '!=', '')->count(),
+                default              => null,
+            };
+        }
 
         if (is_null($count)) {
             return response()->json(['count' => 0, 'error' => 'Invalid group.']);
         }
 
         $groupLabels = [
-            'expiring'           => 'Expiring Tomorrow',
-            'registered'         => 'Registered',
-            'expired'            => 'Expired',
-            'expired_today'      => 'Expired Today',
-            'expired_this_month' => 'Expired This Month',
+            'expiring'                => 'Expiring Tomorrow',
+            'registered'              => 'Registered',
+            'active'                  => 'Active',
+            'expired'                 => 'Expired',
+            'expired_today'           => 'Expired Today',
+            'expired_this_month'      => 'Expired This Month',
+            'expired_selected_months' => 'Expired Selected Months',
+            'area_wise'               => 'Area Wise Clients',
         ];
 
         return response()->json([
             'count' => $count,
             'label' => $groupLabels[$status] ?? $status,
-            'isp'   => !empty($ispCode) ? ucfirst($ispCode) : 'All ISPs',
+            'isp'   => !empty($ispCodes) ? implode(', ', array_map('ucfirst', $ispCodes)) : 'All ISPs',
+            'months' => $months,
+            'areas' => $areas,
+            'status' => $status,
         ]);
     }
 
@@ -587,6 +741,19 @@ class SmsController extends Controller
         $expired_today = Client::where('expiration',Carbon::today('Asia/Dhaka'))->count();
         $expired_this_month = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->count();
 
-        return view('bulksms.create', compact(['templates','expiring_soon','expired_today','expired_this_month']));
+        $clientAddresses = Client::query()
+            ->whereNotNull('address')
+            ->where('address', '!=', '')
+            ->distinct()
+            ->orderBy('address')
+            ->pluck('address')
+            ->map(function ($address) {
+                return trim((string) $address);
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        return view('bulksms.create', compact(['templates','expiring_soon','expired_today','expired_this_month','clientAddresses']));
     }
 }

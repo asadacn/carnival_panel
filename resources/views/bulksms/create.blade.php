@@ -137,6 +137,55 @@
         background-color: #f5365c;
     }
 
+    .bulk-preview-modal {
+        border-radius: 16px !important;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22) !important;
+    }
+
+    .bulk-preview-modal .swal2-title {
+        font-size: 1.35rem;
+        color: #34395e;
+        font-weight: 800;
+    }
+
+    .bulk-preview-modal .swal2-content {
+        color: #34395e;
+    }
+
+    .bulk-preview-modal .preview-detail-list {
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 1px solid #e8eef4;
+        padding: 14px;
+    }
+
+    .bulk-preview-modal .preview-detail-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(52, 57, 94, 0.08);
+    }
+
+    .bulk-preview-modal .preview-detail-row:last-child {
+        border-bottom: 0;
+    }
+
+    .bulk-preview-modal .preview-detail-label {
+        color: #516073;
+        font-weight: 700;
+        font-size: 0.84rem;
+        letter-spacing: 0.02em;
+    }
+
+    .bulk-preview-modal .preview-detail-value {
+        color: #17293b;
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-align: right;
+    }
+
     @keyframes pulse {
         0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(17, 205, 239, 0.7); }
         70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(17, 205, 239, 0); }
@@ -206,24 +255,67 @@
                                                         <option value="">Choose target client group...</option>
                                                         <option value="custom">Custom Numbers List</option>
                                                         <option value="expired">Expired Clients</option>
+                                                        <option value="active">Active Clients</option>
+                                                        <option value="registered">Registered Clients</option>
                                                         <option value="expired_this_month">Expired This Month ({{ $expired_this_month }} Clients)</option>
+                                                        <option value="expired_selected_months">Expired Selected Months</option>
                                                         <option value="expired_today">Expired Today ({{ $expired_today }} Clients)</option>
                                                         <option value="expiring">Expiring Tomorrow ({{ $expiring_soon }} Clients)</option>
+                                                        <option value="area_wise">Area Wise Clients</option>
                                                     </select>
                                                 </div>
                                             </div>
 
-                                            <div class="form-group mb-3">
-                                                <label for="sms_isp_code">Filter by ISP Provider:</label>
+                                            <div class="form-group mb-3" id="sms_months_div" style="display:none;">
+                                                <label for="sms_months">Choose expired months:</label>
                                                 <div class="input-icon-group">
-                                                    <i class="fas fa-globe"></i>
-                                                    <select name="isp_code" id="sms_isp_code" class="form-control form-control-custom">
-                                                        <option value="">🌐 All ISPs</option>
-                                                        <option value="carnival">🎪 Carnival</option>
-                                                        <option value="bijoy">⚡ Bijoy</option>
-                                                        <option value="icc">📡 ICC</option>
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                    <select name="months[]" id="sms_months" class="form-control form-control-custom" multiple size="12">
+                                                        @foreach (range(1, 12) as $month)
+                                                            <option value="{{ $month }}">{{ Carbon\Carbon::create(null, $month, 1)->monthName }}</option>
+                                                        @endforeach
                                                     </select>
                                                 </div>
+                                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple months for expired clients.</small>
+                                            </div>
+
+                                            <div class="form-group mb-3">
+                                                <label for="sms_isp_code">Filter by ISP Provider:</label>
+                                                <div class="border rounded p-3 bg-light" id="sms_isp_code">
+                                                    <div class="row">
+                                                        <div class="col-md-4 col-sm-6 col-12 mb-2">
+                                                            <label class="d-flex align-items-center gap-2 mb-0">
+                                                                <input type="checkbox" name="isp_code[]" value="carnival" class="form-check-input">
+                                                                <span>🎪 Carnival</span>
+                                                            </label>
+                                                        </div>
+                                                        <div class="col-md-4 col-sm-6 col-12 mb-2">
+                                                            <label class="d-flex align-items-center gap-2 mb-0">
+                                                                <input type="checkbox" name="isp_code[]" value="bijoy" class="form-check-input">
+                                                                <span>⚡ Bijoy</span>
+                                                            </label>
+                                                        </div>
+                                                        <div class="col-md-4 col-sm-6 col-12 mb-2">
+                                                            <label class="d-flex align-items-center gap-2 mb-0">
+                                                                <input type="checkbox" name="isp_code[]" value="icc" class="form-check-input">
+                                                                <span>📡 ICC</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <small class="form-text text-muted">Choose one or more ISP codes for the target group.</small>
+                                            </div>
+
+                                            <div class="form-group mb-3">
+                                                <label for="sms_area_code">Filter by Client Address:</label>
+                                                <div class="border rounded p-3 bg-light">
+                                                    <select name="area[]" id="sms_area_code" class="form-control form-control-custom select2" multiple="multiple" data-placeholder="Search and choose client address...">
+                                                        @foreach ($clientAddresses as $address)
+                                                            <option value="{{ $address }}">{{ $address }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <small class="form-text text-muted">Search and choose one or more client address strings for the target group.</small>
                                             </div>
 
                                             <div class="form-group mb-3" id="sms_custom_numbers_div" style="display:none;">
@@ -267,7 +359,7 @@
                                                         <i class="fas fa-redo mr-1"></i> Reset
                                                     </button>
                                                 </div>
-                                                <button type="submit" onclick="Swal.showLoading();" class="btn btn-success rounded-pill px-4 shadow-sm">
+                                                <button type="button" onclick="confirmAndSend('sms')" class="btn btn-success rounded-pill px-4 shadow-sm">
                                                     <i class="fas fa-paper-plane mr-1"></i> Send Bulk SMS
                                                 </button>
                                             </div>
@@ -299,24 +391,70 @@
                                                         <option value="custom">Custom Numbers List</option>
                                                         <option value="expired">Expired Clients</option>
                                                         <option value="registered">Registered Clients</option>
+                                                        <option value="active">Active Clients</option>
                                                         <option value="expired_this_month">Expired This Month ({{ $expired_this_month }} Clients)</option>
+                                                        <option value="expired_selected_months">Expired Selected Months</option>
                                                         <option value="expired_today">Expired Today ({{ $expired_today }} Clients)</option>
                                                         <option value="expiring">Expiring Tomorrow ({{ $expiring_soon }} Clients)</option>
+                                                        <option value="area_wise">Area Wise Clients</option>
                                                     </select>
                                                 </div>
                                             </div>
 
+                                            <div class="form-group mb-3" id="voice_months_div" style="display:none;">
+                                                <label for="voice_months">Choose expired months:</label>
+                                                <div class="border rounded p-3 bg-light">
+                                                    <div class="row">
+                                                        @foreach (range(1, 12) as $month)
+                                                            <div class="col-md-3 col-sm-4 col-6 mb-2">
+                                                                <label class="d-flex align-items-center gap-2 mb-0">
+                                                                    <input type="checkbox" name="months[]" value="{{ $month }}" class="form-check-input">
+                                                                    <span>{{ Carbon\Carbon::create(null, $month, 1)->monthName }}</span>
+                                                                </label>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                                <small class="form-text text-muted">Select one or more expired months for the campaign.</small>
+                                            </div>
+
                                             <div class="form-group mb-3">
                                                 <label for="voice_isp_code">Filter by ISP Provider:</label>
-                                                <div class="input-icon-group">
-                                                    <i class="fas fa-globe"></i>
-                                                    <select name="isp_code" id="voice_isp_code" class="form-control form-control-custom">
-                                                        <option value="">🌐 All ISPs</option>
-                                                        <option value="carnival">🎪 Carnival</option>
-                                                        <option value="bijoy">⚡ Bijoy</option>
-                                                        <option value="icc">📡 ICC</option>
+                                                <div class="border rounded p-3 bg-light" id="voice_isp_code">
+                                                    <div class="row">
+                                                        <div class="col-md-4 col-sm-6 col-12 mb-2">
+                                                            <label class="d-flex align-items-center gap-2 mb-0">
+                                                                <input type="checkbox" name="isp_code[]" value="carnival" class="form-check-input">
+                                                                <span>🎪 Carnival</span>
+                                                            </label>
+                                                        </div>
+                                                        <div class="col-md-4 col-sm-6 col-12 mb-2">
+                                                            <label class="d-flex align-items-center gap-2 mb-0">
+                                                                <input type="checkbox" name="isp_code[]" value="bijoy" class="form-check-input">
+                                                                <span>⚡ Bijoy</span>
+                                                            </label>
+                                                        </div>
+                                                        <div class="col-md-4 col-sm-6 col-12 mb-2">
+                                                            <label class="d-flex align-items-center gap-2 mb-0">
+                                                                <input type="checkbox" name="isp_code[]" value="icc" class="form-check-input">
+                                                                <span>📡 ICC</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <small class="form-text text-muted">Choose one or more ISP codes for the target group.</small>
+                                            </div>
+
+                                            <div class="form-group mb-3">
+                                                <label for="voice_area_code">Filter by Client Address:</label>
+                                                <div class="border rounded p-3 bg-light">
+                                                    <select name="area[]" id="voice_area_code" class="form-control form-control-custom select2" multiple="multiple" data-placeholder="Search and choose client address...">
+                                                        @foreach ($clientAddresses as $address)
+                                                            <option value="{{ $address }}">{{ $address }}</option>
+                                                        @endforeach
                                                     </select>
                                                 </div>
+                                                <small class="form-text text-muted">Search and choose one or more client address strings for the target group.</small>
                                             </div>
 
                                             <div class="form-group mb-3" id="voice_custom_numbers_div" style="display:none;">
@@ -373,7 +511,7 @@
                                                         <i class="fas fa-redo mr-1"></i> Reset
                                                     </button>
                                                 </div>
-                                                <button type="submit" onclick="Swal.showLoading();" class="btn btn-info rounded-pill px-4 shadow-sm text-white">
+                                                <button type="button" onclick="confirmAndSend('voice')" class="btn btn-info rounded-pill px-4 shadow-sm text-white">
                                                     <i class="fas fa-bullhorn mr-1"></i> Start Voice Campaign
                                                 </button>
                                             </div>
@@ -478,6 +616,12 @@
     var autoRefreshTimer = null;
 
     $(document).ready(function() {
+        $('#sms_area_code, #voice_area_code').select2({
+            width: '100%',
+            placeholder: 'Search and choose client address...',
+            allowClear: true
+        });
+
         // Initialize SMS Counter
         $('#sms-body').countSms('#sms-counter');
 
@@ -494,17 +638,6 @@
                 var newTitle = 'Voice - ' + groupText + ' - ' + broadcastText;
                 $('#campaign_title').val(newTitle);
             }
-
-            // Auto-trigger contact count preview when group changes
-            if ($('#voice_client_status').val()) {
-                previewContacts('voice');
-            }
-        });
-
-        $('#sms_client_status, #sms_isp_code').on('change', function() {
-            if ($('#sms_client_status').val()) {
-                previewContacts('sms');
-            }
         });
 
         // Toggle Custom Numbers Input (SMS)
@@ -516,6 +649,14 @@
                 $('#sms_custom_numbers_div').slideUp(200);
                 $('#sms_custom_numbers').prop('required', false).val('');
             }
+
+            if ($(this).val() === 'expired_selected_months') {
+                $('#sms_months_div').slideDown(200);
+                $('#sms_months').prop('required', true);
+            } else {
+                $('#sms_months_div').slideUp(200);
+                $('#sms_months').prop('required', false);
+            }
         });
 
         // Toggle Custom Numbers Input (Voice)
@@ -526,6 +667,14 @@
             } else {
                 $('#voice_custom_numbers_div').slideUp(200);
                 $('#voice_custom_numbers').prop('required', false).val('');
+            }
+
+            if ($(this).val() === 'expired_selected_months') {
+                $('#voice_months_div').slideDown(200);
+                $('#voice_months').prop('required', true);
+            } else {
+                $('#voice_months_div').slideUp(200);
+                $('#voice_months').prop('required', false);
             }
         });
 
@@ -575,6 +724,14 @@
         }
     });
 
+    function escapeHtml(value) {
+        return String(value).replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
     function resetText() {
         $("#sms-body").val('').countSms('#sms-counter');
         $('#sms_client_status').val('').trigger('change');
@@ -589,19 +746,31 @@
     });
 
     // Contact Preview Function
-    function previewContacts(tab) {
-        var clientStatus, ispCode, customContacts, resultBadge;
+    function previewContacts(tab, showModal) {
+        var clientStatus, customContacts, resultBadge, ispCode, selectedMonths, selectedAreas;
 
         if (tab === 'sms') {
             clientStatus   = $('#sms_client_status').val();
-            ispCode        = $('#sms_isp_code').val();
             customContacts = $('#sms_custom_numbers').val();
             resultBadge    = $('#sms_preview_result');
+            ispCode        = $('#sms_isp_code input[type="checkbox"]:checked').map(function() {
+                return this.value;
+            }).get();
+            selectedMonths = $('#sms_months_div input[type="checkbox"]:checked').map(function() {
+                return this.value;
+            }).get();
+            selectedAreas = $('#sms_area_code').val() || [];
         } else {
             clientStatus   = $('#voice_client_status').val();
-            ispCode        = $('#voice_isp_code').val();
             customContacts = $('#voice_custom_numbers').val();
             resultBadge    = $('#voice_preview_result');
+            ispCode        = $('#voice_isp_code input[type="checkbox"]:checked').map(function() {
+                return this.value;
+            }).get();
+            selectedMonths = $('#voice_months_div input[type="checkbox"]:checked').map(function() {
+                return this.value;
+            }).get();
+            selectedAreas = $('#voice_area_code').val() || [];
         }
 
         if (!clientStatus) return;
@@ -613,8 +782,10 @@
             method: 'GET',
             data: {
                 client_status:   clientStatus,
-                isp_code:        ispCode,
                 custom_contacts: customContacts,
+                isp_code:        ispCode,
+                months:          selectedMonths,
+                area:            selectedAreas,
                 _token:          '{{ csrf_token() }}'
             },
             success: function(res) {
@@ -622,17 +793,112 @@
                     resultBadge.html('<i class="fas fa-exclamation-triangle mr-1"></i> Error: ' + res.error).removeClass().addClass('badge badge-preview bg-danger text-white').show();
                     return;
                 }
-                var label = res.isp + ' — ' + res.label;
+
+                var label = (res.isp || 'All ISPs') + ' — ' + (res.label || res.status || 'Selected Group');
                 if (res.count === 0) {
                     resultBadge.html('<i class="fas fa-exclamation-circle mr-1"></i> 0 contacts matched (' + label + ')').removeClass().addClass('badge badge-warning text-dark').show();
                 } else {
                     resultBadge.html('<i class="fas fa-check-circle mr-1"></i> ' + res.count + ' contact(s) queued (' + label + ')').removeClass().addClass('badge badge-success text-white').show();
+                }
+
+                var monthSummary = 'All months';
+                if (Array.isArray(res.months) && res.months.length) {
+                    monthSummary = res.months.map(function(month) {
+                        return 'Month ' + month;
+                    }).join(', ');
+                }
+
+                var areaSummary = 'All addresses';
+                if (Array.isArray(res.areas) && res.areas.length) {
+                    areaSummary = res.areas.join(', ');
+                }
+
+                var smsBody = '';
+                var smsStats = { messages: 1, remaining: 160 };
+                if (tab === 'sms') {
+                    smsBody = $('#sms-body').val() || '';
+                    if (typeof SmsCounter !== 'undefined' && typeof SmsCounter.count === 'function') {
+                        smsStats = SmsCounter.count(smsBody);
+                    }
+                }
+
+                var smsPreview = smsBody ? (smsBody.length > 80 ? smsBody.substring(0, 80) + '...' : smsBody) : '—';
+                var smsMetaRows = '';
+                if (tab === 'sms') {
+                    smsMetaRows = '<div class="preview-detail-row"><span class="preview-detail-label">SMS Text</span><span class="preview-detail-value">' + escapeHtml(smsPreview) + '</span></div>'
+                        + '<div class="preview-detail-row"><span class="preview-detail-label">Total SMS</span><span class="preview-detail-value">' + (smsStats.messages || 1) + '</span></div>'
+                        + '<div class="preview-detail-row"><span class="preview-detail-label">Remaining Characters</span><span class="preview-detail-value">' + (smsStats.remaining || 160) + '</span></div>';
+                }
+
+                var modalHtml = '<div class="preview-detail-list text-left">'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Total Contacts</span><span class="preview-detail-value">' + res.count + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Target Group</span><span class="preview-detail-value">' + (res.label || res.status || 'Selected Group') + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">ISP</span><span class="preview-detail-value">' + (res.isp || 'All ISPs') + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Months</span><span class="preview-detail-value">' + monthSummary + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Addresses</span><span class="preview-detail-value">' + areaSummary + '</span></div>'
+                    + smsMetaRows
+                    + '</div>';
+
+                if (showModal) {
+                    if (tab === 'sms') {
+                        Swal.fire({
+                            title: 'SMS Contact Preview',
+                            html: modalHtml,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Confirm & Send',
+                            cancelButtonText: 'Cancel',
+                            allowOutsideClick: false,
+                            width: 680,
+                            customClass: {
+                                popup: 'bulk-preview-modal'
+                            }
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                $('#sms_form').trigger('submit');
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Voice Contact Preview',
+                            html: modalHtml,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Confirm & Start Voice',
+                            cancelButtonText: 'Cancel',
+                            allowOutsideClick: false,
+                            width: 680,
+                            customClass: {
+                                popup: 'bulk-preview-modal'
+                            }
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                $('#voice_campaign_form').trigger('submit');
+                            }
+                        });
+                    }
                 }
             },
             error: function() {
                 resultBadge.html('<i class="fas fa-times-circle mr-1"></i> Request failed').removeClass().addClass('badge badge-danger text-white').show();
             }
         });
+    }
+
+    function confirmAndSend(tab) {
+        if (tab === 'sms') {
+            if (!$('#sms_client_status').val()) {
+                Swal.fire({ title: 'Target group required', text: 'Select a client group before sending.', icon: 'warning' });
+                return;
+            }
+            previewContacts('sms', true);
+        } else {
+            if (!$('#voice_client_status').val()) {
+                Swal.fire({ title: 'Target group required', text: 'Select a client group before sending.', icon: 'warning' });
+                return;
+            }
+            previewContacts('voice', true);
+        }
     }
 
     // Query Campaign Status via Elit Call API

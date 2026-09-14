@@ -18,4 +18,18 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    public function testBulkPreviewCanAcceptExpiredSelectedMonthsRequest()
+    {
+        $response = $this->getJson('/bulk_sms/preview?client_status=expired_selected_months&months[]=1&months[]=4');
+
+        $response->assertStatus(401);
+    }
+
+    public function testBulkPreviewCanAcceptActiveGroupRequest()
+    {
+        $response = $this->getJson('/bulk_sms/preview?client_status=active');
+
+        $response->assertStatus(401);
+    }
 }
