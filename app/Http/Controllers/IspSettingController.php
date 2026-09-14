@@ -57,26 +57,28 @@ class IspSettingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'isp_code'            => 'required|string|max:50|alpha_dash|unique:isps,isp_code',
-            'isp_name'            => 'required|string|max:255',
-            'isp_tagline'         => 'nullable|string|max:255',
-            'phone'               => 'nullable|string|max:100',
-            'billing_phone'       => 'nullable|string|max:100',
-            'email'               => 'nullable|email|max:150',
-            'website'             => 'nullable|string|max:255',
-            'address'             => 'nullable|string|max:500',
-            'currency_symbol'     => 'nullable|string|max:10',
-            'invoice_title'       => 'nullable|string|max:100',
-            'payment_instruction' => 'nullable|string|max:500',
-            'payment_methods'     => 'nullable|string|max:255',
-            'payment_number'      => 'nullable|string|max:100',
-            'invoice_footer'      => 'nullable|string|max:500',
-            'signatory_title'     => 'nullable|string|max:100',
-            'isp_logo'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'isp_code'             => 'required|string|max:50|alpha_dash|unique:isps,isp_code',
+            'isp_name'             => 'required|string|max:255',
+            'isp_tagline'          => 'nullable|string|max:255',
+            'phone'                => 'nullable|string|max:100',
+            'billing_phone'        => 'nullable|string|max:100',
+            'email'                => 'nullable|email|max:150',
+            'website'              => 'nullable|string|max:255',
+            'address'              => 'nullable|string|max:500',
+            'currency_symbol'      => 'nullable|string|max:10',
+            'invoice_title'        => 'nullable|string|max:100',
+            'payment_instruction'  => 'nullable|string|max:500',
+            'payment_methods'      => 'nullable|string|max:255',
+            'payment_number'       => 'nullable|string|max:100',
+            'invoice_footer'       => 'nullable|string|max:500',
+            'signatory_title'      => 'nullable|string|max:100',
+            'commission_percentage' => ['nullable','numeric','between:0,100'],
+            'isp_logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
         ]);
 
         $data = $request->except(['_token', 'isp_logo']);
         $data['isp_code'] = strtolower(trim($data['isp_code']));
+        $data['commission_percentage'] = $request->filled('commission_percentage') ? (float) $request->commission_percentage : 40.00;
 
         // Handle Logo Upload
         if ($request->hasFile('isp_logo')) {
@@ -105,22 +107,23 @@ class IspSettingController extends Controller
         $isp = Isp::findOrFail($id);
 
         $request->validate([
-            'isp_code'            => 'required|string|max:50|alpha_dash|unique:isps,isp_code,' . $isp->id,
-            'isp_name'            => 'required|string|max:255',
-            'isp_tagline'         => 'nullable|string|max:255',
-            'phone'               => 'nullable|string|max:100',
-            'billing_phone'       => 'nullable|string|max:100',
-            'email'               => 'nullable|email|max:150',
-            'website'             => 'nullable|string|max:255',
-            'address'             => 'nullable|string|max:500',
-            'currency_symbol'     => 'nullable|string|max:10',
-            'invoice_title'       => 'nullable|string|max:100',
-            'payment_instruction' => 'nullable|string|max:500',
-            'payment_methods'     => 'nullable|string|max:255',
-            'payment_number'      => 'nullable|string|max:100',
-            'invoice_footer'      => 'nullable|string|max:500',
-            'signatory_title'     => 'nullable|string|max:100',
-            'isp_logo'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
+            'isp_code'             => 'required|string|max:50|alpha_dash|unique:isps,isp_code,' . $isp->id,
+            'isp_name'             => 'required|string|max:255',
+            'isp_tagline'          => 'nullable|string|max:255',
+            'phone'                => 'nullable|string|max:100',
+            'billing_phone'        => 'nullable|string|max:100',
+            'email'                => 'nullable|email|max:150',
+            'website'              => 'nullable|string|max:255',
+            'address'              => 'nullable|string|max:500',
+            'currency_symbol'      => 'nullable|string|max:10',
+            'invoice_title'        => 'nullable|string|max:100',
+            'payment_instruction'  => 'nullable|string|max:500',
+            'payment_methods'      => 'nullable|string|max:255',
+            'payment_number'       => 'nullable|string|max:100',
+            'invoice_footer'       => 'nullable|string|max:500',
+            'signatory_title'      => 'nullable|string|max:100',
+            'commission_percentage' => ['nullable','numeric','between:0,100'],
+            'isp_logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:4096',
         ]);
 
         $uploadDir = public_path('uploads/settings');
@@ -130,6 +133,7 @@ class IspSettingController extends Controller
 
         $data = $request->except(['_token', '_method', 'isp_logo', 'remove_logo']);
         $data['isp_code'] = strtolower(trim($data['isp_code']));
+        $data['commission_percentage'] = $request->filled('commission_percentage') ? (float) $request->commission_percentage : 40.00;
 
         // Handle Logo Removal
         if ($request->has('remove_logo') && $request->remove_logo == '1') {

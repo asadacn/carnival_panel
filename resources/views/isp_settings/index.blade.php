@@ -526,6 +526,12 @@
                                 </div>
 
                                 <div class="col-md-6">
+                                    <label class="form-label">Commission / Revenue Share (%)</label>
+                                    <input type="number" name="commission_percentage" min="0" max="100" step="0.01" class="form-control" value="{{ old('commission_percentage', $selectedIsp->commission_percentage ?? 40) }}" placeholder="e.g. 40">
+                                    <div class="helper-text">Shares the commission slice for this ISP on the dashboard.</div>
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label">@lang('messages.payment_methods')</label>
                                     <input type="text" name="payment_methods" class="form-control" value="{{ old('payment_methods', $selectedIsp->payment_methods) }}" placeholder="e.g. bKash / Nagad / Cash / Bank">
                                 </div>
@@ -622,6 +628,11 @@
                         <div class="col-md-12">
                             <label class="form-label">@lang('messages.office_address')</label>
                             <textarea name="address" rows="2" class="form-control" placeholder="Street, area, city"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Commission / Revenue Share (%)</label>
+                            <input type="number" name="commission_percentage" min="0" max="100" step="0.01" class="form-control" value="40" placeholder="e.g. 40">
+                            <div class="helper-text">Percentage of gross monthly revenue to keep as commission for this ISP.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">@lang('messages.payment_methods')</label>

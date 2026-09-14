@@ -204,7 +204,45 @@
                                             <div class="db-commission-box">
                                                 <p class="small text-muted mb-1">Total Monthly Revenue (Gross)</p>
                                                 <h3 class="fw-bolder text-dark mb-4">{{ takaFormat($total) }} ৳</h3>
+                                                <div class="table-responsive small">
+                                                    <table class="table table-sm align-middle">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>ISP</th>
+                                                                <th class="text-end">Revenue</th>
+                                                                <th class="text-end">Commission</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($revenue_by_isp ?? collect() as $ispRevenue)
+                                                                <tr>
+                                                                    <td>{{ $ispRevenue->isp_name ?? $ispRevenue->isp_code }}</td>
+                                                                    <td class="text-end fw-semibold text-success">{{ takaFormat($ispRevenue->total_amount) }} ৳</td>
+                                                                    <td class="text-end fw-semibold text-warning">{{ takaFormat($ispRevenue->commission_amount ?? 0) }} ৳</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                                 <div id="commission-details"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <div class="db-card border-0 shadow-sm">
+                                                <div class="db-card-header">
+                                                    <div>
+                                                        <div class="db-card-title">
+                                                            <i data-lucide="bar-chart-3" style="width:18px;height:18px;color:#6366f1;"></i>
+                                                            ISP Revenue Comparison
+                                                        </div>
+                                                        <p class="text-muted small mb-0">Gross monthly revenue by ISP profile.</p>
+                                                    </div>
+                                                </div>
+                                                <div class="db-card-body">
+                                                    <div style="height:260px;"><canvas id="ispRevenueComparisonChart"></canvas></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -760,17 +798,21 @@
 lucide.createIcons();
 
 const totalRevenue = @json($total ?? 0);
+const selectedIspCode = @json($selectedIspCode ?? '');
+const revenueByIsp = @json($revenue_by_isp ?? []);
 const userEmail = "{{ Auth::check() ? Auth::user()->email : '' }}";
 
 // ── Commission Chart ──────────────────────────────────────────────────────
-function initCommissionChart(commAmount, remAmount) {
+function initCommissionChart(commAmount, remAmount, commissionPercentage = 40) {
     const el = document.getElementById('commissionPieChart');
     if (!el) return;
     if (el._chart) el._chart.destroy();
+
+    const remainingPercentage = 100 - commissionPercentage;
     el._chart = new Chart(el.getContext('2d'), {
         type: 'doughnut',
         data: {
-            labels: ['40% Commission', '60% Remaining'],
+            labels: [commissionPercentage + '% Commission', remainingPercentage + '% Remaining'],
             datasets: [{
                 data: [commAmount, remAmount],
                 backgroundColor: ['#10b981','#6366f1'],
@@ -793,16 +835,87 @@ function initCommissionChart(commAmount, remAmount) {
     });
     document.getElementById('commission-details').innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded-3 bg-white border">
-            <span class="small fw-semibold text-success"><i data-lucide="percentage" style="width:14px;height:14px" class="me-1"></i> 40% Commission:</span>
+            <span class="small fw-semibold text-success"><i data-lucide="percentage" style="width:14px;height:14px" class="me-1"></i> ${commissionPercentage}% Commission:</span>
             <span class="fw-bold text-success">৳ ${Number(commAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
         </div>
         <div class="d-flex justify-content-between align-items-center p-2 rounded-3 bg-white border">
-            <span class="small fw-semibold text-primary"><i data-lucide="wallet" style="width:14px;height:14px" class="me-1"></i> 60% Remaining:</span>
+            <span class="small fw-semibold text-primary"><i data-lucide="wallet" style="width:14px;height:14px" class="me-1"></i> ${remainingPercentage}% Remaining:</span>
             <span class="fw-bold text-primary">৳ ${Number(remAmount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
         </div>
     `;
     lucide.createIcons();
 }
+
+function initIspRevenueComparisonChart(rows) {
+    const el = document.getElementById('ispRevenueComparisonChart');
+    if (!el || !Array.isArray(rows) || rows.length === 0) return;
+
+    const labels = rows.map(row => row.isp_name ?? row.isp_code ?? 'ISP');
+    const revenueData = rows.map(row => Number(row.total_amount ?? 0));
+    const commissionData = rows.map(row => {
+        if (row.commission_amount !== undefined && row.commission_amount !== null) {
+            return Number(row.commission_amount ?? 0);
+        }
+
+        const pct = Number(row.commission_percentage ?? 40);
+        const clampedPct = Math.max(0, Math.min(100, pct));
+        return Number(row.total_amount ?? 0) * (clampedPct / 100);
+    });
+
+    if (el._chart) el._chart.destroy();
+
+    el._chart = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Monthly Revenue (৳)',
+                    data: revenueData,
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    maxBarThickness: 30
+                },
+                {
+                    label: 'Commission (৳)',
+                    data: commissionData,
+                    backgroundColor: '#10b981',
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    maxBarThickness: 30
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => '৳ ' + Number(value).toLocaleString(),
+                        color: '#64748b'
+                    },
+                    grid: { color: 'rgba(226,232,240,.5)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b' }
+                }
+            },
+            plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8, padding: 16, font: { size: 12, weight: '600' } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ' ' + ctx.dataset.label + ': ৳ ' + Number(ctx.parsed.y).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    }
+                }
+            }
+        }
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -1020,6 +1133,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    initIspRevenueComparisonChart(revenueByIsp);
+
     // ── Password Unlock ─────────────────────────────────────────────────
     document.getElementById('checkPasswordBtn')?.addEventListener('click', function() {
         const password = document.getElementById('accessPassword').value;
@@ -1029,7 +1144,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('/api/check-master-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
-            body: JSON.stringify({ password: password, totalRevenue: totalRevenue })
+            body: JSON.stringify({ password: password, totalRevenue: totalRevenue, isp_code: selectedIspCode })
         })
         .then(r => r.json())
         .then(data => {
@@ -1037,7 +1152,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 bootstrap.Modal.getInstance(document.getElementById('passwordModal'))?.hide();
                 document.getElementById('unlock-area').style.display = 'none';
                 document.getElementById('protected-commission-chart').style.display = 'block';
-                initCommissionChart(data.commissionAmount, data.remainingAmount);
+                initCommissionChart(data.commissionAmount, data.remainingAmount, data.commissionPercentage ?? 40);
             } else {
                 errorDiv.innerText = data.message || 'Authentication failed.';
                 errorDiv.style.display = 'block';

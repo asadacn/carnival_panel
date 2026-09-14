@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\Isp;
 use App\Models\Package;
 use App\Models\HotspotClient;
 use App\Models\SMSLOG;
@@ -25,6 +26,7 @@ class HomeController extends Controller
         $request->validate([
             'password' => 'required|string',
             'totalRevenue' => 'required|numeric',
+            'isp_code' => 'nullable|string|max:50',
         ]);
 
         $user = Auth::user();
@@ -37,7 +39,10 @@ class HomeController extends Controller
 
         // Verification successful: calculate and return the sensitive data
         $totalRevenue = (float) $request->input('totalRevenue');
-        $commissionRate = 0.40; // 40%
+        $requestedIspCode = $request->input('isp_code');
+        $isp = Isp::forCode($requestedIspCode);
+        $commissionPercentage = (float) ($isp?->commission_percentage ?? 40.00);
+        $commissionRate = max(0, min(100, $commissionPercentage)) / 100;
 
         $commissionAmount = $totalRevenue * $commissionRate;
         $remainingAmount = $totalRevenue - $commissionAmount;
@@ -46,6 +51,7 @@ class HomeController extends Controller
             'success' => true,
             'commissionAmount' => $commissionAmount,
             'remainingAmount' => $remainingAmount,
+            'commissionPercentage' => $commissionPercentage,
         ]);
     }
 
@@ -58,32 +64,50 @@ class HomeController extends Controller
         if ($request->has('refresh')) {
             \Illuminate\Support\Facades\Cache::forget('dashboard_data');
             \Illuminate\Support\Facades\Cache::forget('sms_balance');
-            // Redirect to clean URL
             return redirect()->route('dashboard');
         }
 
-        // Cache the entire dashboard data array for 10 minutes
-        $dashboardData = \Illuminate\Support\Facades\Cache::remember('dashboard_data', 600, function () use ($today, $tomorrow) {
-            
-            // As requested, keeping the full collections
-            $clients = Client::all();
-            $lastUpdated = Client::latest('updated_at')->value('updated_at');
+        $selectedIspCode = $request->input('isp_code');
 
-            $expiring_soon = Client::where('expiration', $tomorrow)->get();
-            $expired_today = Client::where('expiration', $today)->get();
-            $expired_this_month = Client::where('status', 'Expired')
+        $dashboardData = \Illuminate\Support\Facades\Cache::remember('dashboard_data', 600, function () use ($today, $tomorrow, $selectedIspCode) {
+            $clientQuery = Client::query();
+            if ($selectedIspCode) {
+                $clientQuery->where('isp_code', $selectedIspCode);
+            }
+
+            $clients = $clientQuery->get();
+            $lastUpdated = $clientQuery->latest('updated_at')->value('updated_at');
+
+            $expiring_soon = Client::query()->where('expiration', $tomorrow);
+            $expired_today = Client::query()->where('expiration', $today);
+            $expired_this_month = Client::query()->where('status', 'Expired')
                 ->whereYear('expiration', date('Y'))
-                ->whereMonth('expiration', date('m'))
-                ->get();
+                ->whereMonth('expiration', date('m'));
 
-            $package = Package::pluck('price','title');
+            if ($selectedIspCode) {
+                $expiring_soon->where('isp_code', $selectedIspCode);
+                $expired_today->where('isp_code', $selectedIspCode);
+                $expired_this_month->where('isp_code', $selectedIspCode);
+            }
 
-            $clients_by_package = DB::table('clients')
+            $expiring_soon = $expiring_soon->get();
+            $expired_today = $expired_today->get();
+            $expired_this_month = $expired_this_month->get();
+
+            $package = Package::pluck('price', 'title');
+
+            $clientsByPackageQuery = DB::table('clients')
                 ->join('packages', function ($join) {
                     $join->on('clients.package', '=', 'packages.title')
                          ->whereColumn('clients.isp_code', 'packages.isp_code');
                 })
-                ->where('clients.status', 'Active')
+                ->where('clients.status', 'Active');
+
+            if ($selectedIspCode) {
+                $clientsByPackageQuery->where('clients.isp_code', $selectedIspCode);
+            }
+
+            $clients_by_package = $clientsByPackageQuery
                 ->select(
                     'clients.package',
                     DB::raw('count(*) as total_clients'),
@@ -92,46 +116,107 @@ class HomeController extends Controller
                 ->groupBy('clients.package')
                 ->get();
 
+            $revenueByIspQuery = DB::table('clients')
+                ->join('packages', function ($join) {
+                    $join->on('clients.package', '=', 'packages.title')
+                         ->whereColumn('clients.isp_code', 'packages.isp_code');
+                })
+                ->join('isps', 'clients.isp_code', '=', 'isps.isp_code')
+                ->where('clients.status', 'Active');
+
+            if ($selectedIspCode) {
+                $revenueByIspQuery->where('clients.isp_code', $selectedIspCode);
+            }
+
+            $revenue_by_isp = $revenueByIspQuery
+                ->select(
+                    'clients.isp_code',
+                    'isps.isp_name',
+                    'isps.commission_percentage',
+                    DB::raw('sum(packages.price) as total_amount'),
+                    DB::raw('count(*) as total_clients')
+                )
+                ->groupBy('clients.isp_code', 'isps.isp_name', 'isps.commission_percentage')
+                ->orderBy('total_amount', 'desc')
+                ->get()
+                ->map(function ($row) {
+                    $commissionPct = (float) ($row->commission_percentage ?? 40.00);
+                    $commissionPct = max(0, min(100, $commissionPct));
+                    $row->commission_amount = (float) $row->total_amount * ($commissionPct / 100);
+                    return $row;
+                });
+
             $total = $clients_by_package->sum('total_amount');
 
             $Active_clients = DB::table('clients')
-                ->where('status','Active')->count();
+                ->where('status', 'Active');
 
-            $expiredPostpaidClients = Client::where('billing_type', 'postpaid')
+            if ($selectedIspCode) {
+                $Active_clients->where('isp_code', $selectedIspCode);
+            }
+
+            $Active_clients = $Active_clients->count();
+
+            $expiredPostpaidClients = Client::query()->where('billing_type', 'postpaid')
                 ->whereDate('expiration', '>=', $today)
-                ->whereDate('expiration', '<=', $tomorrow)
-                ->get();
+                ->whereDate('expiration', '<=', $tomorrow);
 
-            $freeOnuExpiredClients = Client::where('onu_free', 1)
+            if ($selectedIspCode) {
+                $expiredPostpaidClients->where('isp_code', $selectedIspCode);
+            }
+
+            $expiredPostpaidClients = $expiredPostpaidClients->get();
+
+            $freeOnuExpiredClients = Client::query()->where('onu_free', 1)
                 ->where('onu_returned', 0)
-                ->whereDate('expiration', '<', $today)
-                ->get();
+                ->whereDate('expiration', '<', $today);
 
-            // Hotspot expired clients
-            $expiredHotspotClients = HotspotClient::where('expires_at', '<', $today)
+            if ($selectedIspCode) {
+                $freeOnuExpiredClients->where('isp_code', $selectedIspCode);
+            }
+
+            $freeOnuExpiredClients = $freeOnuExpiredClients->get();
+
+            $expiredHotspotClients = HotspotClient::query()
+                ->where('expires_at', '<', $today)
                 ->orderBy('expires_at', 'asc')
                 ->get();
 
             $currentYear = now()->year;
             $previousYear = $currentYear - 1;
 
-            // Current Year Monthly Expired Clients
-            $currentYearData = Client::whereYear('expiration', $currentYear)
+            $currentYearData = Client::query()->whereYear('expiration', $currentYear)
                 ->where('status', 'Expired')
                 ->select(DB::raw('MONTH(expiration) as month'), DB::raw('COUNT(*) as total'))
                 ->groupBy(DB::raw('MONTH(expiration)'))
-                ->pluck('total','month')
+                ->pluck('total', 'month')
                 ->toArray();
 
-            // Previous Year Monthly Expired Clients
-            $previousYearData = Client::whereYear('expiration', $previousYear)
+            $previousYearData = Client::query()->whereYear('expiration', $previousYear)
                 ->where('status', 'Expired')
                 ->select(DB::raw('MONTH(expiration) as month'), DB::raw('COUNT(*) as total'))
                 ->groupBy(DB::raw('MONTH(expiration)'))
-                ->pluck('total','month')
+                ->pluck('total', 'month')
                 ->toArray();
 
-            // Fill missing months with 0
+            if ($selectedIspCode) {
+                $currentYearData = Client::query()->where('isp_code', $selectedIspCode)
+                    ->whereYear('expiration', $currentYear)
+                    ->where('status', 'Expired')
+                    ->select(DB::raw('MONTH(expiration) as month'), DB::raw('COUNT(*) as total'))
+                    ->groupBy(DB::raw('MONTH(expiration)'))
+                    ->pluck('total', 'month')
+                    ->toArray();
+
+                $previousYearData = Client::query()->where('isp_code', $selectedIspCode)
+                    ->whereYear('expiration', $previousYear)
+                    ->where('status', 'Expired')
+                    ->select(DB::raw('MONTH(expiration) as month'), DB::raw('COUNT(*) as total'))
+                    ->groupBy(DB::raw('MONTH(expiration)'))
+                    ->pluck('total', 'month')
+                    ->toArray();
+            }
+
             $months = range(1,12);
             $currentYearDataFilled = [];
             $previousYearDataFilled = [];
@@ -141,7 +226,6 @@ class HomeController extends Controller
                 $previousYearDataFilled[$month] = $previousYearData[$month] ?? 0;
             }
 
-            // SMS Current Month Daily Trend Analytics
             $smsStartDate = Carbon::now('Asia/Dhaka')->startOfMonth();
             $smsEndDate   = Carbon::today('Asia/Dhaka');
 
@@ -174,7 +258,6 @@ class HomeController extends Controller
                 $smsFailedSeries[] = $failed;
             }
 
-            // Running Month totals (current calendar month)
             $runningMonthStart = Carbon::now('Asia/Dhaka')->startOfMonth();
             $runningMonthStats = SMSLOG::where('created_at', '>=', $runningMonthStart)
                 ->select(
@@ -221,9 +304,12 @@ class HomeController extends Controller
                 'smsDeliveryRate' => $smsDeliveryRate,
                 'lastUpdated' => $lastUpdated ? Carbon::parse($lastUpdated)->format('d-m-Y H:i:s') : null,
                 'total' => $total,
+                'revenue_by_isp' => $revenue_by_isp,
+                'selectedIspCode' => $selectedIspCode,
             ];
         });
 
+        $dashboardData['selectedIspCode'] = $selectedIspCode;
 
         return view('home', $dashboardData);
     }

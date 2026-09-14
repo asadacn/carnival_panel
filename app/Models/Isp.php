@@ -30,11 +30,13 @@ class Isp extends Model
         'payment_number',
         'invoice_footer',
         'signatory_title',
+        'commission_percentage',
         'is_default'
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
+        'commission_percentage' => 'decimal:2',
     ];
 
     const CACHE_KEY_ALL = 'all_isp_profiles';
