@@ -43,7 +43,7 @@
 
             {{-- Expiring Tomorrow --}}
             <div class="col-6 col-sm-4 col-lg">
-                <a href="{{ route('clients.index') }}" class="text-decoration-none">
+                <a href="#clientExpiryModal" class="text-decoration-none dashboard-kpi-trigger" data-bs-toggle="modal" data-expiry-group="tomorrow">
                     <div class="db-kpi-card" style="--kpi-accent:#f97316;">
                         <div class="db-kpi-icon" style="background:rgba(249,115,22,.12);">
                             <i data-lucide="alert-triangle" style="color:#f97316;width:22px;height:22px;"></i>
@@ -59,7 +59,7 @@
 
             {{-- Expired Today --}}
             <div class="col-6 col-sm-4 col-lg">
-                <a href="#todaysExpiredClients" class="text-decoration-none">
+                <a href="#clientExpiryModal" class="text-decoration-none dashboard-kpi-trigger" data-bs-toggle="modal" data-expiry-group="today">
                     <div class="db-kpi-card" style="--kpi-accent:#ef4444;">
                         <div class="db-kpi-icon" style="background:rgba(239,68,68,.12);">
                             <i data-lucide="calendar-x" style="color:#ef4444;width:22px;height:22px;"></i>
@@ -75,7 +75,7 @@
 
             {{-- Monthly Expired --}}
             <div class="col-6 col-sm-4 col-lg">
-                <a href="{{ route('clients.index') }}" class="text-decoration-none">
+                <a href="#clientExpiryModal" class="text-decoration-none dashboard-kpi-trigger" data-bs-toggle="modal" data-expiry-group="monthly">
                     <div class="db-kpi-card" style="--kpi-accent:#8b5cf6;">
                         <div class="db-kpi-icon" style="background:rgba(139,92,246,.12);">
                             <i data-lucide="calendar-days" style="color:#8b5cf6;width:22px;height:22px;"></i>
@@ -428,7 +428,7 @@
                     </div>
                     <div class="db-card-body p-0">
                         @if($expiredHotspotClients->count() > 0)
-                        <div class="table-responsive" style="max-height:320px;overflow-y:auto;">
+                        <div class="table-responsive">
                             <table class="table db-table mb-0">
                                 <thead class="sticky-top" style="top:0;">
                                     <tr>
@@ -591,6 +591,61 @@
     <i data-lucide="plus" style="width:26px;height:26px;"></i>
 </a>
 
+{{-- ── CLIENT EXPIRY MODAL ──────────────────────────────────────────────── --}}
+<div class="modal fade" id="clientExpiryModal" tabindex="-1" aria-labelledby="clientExpiryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content db-expiry-modal border-0">
+            <div class="modal-header db-expiry-modal-header">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="db-expiry-modal-icon"><i data-lucide="calendar-clock" style="width:18px;height:18px;"></i></span>
+                        <h5 class="modal-title mb-0" id="clientExpiryModalLabel">Clients</h5>
+                    </div>
+                    <p class="small text-muted mb-0 mt-1" id="clientExpiryModalSubtitle">Review the selected client list.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                @foreach([
+                    'tomorrow' => ['clients' => $expiring_soon, 'label' => 'Expiring Tomorrow', 'subtitle' => 'Clients whose connections expire tomorrow.', 'color' => '#f97316'],
+                    'today' => ['clients' => $expired_today, 'label' => 'Expired Today', 'subtitle' => 'Clients whose connections expired today.', 'color' => '#ef4444'],
+                    'monthly' => ['clients' => $expired_this_month, 'label' => 'Monthly Expired', 'subtitle' => 'Clients expired during the current month.', 'color' => '#8b5cf6'],
+                ] as $group => $expiry)
+                    <div class="dashboard-expiry-panel" data-expiry-panel="{{ $group }}" hidden>
+                        @if($expiry['clients']->count())
+                            <div class="table-responsive dashboard-expiry-table-wrap">
+                                <table class="table db-table mb-0">
+                                    <thead>
+                                        <tr><th>Name</th><th>Client ID</th><th>Contact</th><th>Address</th><th>Package</th><th>Expiry</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($expiry['clients'] as $client)
+                                            <tr>
+                                                <td><a href="{{ route('clients.show', $client->id) }}" class="fw-semibold text-dark text-decoration-none hover-primary">{{ $client->name }}</a></td>
+                                                <td><span class="db-link-id">{{ $client->username }}</span></td>
+                                                <td>@if($client->contact)<a href="tel:{{ $client->contact }}" class="text-muted small">{{ $client->contact }}</a>@else<span class="text-muted">—</span>@endif</td>
+                                                <td class="small text-muted" style="min-width:180px;">{{ $client->address ?: '—' }}</td>
+                                                <td><span class="db-pkg-badge">{{ $client->package ?: '—' }}</span></td>
+                                                <td class="small fw-semibold" style="color:{{ $expiry['color'] }}">{{ $client->expiration ? \Carbon\Carbon::parse($client->expiration)->format('d M, Y') : '—' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="db-empty-state">
+                                <i data-lucide="check-circle-2" style="width:38px;height:38px;color:#10b981;" class="mb-2"></i>
+                                <p class="mb-0 fw-semibold text-success">No clients in this list.</p>
+                                <small class="text-muted">Everything looks clear for this period.</small>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- ── PASSWORD MODAL ───────────────────────────────────────────────────── --}}
 <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
@@ -631,6 +686,8 @@
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
     cursor: pointer;
 }
+.dashboard-kpi-trigger { display: block; }
+.dashboard-kpi-trigger:focus-visible .db-kpi-card { outline: 3px solid rgba(99,102,241,.3); outline-offset: 2px; }
 .db-kpi-card:hover {
     box-shadow: 0 4px 18px rgba(0,0,0,.10);
     transform: translateY(-2px);
@@ -754,6 +811,11 @@
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; padding: 40px 20px; text-align: center;
 }
+.db-expiry-modal { border-radius: 18px; overflow: hidden; box-shadow: 0 18px 55px rgba(15,23,42,.2); }
+.db-expiry-modal-header { padding: 20px 24px; border-bottom: 1px solid #eef2f7; background: linear-gradient(135deg,#fff,#f8fafc); }
+.db-expiry-modal-icon { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; color: #6366f1; background: rgba(99,102,241,.1); }
+.dashboard-expiry-table-wrap { max-height: min(55vh, 480px); overflow-y: auto; }
+.dashboard-expiry-table-wrap .db-table thead th { position: sticky; top: 0; z-index: 1; }
 .db-commission-box {
     background: #f8fafc; border-radius: 14px; padding: 24px;
 }
@@ -796,6 +858,25 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
 lucide.createIcons();
+
+const expiryModal = document.getElementById('clientExpiryModal');
+if (expiryModal) {
+    const expiryCopy = {
+        tomorrow: ['Expiring Tomorrow', 'Clients whose connections expire tomorrow.'],
+        today: ['Expired Today', 'Clients whose connections expired today.'],
+        monthly: ['Monthly Expired', 'Clients expired during the current month.']
+    };
+
+    expiryModal.addEventListener('show.bs.modal', function (event) {
+        const group = event.relatedTarget?.dataset.expiryGroup || 'today';
+        const copy = expiryCopy[group] || expiryCopy.today;
+        document.getElementById('clientExpiryModalLabel').textContent = copy[0];
+        document.getElementById('clientExpiryModalSubtitle').textContent = copy[1];
+        expiryModal.querySelectorAll('[data-expiry-panel]').forEach(function (panel) {
+            panel.hidden = panel.dataset.expiryPanel !== group;
+        });
+    });
+}
 
 const totalRevenue = @json($total ?? 0);
 const selectedIspCode = @json($selectedIspCode ?? '');

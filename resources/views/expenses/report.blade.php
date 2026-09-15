@@ -458,8 +458,9 @@
             <div class="kpi-card kpi-accent-1">
                 <div class="kpi-icon"><i data-lucide="receipt" style="width:20px;height:20px;"></i></div>
                 <div class="kpi-body">
-                    <span class="kpi-label">Total Expenses</span>
+                    <span class="kpi-label">Filtered Total</span>
                     <span class="kpi-value">{{ isp_setting('currency_symbol', '৳') }} {{ number_format($stats['total'], 2) }}</span>
+                    <small class="text-muted">Current filters</small>
                 </div>
             </div>
             <div class="kpi-card kpi-accent-2">

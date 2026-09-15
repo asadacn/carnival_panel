@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreatePackageRequest;
 use App\Http\Requests\UpdatePackageRequest;
+use App\Models\Isp;
 use App\Repositories\PackageRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
@@ -29,10 +30,18 @@ class PackageController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $packages = $this->packageRepository->all();
+        $packages = $this->packageRepository->all()
+            ->sortBy(function ($package) {
+                return strtolower($package->isp_code ?? 'zzzz') . '|' . strtolower($package->title ?? '');
+            })
+            ->values();
+        $ispProfiles = Isp::getAllCached()->keyBy(function ($isp) {
+            return strtolower($isp->isp_code);
+        });
 
         return view('packages.index')
-            ->with('packages', $packages);
+            ->with('packages', $packages)
+            ->with('ispProfiles', $ispProfiles);
     }
 
     /**

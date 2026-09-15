@@ -189,11 +189,15 @@ class OfficeExpenseController extends Controller
 
     private function datatable(Request $request)
     {
-        $query = $this->filteredQuery($request)
+        $query = $this->filteredQuery($request);
+        $filteredTotal = (float) (clone $query)->sum('amount');
+
+        $query = $query
             ->orderBy('expense_date', 'desc')
             ->orderBy('id', 'desc');
 
         return DataTables::of($query)
+            ->with('filtered_total', $filteredTotal)
             ->addIndexColumn()
             ->addColumn('expense_date_formatted', function ($expense) {
                 return $expense->expense_date->format('d M, Y');

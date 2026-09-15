@@ -524,6 +524,11 @@
                     Expense Ledger
                 </div>
                 <div class="d-flex gap-2">
+                    <span class="db-stat-pill" title="Total for the current filters">
+                        <i data-lucide="calculator" style="width:14px;height:14px;color:#10b981;"></i>
+                        <span>Filtered total:</span>
+                        <strong id="filtered-expense-total">{{ isp_setting('currency_symbol', '৳') }} {{ number_format($stats['total'], 2) }}</strong>
+                    </span>
                     <a href="{{ route('office-expenses.export') . '?' . request()->getQueryString() }}" class="btn-reset" style="font-size:0.78rem;">
                         <i data-lucide="download" style="width:14px;height:14px;"></i> Export
                     </a>
@@ -576,6 +581,10 @@ $(document).ready(function() {
                 d.category = $('#filter_category').val();
                 d.payment_method = $('#filter_payment_method').val();
                 d.search = $('#filter_search').val();
+            },
+            dataSrc: function(json) {
+                $('#filtered-expense-total').text('{{ isp_setting('currency_symbol', '৳') }} ' + Number(json.filtered_total || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                return json.data;
             }
         },
         language: { search: "", searchPlaceholder: "Search expenses..." },
