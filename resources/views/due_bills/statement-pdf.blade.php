@@ -277,15 +277,15 @@
         <div class="header">
             <div class="company-info" style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <img src="{{ isp_logo() }}" alt="{{ isp_name() }}" style="max-height: 50px; max-width: 130px; object-fit: contain;">
+                    <img src="{{ isp_logo($client->isp_code) }}" alt="{{ isp_name($client->isp_code) }}" style="max-height: 50px; max-width: 130px; object-fit: contain;" onerror="this.src='{{ asset('img/logo.png') }}'">
                     <div>
-                        <div class="company-name">{{ isp_name('CARNIVAL NETWORKS') }}</div>
-                        <div style="font-size: 11px; color: #6b7280;">{{ isp_setting('isp_tagline', 'High-Speed Broadband Internet') }}</div>
+                        <div class="company-name">{{ isp_name($client->isp_code, 'Carnival Internet') }}</div>
+                        <div style="font-size: 11px; color: #6b7280;">{{ isp_setting('isp_tagline', 'High-Speed Broadband Internet', $client->isp_code) }}</div>
                     </div>
                 </div>
                 <div class="company-details">
-                    <div>Support: {{ isp_setting('phone', '01XXXXXXXXX') }}</div>
-                    @if(isp_setting('email'))<div>{{ isp_setting('email') }}</div>@endif
+                    <div>Support: {{ isp_setting('phone', '01XXXXXXXXX', $client->isp_code) }}</div>
+                    @if(isp_setting('email', null, $client->isp_code))<div>{{ isp_setting('email', null, $client->isp_code) }}</div>@endif
                     <div>Report Generated: {{ now()->format('d M Y H:i') }}</div>
                 </div>
             </div>

@@ -1,4 +1,37 @@
 <div class="container-fluid px-0">
+    <!-- ===== ISP Branding Card ===== -->
+    <div class="card shadow-sm mb-4 isp-branding-card" id="ispBrandingCard">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+                <div class="isp-logo-wrap">
+                    <img src="{{ isp_logo($client->isp_code) }}" alt="{{ isp_name($client->isp_code) }}" style="max-height: 60px; max-width: 160px; object-fit: contain;" onerror="this.src='{{ asset('img/logo.png') }}'">
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="mb-1 fw-bold text-dark">
+                        <i class="fas fa-building me-2 text-primary"></i>{{ isp_name($client->isp_code, 'Carnival Internet') }}
+                    </h5>
+                    <div class="d-flex flex-wrap gap-3 small text-muted">
+                        <span><i class="fas fa-id-badge me-1"></i>ISP Code: <strong class="text-dark">{{ strtoupper($client->isp_code ?? '-') }}</strong></span>
+                        @if(isp_setting('phone', null, $client->isp_code))
+                            <span><i class="fas fa-phone me-1"></i>{{ isp_setting('phone', null, $client->isp_code) }}</span>
+                        @endif
+                        @if(isp_setting('email', null, $client->isp_code))
+                            <span><i class="fas fa-envelope me-1"></i>{{ isp_setting('email', null, $client->isp_code) }}</span>
+                        @endif
+                        @if(isp_setting('website', null, $client->isp_code))
+                            <span><i class="fas fa-globe me-1"></i>{{ isp_setting('website', null, $client->isp_code) }}</span>
+                        @endif
+                    </div>
+                    @if(isp_setting('address', null, $client->isp_code))
+                        <div class="small text-muted mt-1">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ isp_setting('address', null, $client->isp_code) }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== Client Summary Cards ===== -->
     <div class="row g-3 mb-4">
         <!-- Status Card -->
@@ -117,7 +150,7 @@
                             <div class="col-md-6 col-lg-4">
                                 <div class="detail-item">
                                     <span class="detail-label"><i class="fas fa-wifi me-1"></i>ISP</span>
-                                    <span class="detail-value">{{ $client->isp_code ?? '-' }}</span>
+                                    <span class="detail-value">{{ isp_name($client->isp_code, 'Carnival Internet') }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6 col-lg-4">
@@ -514,6 +547,33 @@
 </div>
 
 <style>
+    /* ===== ISP BRANDING CARD ===== */
+    .isp-branding-card {
+        border-radius: 12px;
+        border-left: 4px solid #2563eb;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        transition: all 0.25s ease;
+    }
+    .isp-branding-card:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
+        transform: translateY(-2px);
+    }
+    .isp-logo-wrap {
+        flex-shrink: 0;
+        min-width: 120px;
+        text-align: center;
+        padding: 8px 16px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+    @media (max-width: 768px) {
+        .isp-logo-wrap {
+            min-width: 100%;
+            text-align: center;
+        }
+    }
+
     /* ===== SUMMARY CARDS ===== */
     .summary-card {
         border-radius: 12px;

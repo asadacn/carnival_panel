@@ -21,6 +21,10 @@
                         <p class="text-muted mb-0 small">
                             <i class="fas fa-id-badge me-1"></i> {{ $client->username ?? 'N/A' }}
                         </p>
+                        <p class="text-muted mb-0 small client-isp-indicator d-flex align-items-center gap-1 mt-1">
+                            <img src="{{ isp_logo($client->isp_code) }}" alt="{{ isp_name($client->isp_code) }}">
+                            <span>{{ isp_name($client->isp_code, 'Carnival Internet') }}</span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -239,6 +243,19 @@
         z-index: 10;
     }
     .modern-detail-header h1 { font-size: 1.4rem; }
+
+    .client-isp-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+    .client-isp-indicator img {
+        max-height: 18px;
+        max-width: 60px;
+        object-fit: contain;
+    }
 
     .client-name-pill {
         width: 44px; height: 44px;
