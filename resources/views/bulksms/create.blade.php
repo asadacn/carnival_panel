@@ -186,6 +186,39 @@
         text-align: right;
     }
 
+    .month-chip {
+        border: 1.5px solid #e4e6fc;
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #516073;
+    }
+
+    .month-chip:hover {
+        border-color: #6777ef;
+    }
+
+    .month-chip-month-active {
+        border-color: #6777ef;
+        background: rgba(103, 119, 239, 0.1);
+        color: #3549e6;
+    }
+
+    .month-chip-year-active {
+        border-color: #11cdef;
+        background: rgba(17, 205, 239, 0.12);
+        color: #11988d;
+    }
+
+    .month-chip-count {
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
     @keyframes pulse {
         0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(17, 205, 239, 0.7); }
         70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(17, 205, 239, 0); }
@@ -266,18 +299,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-group mb-3" id="sms_months_div" style="display:none;">
-                                                <label for="sms_months">Choose expired months:</label>
-                                                <div class="input-icon-group">
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                    <select name="months[]" id="sms_months" class="form-control form-control-custom" multiple size="12">
-                                                        @foreach (range(1, 12) as $month)
-                                                            <option value="{{ $month }}">{{ Carbon\Carbon::create(null, $month, 1)->monthName }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple months for expired clients.</small>
-                                            </div>
+                                            @include('bulksms.partials.month_filter', ['prefix' => 'sms', 'monthCounts' => $expiredMonthCounts, 'years' => $expiredYears])
 
                                             <div class="form-group mb-3">
                                                 <label for="sms_isp_code">Filter by ISP Provider:</label>
@@ -401,22 +423,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-group mb-3" id="voice_months_div" style="display:none;">
-                                                <label for="voice_months">Choose expired months:</label>
-                                                <div class="border rounded p-3 bg-light">
-                                                    <div class="row">
-                                                        @foreach (range(1, 12) as $month)
-                                                            <div class="col-md-3 col-sm-4 col-6 mb-2">
-                                                                <label class="d-flex align-items-center gap-2 mb-0">
-                                                                    <input type="checkbox" name="months[]" value="{{ $month }}" class="form-check-input">
-                                                                    <span>{{ Carbon\Carbon::create(null, $month, 1)->monthName }}</span>
-                                                                </label>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                </div>
-                                                <small class="form-text text-muted">Select one or more expired months for the campaign.</small>
-                                            </div>
+                                            @include('bulksms.partials.month_filter', ['prefix' => 'voice', 'monthCounts' => $expiredMonthCounts, 'years' => $expiredYears])
 
                                             <div class="form-group mb-3">
                                                 <label for="voice_isp_code">Filter by ISP Provider:</label>
@@ -650,13 +657,7 @@
                 $('#sms_custom_numbers').prop('required', false).val('');
             }
 
-            if ($(this).val() === 'expired_selected_months') {
-                $('#sms_months_div').slideDown(200);
-                $('#sms_months').prop('required', true);
-            } else {
-                $('#sms_months_div').slideUp(200);
-                $('#sms_months').prop('required', false);
-            }
+            toggleMonthFilter('sms', $(this).val() === 'expired_selected_months');
         });
 
         // Toggle Custom Numbers Input (Voice)
@@ -669,13 +670,7 @@
                 $('#voice_custom_numbers').prop('required', false).val('');
             }
 
-            if ($(this).val() === 'expired_selected_months') {
-                $('#voice_months_div').slideDown(200);
-                $('#voice_months').prop('required', true);
-            } else {
-                $('#voice_months_div').slideUp(200);
-                $('#voice_months').prop('required', false);
-            }
+            toggleMonthFilter('voice', $(this).val() === 'expired_selected_months');
         });
 
         // Toggle Custom Broadcast ID Input
@@ -702,6 +697,26 @@
                 $(this).append('<input type="hidden" name="broadcast_id" value="' + customVal + '">');
                 $('#broadcast_id').prop('disabled', true);
             }
+        });
+
+        // Month filter chip interactions
+        $(document).on('change', '.month-filter .month-input, .month-filter .year-input', function() {
+            syncMonthFilterState($(this).data('filter'));
+        });
+
+        $(document).on('click', '.month-select-all', function(e) {
+            e.preventDefault();
+            var prefix = $(this).data('target');
+            var inputs = getMonthFilterInputs(prefix);
+            inputs.prop('checked', true);
+            syncMonthFilterState(prefix);
+        });
+
+        $(document).on('click', '.month-clear', function(e) {
+            e.preventDefault();
+            var prefix = $(this).data('target');
+            getMonthFilterInputs(prefix).prop('checked', false);
+            syncMonthFilterState(prefix);
         });
 
         // Auto Refresh Toggle Listener
@@ -745,18 +760,74 @@
         $(this).tab('show');
     });
 
+    var MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July',
+        'August', 'September', 'October', 'November', 'December'];
+
+    function getMonthFilterInputs(prefix) {
+        return $('#' + prefix + '_months_div input[type="checkbox"]');
+    }
+
+    function toggleMonthFilter(prefix, show) {
+        var $div = $('#' + prefix + '_months_div');
+
+        if (show) {
+            $div.slideDown(200);
+            syncMonthFilterState(prefix);
+        } else {
+            $div.slideUp(200);
+            getMonthFilterInputs(prefix).prop('checked', false);
+            syncMonthFilterState(prefix);
+        }
+    }
+
+    function syncMonthFilterState(prefix) {
+        var $div = $('#' + prefix + '_months_div');
+
+        $div.find('.month-input').each(function() {
+            $(this).closest('.month-chip').toggleClass('month-chip-month-active', this.checked);
+        });
+        $div.find('.year-input').each(function() {
+            $(this).closest('.month-chip').toggleClass('month-chip-year-active', this.checked);
+        });
+
+        var months = selectedMonths(prefix);
+        var years = selectedYears(prefix);
+        var summary = 'none';
+
+        if (months.length) {
+            summary = months.map(function(month) {
+                return MONTH_NAMES[parseInt(month, 10)] || ('Month ' + month);
+            }).join(', ');
+        }
+
+        $('#' + prefix + '_months_summary').text(summary);
+
+        var yearHint = $('#' + prefix + '_months_div .month-filter-year-hint');
+        if (yearHint.length) {
+            yearHint.text(years.length ? ('Years: ' + years.join(', ')) : 'Every year');
+        }
+    }
+
+    function selectedMonths(prefix) {
+        return $('#' + prefix + '_months_div .month-input:checked')
+            .map(function() { return this.value; }).get();
+    }
+
+    function selectedYears(prefix) {
+        return $('#' + prefix + '_months_div .year-input:checked')
+            .map(function() { return this.value; }).get();
+    }
+
     // Contact Preview Function
     function previewContacts(tab, showModal) {
-        var clientStatus, customContacts, resultBadge, ispCode, selectedMonths, selectedAreas;
+        var prefix = tab === 'sms' ? 'sms' : 'voice';
+        var clientStatus, customContacts, resultBadge, ispCode, monthsSel, yearsSel, selectedAreas;
 
         if (tab === 'sms') {
             clientStatus   = $('#sms_client_status').val();
             customContacts = $('#sms_custom_numbers').val();
             resultBadge    = $('#sms_preview_result');
             ispCode        = $('#sms_isp_code input[type="checkbox"]:checked').map(function() {
-                return this.value;
-            }).get();
-            selectedMonths = $('#sms_months_div input[type="checkbox"]:checked').map(function() {
                 return this.value;
             }).get();
             selectedAreas = $('#sms_area_code').val() || [];
@@ -767,13 +838,24 @@
             ispCode        = $('#voice_isp_code input[type="checkbox"]:checked').map(function() {
                 return this.value;
             }).get();
-            selectedMonths = $('#voice_months_div input[type="checkbox"]:checked').map(function() {
-                return this.value;
-            }).get();
             selectedAreas = $('#voice_area_code').val() || [];
         }
 
+        monthsSel = selectedMonths(prefix);
+        yearsSel = selectedYears(prefix);
+
         if (!clientStatus) return;
+
+        if (clientStatus === 'expired_selected_months' && monthsSel.length === 0) {
+            if (showModal) {
+                Swal.fire({
+                    title: 'Month required',
+                    text: 'Choose at least one expired month before previewing or sending.',
+                    icon: 'warning'
+                });
+            }
+            return;
+        }
 
         resultBadge.html('<i class="fas fa-spinner fa-spin mr-1"></i> Calculating contacts...').removeClass().addClass('badge badge-preview bg-light border text-primary').show();
 
@@ -784,7 +866,8 @@
                 client_status:   clientStatus,
                 custom_contacts: customContacts,
                 isp_code:        ispCode,
-                months:          selectedMonths,
+                months:          monthsSel,
+                years:           yearsSel,
                 area:            selectedAreas,
                 _token:          '{{ csrf_token() }}'
             },
@@ -804,8 +887,13 @@
                 var monthSummary = 'All months';
                 if (Array.isArray(res.months) && res.months.length) {
                     monthSummary = res.months.map(function(month) {
-                        return 'Month ' + month;
+                        return MONTH_NAMES[parseInt(month, 10)] || ('Month ' + month);
                     }).join(', ');
+                }
+
+                var yearSummary = 'Every year';
+                if (Array.isArray(res.years) && res.years.length) {
+                    yearSummary = res.years.join(', ');
                 }
 
                 var areaSummary = 'All addresses';
@@ -834,7 +922,8 @@
                     + '<div class="preview-detail-row"><span class="preview-detail-label">Total Contacts</span><span class="preview-detail-value">' + res.count + '</span></div>'
                     + '<div class="preview-detail-row"><span class="preview-detail-label">Target Group</span><span class="preview-detail-value">' + (res.label || res.status || 'Selected Group') + '</span></div>'
                     + '<div class="preview-detail-row"><span class="preview-detail-label">ISP</span><span class="preview-detail-value">' + (res.isp || 'All ISPs') + '</span></div>'
-                    + '<div class="preview-detail-row"><span class="preview-detail-label">Months</span><span class="preview-detail-value">' + monthSummary + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Months</span><span class="preview-detail-value">' + escapeHtml(monthSummary) + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Years</span><span class="preview-detail-value">' + escapeHtml(yearSummary) + '</span></div>'
                     + '<div class="preview-detail-row"><span class="preview-detail-label">Addresses</span><span class="preview-detail-value">' + areaSummary + '</span></div>'
                     + smsMetaRows
                     + '</div>';

@@ -27,6 +27,22 @@ class SmsController extends Controller
         }, (array) $months))));
     }
 
+    private function requestedYears(Request $request): array
+    {
+        $raw = $request->input('years', []);
+        $currentYear = (int) Carbon::now('Asia/Dhaka')->format('Y');
+        $minYear = $currentYear - 10;
+
+        if (!is_array($raw)) {
+            $raw = is_string($raw) ? preg_split('/[,\s]+/', trim($raw)) : [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(function ($year) use ($minYear, $currentYear) {
+            $year = (int) trim((string) $year);
+            return ($year >= $minYear && $year <= $currentYear) ? $year : null;
+        }, (array) $raw))));
+    }
+
     private function requestedIspCodes(Request $request): array
     {
         $raw = $request->input('isp_code', []);
@@ -80,7 +96,7 @@ class SmsController extends Controller
         });
     }
 
-    private function expiredSelectedMonthsQuery($baseQuery, array $months)
+    private function expiredSelectedMonthsQuery($baseQuery, array $months, array $years = [])
     {
         $months = array_values(array_unique(array_filter(array_map(function ($month) {
             $month = (int) trim((string) $month);
@@ -88,17 +104,24 @@ class SmsController extends Controller
         }, $months))));
 
         if (empty($months)) {
-            return (clone $baseQuery)->where('status', 'expired')->whereRaw('0 = 1');
+            return (clone $baseQuery)->whereRaw('0 = 1');
         }
 
-        // Support multiple month selections by OR-ing month predicates instead of forcing one fixed month or one fixed year.
-        return (clone $baseQuery)
-            ->where('status', 'expired')
+        $query = (clone $baseQuery)
+            ->whereRaw('LOWER(status) = ?', ['expired'])
+            ->whereNotNull('expiration')
+            ->whereDate('expiration', '<=', Carbon::today('Asia/Dhaka'))
             ->where(function ($q) use ($months) {
                 foreach ($months as $month) {
-                    $q->orWhereMonth('expiration', $month);
+                    $q->orWhereRaw('MONTH(expiration) = ?', [$month]);
                 }
             });
+
+        if (!empty($years)) {
+            $query->whereIn(DB::raw('YEAR(expiration)'), $years);
+        }
+
+        return $query;
     }
 
     public function send_sms(Request $request)
@@ -306,7 +329,7 @@ class SmsController extends Controller
                         return redirect()->back();
                     }
 
-                    $clientsCollection = $this->expiredSelectedMonthsQuery($baseQuery, $months)
+                    $clientsCollection = $this->expiredSelectedMonthsQuery($baseQuery, $months, $this->requestedYears($request))
                         ->get(['id', 'username', 'contact']);
                     break;
                 case "area_wise":
@@ -415,7 +438,7 @@ class SmsController extends Controller
         // 2. Build base query — optionally filter by ISP
         $ispCodes = $this->requestedIspCodes($request);
         $areaIds = $this->requestedAreas($request);
-        $baseQuery = Client::query();
+        $baseQuery = Client::query()->whereNotNull('contact')->where('contact', '!=', '');
         if (!empty($ispCodes)) {
             $baseQuery->whereIn('isp_code', $ispCodes);
         }
@@ -466,7 +489,7 @@ class SmsController extends Controller
                         return redirect()->back();
                     }
 
-                    $clients = $this->expiredSelectedMonthsQuery($baseQuery, $months)->pluck('contact');
+                    $clients = $this->expiredSelectedMonthsQuery($baseQuery, $months, $this->requestedYears($request))->pluck('contact');
                     break;
                 case "area_wise":
                     $clients = (clone $baseQuery)
@@ -590,6 +613,7 @@ class SmsController extends Controller
         $ispCodes = $this->requestedIspCodes($request);
         $areas = $this->requestedAreas($request);
         $months = $this->requestedMonths($request);
+        $years = $this->requestedYears($request);
 
         if (empty($status)) {
             return response()->json(['count' => 0, 'label' => '—', 'error' => 'No group selected.']);
@@ -604,13 +628,14 @@ class SmsController extends Controller
                 'label' => 'Custom Numbers',
                 'isp'   => !empty($ispCodes) ? implode(', ', array_map('ucfirst', $ispCodes)) : 'All ISPs',
                 'months' => $months,
+                'years' => $years,
                 'areas' => $areas,
                 'status' => $status,
             ]);
         }
 
         // Build base query with optional ISP and area filters
-        $query = Client::query();
+        $query = Client::query()->whereNotNull('contact')->where('contact', '!=', '');
         if (!empty($ispCodes)) {
             $query->whereIn('isp_code', $ispCodes);
         }
@@ -619,7 +644,16 @@ class SmsController extends Controller
         }
 
         if ($status === 'expired_selected_months') {
-            $count = empty($months) ? 0 : $this->expiredSelectedMonthsQuery($query, $months)->count();
+            if (empty($months)) {
+                return response()->json([
+                    'count'  => 0,
+                    'label'  => 'Expired Selected Months',
+                    'status' => $status,
+                    'error'  => 'Choose at least one expired month.',
+                ]);
+            }
+
+            $count = $this->expiredSelectedMonthsQuery($query, $months, $years)->count();
         } else {
             $count = match ($status) {
                 'expiring'           => (clone $query)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->count(),
@@ -656,6 +690,7 @@ class SmsController extends Controller
             'label' => $groupLabels[$status] ?? $status,
             'isp'   => !empty($ispCodes) ? implode(', ', array_map('ucfirst', $ispCodes)) : 'All ISPs',
             'months' => $months,
+            'years' => $years,
             'areas' => $areas,
             'status' => $status,
         ]);
@@ -741,6 +776,39 @@ class SmsController extends Controller
         $expired_today = Client::where('expiration',Carbon::today('Asia/Dhaka'))->count();
         $expired_this_month = Client::where('status','expired')->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->count();
 
+        // Expired clients grouped by expiration month, so the month picker can show live counts.
+        $expiredMonthCounts = Client::query()
+            ->whereRaw('LOWER(status) = ?', ['expired'])
+            ->whereNotNull('expiration')
+            ->whereDate('expiration', '<=', Carbon::today('Asia/Dhaka'))
+            ->selectRaw('MONTH(expiration) as month_no, COUNT(*) as total')
+            ->groupBy('month_no')
+            ->pluck('total', 'month_no')
+            ->map(function ($total) {
+                return (int) $total;
+            })
+            ->all();
+
+        $expiredYears = Client::query()
+            ->whereRaw('LOWER(status) = ?', ['expired'])
+            ->whereNotNull('expiration')
+            ->whereDate('expiration', '<=', Carbon::today('Asia/Dhaka'))
+            ->selectRaw('YEAR(expiration) as year_no')
+            ->distinct()
+            ->orderByDesc('year_no')
+            ->limit(8)
+            ->pluck('year_no')
+            ->map(function ($year) {
+                return (int) $year;
+            })
+            ->values()
+            ->all();
+
+        if (empty($expiredYears)) {
+            $currentYear = (int) Carbon::now('Asia/Dhaka')->format('Y');
+            $expiredYears = range($currentYear, $currentYear - 2);
+        }
+
         $clientAddresses = Client::query()
             ->whereNotNull('address')
             ->where('address', '!=', '')
@@ -754,6 +822,6 @@ class SmsController extends Controller
             ->values()
             ->all();
 
-        return view('bulksms.create', compact(['templates','expiring_soon','expired_today','expired_this_month','clientAddresses']));
+        return view('bulksms.create', compact(['templates','expiring_soon','expired_today','expired_this_month','clientAddresses','expiredMonthCounts','expiredYears']));
     }
 }
