@@ -219,6 +219,30 @@ class DueBillController extends Controller
 
         $bill = DueBill::create($validated);
 
+        $unpaidStatuses = ['unpaid', 'partially_paid', 'overdue'];
+
+        // Outstanding dues from earlier periods for this client
+        $previousBills = DueBill::where('client_id', $bill->client_id)
+            ->where('id', '!=', $bill->id)
+            ->whereIn('status', $unpaidStatuses)
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id'        => $b->id,
+                    'period'    => \Carbon\Carbon::createFromDate((int) $b->year, (int) $b->month, 1)->format('F Y'),
+                    'amount'    => round((float) $b->amount, 2),
+                    'remaining' => round((float) $b->amount - (float) $b->paid_amount, 2),
+                    'due_date'  => $b->due_date,
+                    'status'    => $b->status,
+                ];
+            })
+            ->values();
+
+        $previousDue = round($previousBills->sum('remaining'), 2);
+        $totalDue = round($previousDue + (float) $validated['amount'], 2);
+
         // Send SMS notification
         try {
             $client = Client::findOrFail($validated['client_id']);
@@ -230,16 +254,7 @@ class DueBillController extends Controller
             $paymentNumber = isp_setting('payment_number', config('sms.payment_number', ''), $ispCode);
             $ispName = isp_name($ispCode, ucfirst($client->isp_code ?? 'Carnival'));
 
-            $previousDue = DueBill::where('client_id', $client->id)
-                ->where('id', '!=', $bill->id)
-                ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
-                ->get()
-                ->sum(function ($b) {
-                    return $b->amount - $b->paid_amount;
-                });
-
             $currentAmount = $validated['amount'];
-            $totalDue = $currentAmount + $previousDue;
 
             $message = "প্রিয় {$client->name},\n"
                 . "গ্রাহক আইডি: {$client->username}\n"
@@ -266,6 +281,10 @@ class DueBillController extends Controller
                 'success' => true,
                 'message' => 'Due bill created successfully.',
                 'bill_id' => $bill->id,
+                'amount' => round((float) $validated['amount'], 2),
+                'previous_due' => $previousDue,
+                'total_due' => $totalDue,
+                'previous_bills' => $previousBills,
             ]);
         }
 

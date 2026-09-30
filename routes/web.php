@@ -53,6 +53,7 @@ Route::post('client/erase/', [ClientController::class, 'erase'])->name('clients.
 
 // Get client package price
 Route::get('clients/{clientId}/package-price', [ClientController::class, 'getPackagePrice'])->name('clients.package-price');
+Route::get('clients/{clientId}/due-summary', [ClientController::class, 'getClientDueSummary'])->name('clients.due-summary');
 Route::post('clients/bulk-bill-info', [ClientController::class, 'getBulkBillInfo'])->name('clients.bulk-bill-info');
 
 // Closed Clients Cable Return Management AJAX endpoints

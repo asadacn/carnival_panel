@@ -1099,6 +1099,34 @@
                             </div>
                         </div>
 
+                        <!-- Previous Dues / Total Due -->
+                        <div class="qb-dues-panel" id="quick_due_summary_card" style="display:none;">
+                            <div class="qb-dues-panel-head">
+                                <span class="qb-dues-panel-title">
+                                    <i class="fas fa-history"></i> Previous Dues
+                                </span>
+                                <span class="qb-dues-count" id="quick_dues_count">0 bill(s)</span>
+                            </div>
+                            <div class="qb-dues-body">
+                                <div id="quick_previous_bills"></div>
+
+                                <div class="qb-total-list">
+                                    <div class="qb-total-strip qb-strip-amber">
+                                        <span class="qb-total-strip-label">
+                                            <i class="fas fa-hourglass-half"></i> Previous Due
+                                        </span>
+                                        <span class="qb-total-strip-value" id="quick_previous_due">৳0.00</span>
+                                    </div>
+                                    <div class="qb-total-strip qb-strip-danger">
+                                        <span class="qb-total-strip-label">
+                                            <i class="fas fa-exclamation-circle"></i> Total Due (Previous + New)
+                                        </span>
+                                        <span class="qb-total-strip-value" id="quick_total_due">৳0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Month/Year Display -->
                         <div class="month-year-display">
                             <span class="month-label"><i class="fas fa-calendar"></i> Billing Period:</span>
@@ -1108,7 +1136,10 @@
                         <!-- Amount Input -->
                         <div class="quick-bill-form-group">
                             <label for="quick_amount" class="quick-bill-form-label">Amount (৳) <span class="required-star">*</span></label>
-                            <input type="number" id="quick_amount" class="quick-bill-form-control" placeholder="Enter billing amount" step="0.01" min="0.01" required>
+                            <div class="qb-amount-wrap">
+                                <span class="qb-currency">৳</span>
+                                <input type="number" id="quick_amount" class="quick-bill-form-control" placeholder="Enter billing amount" step="0.01" min="0.01" required>
+                            </div>
                             <small class="form-helper-text">e.g., 2500.00</small>
                         </div>
 
@@ -1359,6 +1390,219 @@
             display: flex;
             gap: 0.875rem;
             justify-content: flex-end;
+        }
+
+        /* ===== QUICK BILL DUES PANEL ===== */
+        .qb-dues-panel {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+        }
+
+        .qb-dues-panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.6rem 0.9rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .qb-dues-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .qb-dues-count {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            background: #e0e7ff;
+            color: #4338ca;
+            white-space: nowrap;
+        }
+
+        .qb-dues-body {
+            padding: 0.35rem 0.9rem 0.75rem;
+        }
+
+        .qb-dues-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.55rem 0;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .qb-dues-row:last-child {
+            border-bottom: 0;
+        }
+
+        .qb-dues-period {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .qb-dues-meta {
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .qb-dues-amount {
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .qb-chip {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 0.1rem 0.42rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .qb-chip-clear {
+            background: #d1fae5;
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+
+        .qb-chip-overdue {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        .qb-chip-current {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-color: #bae6fd;
+        }
+
+        .qb-chip-muted {
+            background: #f1f5f9;
+            color: #64748b;
+            border-color: #e2e8f0;
+        }
+
+        .qb-dues-empty {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 0.25rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #047857;
+        }
+
+        .qb-dues-skeleton {
+            height: 12px;
+            border-radius: 6px;
+            margin: 0.65rem 0;
+            background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+            background-size: 200% 100%;
+            animation: qbShimmer 1.2s infinite;
+        }
+
+        @keyframes qbShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .qb-total-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.85rem;
+        }
+
+        .qb-total-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.55rem 0.75rem;
+            border-radius: 10px;
+            border: 1px solid;
+            font-size: 0.84rem;
+        }
+
+        .qb-total-strip-label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+        }
+
+        .qb-total-strip-value {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .qb-strip-neutral {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #475569;
+        }
+
+        .qb-strip-amber {
+            background: #fffbeb;
+            border-color: #fde68a;
+            color: #b45309;
+        }
+
+        .qb-strip-danger {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        .qb-strip-danger .qb-total-strip-value {
+            font-size: 1.1rem;
+        }
+
+        .qb-amount-wrap {
+            position: relative;
+        }
+
+        .qb-amount-wrap .qb-currency {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #64748b;
+            pointer-events: none;
+        }
+
+        .qb-amount-wrap .quick-bill-form-control {
+            padding-left: 2.1rem;
+            text-align: right;
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
         }
 
         .quick-bill-btn {
@@ -1865,6 +2109,92 @@
         window.currentOnuFilter = '';
         window.currentCableFilter = '';
 
+        /* ============================================================
+         * ROW MENU vs. SERVER-SIDE REDRAW RACE
+         *
+         * DataTables re-renders the whole tbody when a search response
+         * arrives. The row action menu lives inside the row, so a response
+         * landing after the user opened "More Options" destroys the open
+         * menu and it looks like the click "closed" it. Rapid typing also
+         * queues many draws, which makes the window much wider.
+         *
+         * Fix: cancel superseded requests, block the toggle while a draw is
+         * in flight, and re-open the menu once the redraw settles.
+         * ============================================================ */
+        (function() {
+            window._clientsDrawPending = 0;
+            window._clientsPendingXhr = null;
+            window._clientsMenuClientId = null;   // menu the user expects to be open
+            window._clientsMenuWanted = false;    // open intent captured during a redraw
+
+            window.clientsTableBusy = function() {
+                return window._clientsDrawPending > 0;
+            };
+
+            // Called after every completed draw: restore the menu if it was open/wanted
+            window.clientsAfterRedraw = function() {
+                if (!window._clientsMenuWanted || window._clientsMenuClientId === null) return;
+                if (window.clientsTableBusy()) return;   // another request still running
+
+                window._clientsMenuWanted = false;
+
+                const $toggle = $('#clients tbody')
+                    .find('[data-bs-toggle="dropdown"][data-client-id="' + window._clientsMenuClientId + '"]');
+
+                if (!$toggle.length) {
+                    // Row disappeared from the result set, nothing to restore
+                    window._clientsMenuClientId = null;
+                    return;
+                }
+
+                // Only re-open when the surviving button is not already expanded,
+                // otherwise a redraw that did not touch this row would re-trigger it.
+                if ($toggle.attr('aria-expanded') !== 'true') {
+                    bootstrap.Dropdown.getOrCreateInstance($toggle[0]).show();
+                }
+            };
+
+            document.addEventListener('show.bs.dropdown', function(e) {
+                const trigger = e.target.closest('[data-bs-toggle="dropdown"][data-client-id]');
+                if (trigger) {
+                    window._clientsMenuClientId = trigger.getAttribute('data-client-id');
+                }
+            }, true);
+
+            document.addEventListener('hidden.bs.dropdown', function(e) {
+                const trigger = e.target.closest('[data-bs-toggle="dropdown"][data-client-id]');
+                if (trigger && !window._clientsMenuWanted) {
+                    if (String(trigger.getAttribute('data-client-id')) === String(window._clientsMenuClientId)) {
+                        window._clientsMenuClientId = null;
+                    }
+                }
+            }, true);
+
+            document.addEventListener('click', function(e) {
+                const toggle = e.target.closest('#clients [data-bs-toggle="dropdown"][data-client-id]');
+                if (!toggle) return;
+
+                const clientId = toggle.getAttribute('data-client-id');
+
+                if (window.clientsTableBusy()) {
+                    // A redraw is about to replace this row, so opening now would
+                    // immediately be destroyed. Hold the intent and open it after.
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window._clientsMenuClientId = clientId;
+                    window._clientsMenuWanted = true;
+                    return;
+                }
+
+                window._clientsMenuClientId = clientId;
+                window._clientsMenuWanted = true;
+            }, true);
+
+            document.addEventListener('draw.dt', function() {
+                setTimeout(window.clientsAfterRedraw, 0);
+            });
+        })();
+
         // ------------------ DATA TABLES SETUP ------------------
         $(document).ready(function() {
             // CSRF Setup for all AJAX calls
@@ -1894,7 +2224,26 @@
                         d.onu_filter    = window.currentOnuFilter || '';
                         d.cable_filter  = window.currentCableFilter || '';
                     },
+                    beforeSend: function(xhr, settings) {
+                        // Only the newest draw matters. Cancel the previous request so an
+                        // out-of-order response cannot re-render rows under the user.
+                        if (window._clientsPendingXhr && window._clientsPendingXhr.readyState !== 4) {
+                            window._clientsPendingXhr.abort();
+                        }
+                        window._clientsPendingXhr = xhr;
+                        window._clientsDrawPending++;
+                    },
+                    complete: function(xhr, status) {
+                        window._clientsDrawPending = Math.max(0, window._clientsDrawPending - 1);
+                        if (window._clientsPendingXhr === xhr) {
+                            window._clientsPendingXhr = null;
+                        }
+                        setTimeout(window.clientsAfterRedraw, 0);
+                    },
                     error: function(xhr, textStatus, errorThrown) {
+                        // A cancelled (superseded) request must not be reported as a failure
+                        if (textStatus === 'abort') return;
+
                         try { table.processing(false); } catch (e) {}
                         setTimeout(function() { $('.dataTables_processing').hide(); }, 50);
                         const isOffline = !navigator.onLine || xhr.status === 0;
@@ -1989,21 +2338,40 @@
                 ]
             });
 
-            // Connect Instant Search input with DataTables search & toggle clear button
+            // Connect Instant Search input with DataTables search & toggle clear button.
+            // Debounced: every keystroke used to fire a server-side draw, so several
+            // responses raced each other and re-rendered the tbody under the user.
+            let searchDebounceTimer = null;
+
             $('#custom-client-search').on('keyup input', function() {
                 const val = $(this).val();
+
                 if (val.length > 0) {
                     $('#clear-search-btn').removeClass('d-none');
                 } else {
                     $('#clear-search-btn').addClass('d-none');
                 }
-                table.search(val).draw();
+
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(function() {
+                    table.search(val).draw();
+                }, 250);
+            });
+
+            // Enter searches immediately instead of waiting for the debounce
+            $('#custom-client-search').on('keydown', function(e) {
+                if (e.key !== 'Enter') return;
+
+                e.preventDefault();
+                clearTimeout(searchDebounceTimer);
+                table.search($(this).val()).draw();
             });
 
             // Clear search button handler
             $('#clear-search-btn').on('click', function() {
                 $('#custom-client-search').val('').focus();
                 $(this).addClass('d-none');
+                clearTimeout(searchDebounceTimer);
                 table.search('').draw();
             });
 
@@ -2017,6 +2385,7 @@
             // Filter dropdown change triggers table reload
             $('.client-filter-input').on('change', function() {
                 $('.chip-btn').removeClass('active');
+                clearTimeout(searchDebounceTimer);
                 table.draw();
             });
 
@@ -2039,6 +2408,7 @@
                 else if (type === 'onu') window.currentOnuFilter = val;
                 else if (type === 'cable') window.currentCableFilter = val;
 
+                clearTimeout(searchDebounceTimer);
                 table.draw();
             });
 
@@ -2046,6 +2416,7 @@
             $('#reset-filters-btn').on('click', function() {
                 $('#custom-client-search').val('');
                 $('#clear-search-btn').addClass('d-none');
+                clearTimeout(searchDebounceTimer);
                 table.search('');
                 $('#status-filter, #isp-filter, #due-filter').val('');
                 window.currentOnuFilter = '';
@@ -2436,6 +2807,26 @@
         // Store client details globally for copy feature
         var _qbClientContact = '';
         var _qbClientAddress = '';
+        var _qbPreviousDue = 0;
+        var _qbPreviousBills = [];
+        var _qbCurrency = '৳';
+        var _qbTotalDue = 0;
+
+        function qbFormatMoney(value) {
+            return parseFloat(value || 0).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Recalculate the "Total Due" line whenever the amount changes
+        function qbRefreshTotalDue() {
+            var amount = parseFloat(document.getElementById('quick_amount').value) || 0;
+            _qbTotalDue = amount + _qbPreviousDue;
+
+            document.getElementById('quick_previous_due').textContent = _qbCurrency + qbFormatMoney(_qbPreviousDue);
+            document.getElementById('quick_total_due').textContent = _qbCurrency + qbFormatMoney(_qbTotalDue);
+        }
 
         function showQuickBillModal(clientId, clientName, clientContact, clientAddress) {
             document.getElementById('quick_client_id').value = clientId;
@@ -2446,6 +2837,19 @@
             // Store contact & address for copy feature
             _qbClientContact = clientContact || '';
             _qbClientAddress = clientAddress || '';
+            _qbPreviousDue = 0;
+            _qbPreviousBills = [];
+            _qbCurrency = '৳';
+            _qbTotalDue = 0;
+
+            // Reset dues panel while loading
+            var duesPanel = document.getElementById('quick_due_summary_card');
+            duesPanel.style.display = '';
+            document.getElementById('quick_dues_count').textContent = 'loading…';
+            document.getElementById('quick_previous_bills').innerHTML =
+                '<div class="qb-dues-skeleton" style="width:70%;"></div>' +
+                '<div class="qb-dues-skeleton" style="width:55%;"></div>';
+            qbRefreshTotalDue();
 
             // Fetch package price for this client
             $.ajax({
@@ -2454,7 +2858,7 @@
                 success: function(response) {
                     if (response.success && response.price) {
                         document.getElementById('quick_amount').value = response.price;
-                        console.log(`Package "${response.package_name}" price: ৳${response.price}`);
+                        qbRefreshTotalDue();
                     }
                 },
                 error: function(err) {
@@ -2462,9 +2866,68 @@
                 }
             });
 
+            // Fetch previous unpaid dues so the operator sees the real total before billing
+            $.ajax({
+                url: `{{ route('clients.due-summary', ':id') }}`.replace(':id', clientId),
+                type: 'GET',
+                success: function(response) {
+                    if (!response.success) return;
+
+                    _qbCurrency = response.currency || '৳';
+                    _qbPreviousDue = parseFloat(response.previous_due) || 0;
+                    _qbPreviousBills = response.previous_bills || [];
+
+                    var billsHtml = '';
+
+                    if (_qbPreviousBills.length) {
+                        var otherCount = _qbPreviousBills.filter(function(b) { return !b.is_current_period; }).length;
+
+                        document.getElementById('quick_dues_count').textContent =
+                            otherCount + ' earlier bill(s)';
+
+                        _qbPreviousBills.forEach(function(bill) {
+                            var chips = '';
+                            if (bill.is_current_period) {
+                                chips += '<span class="qb-chip qb-chip-current">This month</span>';
+                            } else if (bill.status === 'overdue') {
+                                chips += '<span class="qb-chip qb-chip-overdue">Overdue</span>';
+                            }
+
+                            var amountClass = bill.is_current_period ? 'qb-chip-muted' : 'text-danger';
+
+                            billsHtml += '<div class="qb-dues-row">'
+                                + '<div>'
+                                    + '<div class="qb-dues-period">' + bill.period + chips + '</div>'
+                                    + '<div class="qb-dues-meta">Billed ' + _qbCurrency + qbFormatMoney(bill.amount)
+                                        + (bill.paid_amount > 0 ? ' · Paid ' + _qbCurrency + qbFormatMoney(bill.paid_amount) : '')
+                                        + (bill.due_date ? ' · Due ' + bill.due_date : '') + '</div>'
+                                + '</div>'
+                                + '<div class="qb-dues-amount ' + amountClass + '">' + _qbCurrency + qbFormatMoney(bill.remaining) + '</div>'
+                                + '</div>';
+                        });
+                    } else {
+                        document.getElementById('quick_dues_count').textContent = '0 bill(s)';
+                        billsHtml += '<div class="qb-dues-empty"><i class="fas fa-check-circle"></i>No previous dues for this client.</div>';
+                    }
+
+                    document.getElementById('quick_previous_bills').innerHTML = billsHtml;
+                    qbRefreshTotalDue();
+                },
+                error: function() {
+                    document.getElementById('quick_dues_count').textContent = 'unavailable';
+                    document.getElementById('quick_previous_bills').innerHTML =
+                        '<div class="qb-dues-empty" style="color:#b91c1c;"><i class="fas fa-triangle-exclamation"></i>Could not load previous dues.</div>';
+                    qbRefreshTotalDue();
+                }
+            });
+
             var quickBillModal = new bootstrap.Modal(document.getElementById('quickBillModal'));
             quickBillModal.show();
         }
+
+        // Keep the Total Due line in sync with the entered amount
+        document.getElementById('quick_amount').addEventListener('input', qbRefreshTotalDue);
+        document.getElementById('quick_amount').addEventListener('change', qbRefreshTotalDue);
 
         // Create quick bill with auto-filled current month
         function createQuickBill() {
@@ -2513,6 +2976,47 @@
                     var billAmount = document.getElementById('quick_amount').value;
                     var currentMonthYear = document.getElementById('quick_month_year').innerText;
 
+                    // Server returns the authoritative breakdown after creation
+                    var previousDue = parseFloat(response.previous_due) || 0;
+                    var totalDue = parseFloat(response.total_due) || (parseFloat(billAmount) + previousDue);
+                    var previousBills = response.previous_bills || [];
+                    var currency = _qbCurrency || '৳';
+
+                    // Previous dues block for sharing (empty when the client is clean)
+                    var previousLinesMd = '';
+                    var previousLinesHtml = '';
+
+                    if (previousDue > 0 && previousBills.length) {
+                        previousBills.forEach(function(bill) {
+                            var chip = bill.is_current_period
+                                ? '<span class="qb-chip qb-chip-current">This month</span>'
+                                : (bill.status === 'overdue' ? '<span class="qb-chip qb-chip-overdue">Overdue</span>' : '');
+                            var amountColor = bill.is_current_period ? '#64748b' : '#b91c1c';
+
+                            previousLinesMd += '• ' + bill.period + ': ' + currency + qbFormatMoney(bill.remaining) + '\n';
+                            previousLinesHtml += '<div class="qb-dues-row">'
+                                + '<div class="qb-dues-period">' + bill.period + ' ' + chip + '</div>'
+                                + '<div class="qb-dues-amount" style="color:' + amountColor + ';">' + currency + qbFormatMoney(bill.remaining) + '</div>'
+                                + '</div>';
+                        });
+                    }
+
+                    var dueBlockMd = previousDue > 0
+                        ? '📌 *Previous Dues:*\n' + previousLinesMd +
+                          '💳 *Previous Due:* ' + currency + qbFormatMoney(previousDue) + '\n'
+                        : '✅ *Previous Due:* 0.00 (no outstanding dues)\n';
+
+                    var dueBlockHtml = previousDue > 0
+                        ? '<div class="qb-dues-panel" style="margin:12px 0 0;box-shadow:none;">'
+                            + '<div class="qb-dues-panel-head"><span class="qb-dues-panel-title"><i class="fas fa-history"></i> Previous Dues</span>'
+                            + '<span class="qb-dues-count">' + previousBills.length + ' bill(s)</span></div>'
+                            + '<div class="qb-dues-body">' + previousLinesHtml
+                            + '<div class="qb-total-strip qb-strip-amber" style="margin-top:.6rem;">'
+                              + '<span class="qb-total-strip-label"><i class="fas fa-hourglass-half"></i> Previous Due</span>'
+                              + '<span class="qb-total-strip-value">' + currency + qbFormatMoney(previousDue) + '</span></div>'
+                            + '</div></div>'
+                        : '<div class="qb-dues-empty" style="padding:.6rem .25rem;"><i class="fas fa-check-circle"></i>No previous dues for this client.</div>';
+
                     // Formatted plain text for clipboard/sharing
                     window._qbCurrentCopyText = '🔔 *DUE BILL CREATED* 🔔\n' +
                         '-----------------------------\n' +
@@ -2520,7 +3024,9 @@
                         '📞 *Contact:* ' + (_qbClientContact || 'N/A') + '\n' +
                         '📍 *Address:* ' + (_qbClientAddress || 'N/A') + '\n' +
                         '📅 *Period:* ' + currentMonthYear + '\n' +
-                        '💰 *Amount:* ৳' + parseFloat(billAmount).toLocaleString() + '\n' +
+                        '💰 *New Bill:* ' + currency + qbFormatMoney(parseFloat(billAmount)) + '\n' +
+                        dueBlockMd +
+                        '🔥 *TOTAL DUE:* ' + currency + qbFormatMoney(totalDue) + '\n' +
                         '-----------------------------';
 
                     // HTML version for Telegram with HTML parse mode
@@ -2530,7 +3036,15 @@
                         '📞 <b>Contact:</b> ' + (_qbClientContact || 'N/A') + '\n' +
                         '📍 <b>Address:</b> ' + (_qbClientAddress || 'N/A') + '\n' +
                         '📅 <b>Period:</b> ' + currentMonthYear + '\n' +
-                        '💰 <b>Amount:</b> ৳' + parseFloat(billAmount).toLocaleString() + '\n' +
+                        '💰 <b>New Bill:</b> ' + currency + qbFormatMoney(parseFloat(billAmount)) + '\n' +
+                        (previousDue > 0
+                            ? '📌 <b>Previous Dues:</b>\n' +
+                              previousBills.map(function(bill) {
+                                  return '• ' + bill.period + ': ' + currency + qbFormatMoney(bill.remaining);
+                              }).join('\n') + '\n' +
+                              '💳 <b>Previous Due:</b> ' + currency + qbFormatMoney(previousDue) + '\n'
+                            : '✅ <b>Previous Due:</b> 0.00 (no outstanding dues)\n') +
+                        '🔥 <b>TOTAL DUE:</b> ' + currency + qbFormatMoney(totalDue) + '\n' +
                         '-----------------------------';
 
                     Swal.fire({
@@ -2538,15 +3052,31 @@
                         title: 'Bill Created!',
                         html: `
                             <p style="margin-bottom: 12px; color: #6b7280; font-size: 0.9rem;">Due bill for current month created successfully.</p>
-                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; text-align: left; margin-bottom: 16px;">
-                                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-weight: 600; color: #166534; font-size: 0.85rem;">
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 16px; text-align: left; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: #166534; font-size: 0.9rem;">
                                     <i class="fas fa-user-circle"></i> ${clientName}
                                 </div>
-                                <div style="font-size: 0.82rem; color: #374151; line-height: 1.7;">
+                                <div style="font-size: 0.82rem; color: #374151; line-height: 1.75;">
                                     <div><i class="fas fa-phone-alt" style="width: 16px; color: #6b7280;"></i> ${_qbClientContact || 'N/A'}</div>
                                     <div><i class="fas fa-map-marker-alt" style="width: 16px; color: #6b7280;"></i> ${_qbClientAddress || 'N/A'}</div>
-                                    <div><i class="fas fa-money-bill-wave" style="width: 16px; color: #6b7280;"></i> ৳${parseFloat(billAmount).toLocaleString()}</div>
                                 </div>
+
+                                <div class="qb-total-list">
+                                    <div class="qb-total-strip qb-strip-neutral">
+                                        <span class="qb-total-strip-label"><i class="fas fa-money-bill-wave"></i> New Bill (${currentMonthYear})</span>
+                                        <span class="qb-total-strip-value">${currency}${qbFormatMoney(parseFloat(billAmount))}</span>
+                                    </div>
+                                    <div class="qb-total-strip qb-strip-amber">
+                                        <span class="qb-total-strip-label"><i class="fas fa-hourglass-half"></i> Previous Due</span>
+                                        <span class="qb-total-strip-value">${currency}${qbFormatMoney(previousDue)}</span>
+                                    </div>
+                                    <div class="qb-total-strip qb-strip-danger">
+                                        <span class="qb-total-strip-label"><i class="fas fa-exclamation-circle"></i> TOTAL DUE</span>
+                                        <span class="qb-total-strip-value">${currency}${qbFormatMoney(totalDue)}</span>
+                                    </div>
+                                </div>
+
+                                ${dueBlockHtml}
                             </div>
 
                             <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -2740,6 +3270,13 @@
 
                         const rowStyle = c.has_existing_bill ? 'background-color: #fffbe6;' : '';
 
+                        const previousDue = parseFloat(c.previous_due) || 0;
+                        const currency = c.currency || '৳';
+                        const previousDueCell = previousDue > 0
+                            ? `<div class="qb-dues-amount text-danger" style="font-size:0.85rem;">${currency}${previousDue.toLocaleString()}</div>
+                               <span class="qb-chip qb-chip-overdue">${c.previous_bill_count} bill(s)</span>`
+                            : `<span class="qb-chip qb-chip-clear"><i class="fas fa-check"></i> Clear</span>`;
+
                         rowsHtml += `
                             <tr style="${rowStyle}">
                                 <td class="align-middle text-start ps-2">
@@ -2749,14 +3286,22 @@
                                 <td class="align-middle text-center">
                                     <span class="badge bg-light text-dark border" style="font-size:0.75rem;">${c.package_name}</span>
                                 </td>
-                                <td class="align-middle text-center" style="width: 140px;">
+                                <td class="align-middle text-center">
+                                    ${previousDueCell}
+                                </td>
+                                <td class="align-middle text-center" style="width: 130px;">
                                     <input type="number" class="form-control form-control-sm text-end bulk-bill-amount-input"
                                            data-client-id="${c.id}"
                                            data-package-price="${priceVal}"
+                                           data-previous-due="${previousDue}"
+                                           data-currency="${currency}"
                                            value="${priceVal}"
                                            placeholder="0.00"
                                            step="0.01"
                                            min="0.01">
+                                </td>
+                                <td class="align-middle text-center bulk-row-total" style="font-weight:700;font-variant-numeric:tabular-nums;font-size:0.85rem;color:${previousDue > 0 ? '#b91c1c' : '#059669'};">
+                                    ${currency}${(previousDue + (parseFloat(priceVal) || 0)).toLocaleString()}
                                 </td>
                                 <td class="align-middle text-center">
                                     ${alertBadge}
@@ -2803,7 +3348,9 @@
                                         <tr>
                                             <th class="ps-2">Client</th>
                                             <th class="text-center">Package</th>
-                                            <th class="text-center">Billing Amount (৳)</th>
+                                            <th class="text-center">Previous Due</th>
+                                            <th class="text-center">New Bill (৳)</th>
+                                            <th class="text-center">Total Due</th>
                                             <th class="text-center">Status</th>
                                         </tr>
                                     </thead>
@@ -2814,13 +3361,25 @@
                             </div>
 
                             <!-- Live Grand Total Indicator -->
-                            <div class="d-flex align-items-center justify-content-between mt-2 p-2 rounded" style="background: #ecfdf5; border: 1px solid #a7f3d0;">
-                                <span class="fw-bold text-success" style="font-size:0.85rem;">
-                                    <i class="fas fa-calculator me-1"></i> Calculated Total:
-                                </span>
-                                <span class="fw-bold text-success" id="bulk-grand-total-display" style="font-size:1.1rem;">
-                                    ৳ 0
-                                </span>
+                            <div class="qb-total-list" style="margin-top:10px;">
+                                <div class="qb-total-strip qb-strip-neutral">
+                                    <span class="qb-total-strip-label">
+                                        <i class="fas fa-calculator"></i> Calculated Total (New Bills)
+                                    </span>
+                                    <span class="qb-total-strip-value" id="bulk-grand-total-display">৳ 0</span>
+                                </div>
+                                <div class="qb-total-strip qb-strip-amber">
+                                    <span class="qb-total-strip-label">
+                                        <i class="fas fa-hourglass-half"></i> Previous Dues
+                                    </span>
+                                    <span class="qb-total-strip-value" id="bulk-previous-due-display">৳ 0</span>
+                                </div>
+                                <div class="qb-total-strip qb-strip-danger">
+                                    <span class="qb-total-strip-label">
+                                        <i class="fas fa-exclamation-circle"></i> Grand Total Due (New + Previous)
+                                    </span>
+                                    <span class="qb-total-strip-value" id="bulk-total-due-display">৳ 0</span>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -2850,13 +3409,36 @@
                             // Function to update total
                             function updateCalculatedTotal() {
                                 let total = 0;
+                                let previousTotal = 0;
+
                                 document.querySelectorAll('.bulk-bill-amount-input').forEach(function(input) {
                                     const val = parseFloat(input.value) || 0;
+                                    const previousDue = parseFloat(input.getAttribute('data-previous-due')) || 0;
                                     total += val;
+                                    previousTotal += previousDue;
+
+                                    const row = input.closest('tr');
+                                    const rowTotal = row ? row.querySelector('.bulk-row-total') : null;
+                                    if (rowTotal) {
+                                        const symbol = (input.getAttribute('data-currency') || '৳').trim().charAt(0);
+                                        rowTotal.textContent = symbol + (val + previousDue).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                                        rowTotal.style.color = previousDue > 0 ? '#b91c1c' : '#059669';
+                                    }
                                 });
+
                                 const display = document.getElementById('bulk-grand-total-display');
                                 if (display) {
                                     display.textContent = '৳ ' + total.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                                }
+
+                                const previousDisplay = document.getElementById('bulk-previous-due-display');
+                                if (previousDisplay) {
+                                    previousDisplay.textContent = '৳ ' + previousTotal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                                }
+
+                                const totalDueDisplay = document.getElementById('bulk-total-due-display');
+                                if (totalDueDisplay) {
+                                    totalDueDisplay.textContent = '৳ ' + (total + previousTotal).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2});
                                 }
                             }
 
@@ -2914,7 +3496,8 @@
 
                                 billsToCreate.push({
                                     client_id: clientId,
-                                    amount: amountVal
+                                    amount: amountVal,
+                                    previous_due: parseFloat($(this).attr('data-previous-due')) || 0
                                 });
                             });
 
@@ -2945,8 +3528,14 @@
                                         amount: item.amount,
                                         notes: `Bulk created on ${periodName}`
                                     }
-                                }).then(function() {
-                                    return { success: true, client_id: item.client_id, amount: item.amount };
+                                }).then(function(response) {
+                                    return {
+                                        success: true,
+                                        client_id: item.client_id,
+                                        amount: item.amount,
+                                        previous_due: (typeof response.previous_due !== 'undefined') ? parseFloat(response.previous_due) : item.previous_due,
+                                        total_due: parseFloat(response.total_due) || ((parseFloat(item.amount) || 0) + (parseFloat(item.previous_due) || 0))
+                                    };
                                 }).catch(function(xhr) {
                                     return {
                                         success: false,
@@ -2964,6 +3553,25 @@
                         const failed = results.filter(r => !r.success);
 
                         const totalSumBilled = successful.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+                        const previousDueSum = successful.reduce((acc, curr) => acc + (parseFloat(curr.previous_due) || 0), 0);
+                        const grandTotalDue = successful.reduce((acc, curr) => acc + (parseFloat(curr.total_due) || 0), 0);
+
+                        const totalsHtml = `
+                            <div class="qb-total-list text-start" style="font-size:0.85rem;">
+                                <div class="qb-total-strip qb-strip-neutral">
+                                    <span class="qb-total-strip-label"><i class="fas fa-calculator"></i> Total Billed (${successful.length} bills)</span>
+                                    <span class="qb-total-strip-value">৳ ${totalSumBilled.toLocaleString()}</span>
+                                </div>
+                                <div class="qb-total-strip qb-strip-amber">
+                                    <span class="qb-total-strip-label"><i class="fas fa-hourglass-half"></i> Previous Dues Carried</span>
+                                    <span class="qb-total-strip-value">৳ ${previousDueSum.toLocaleString()}</span>
+                                </div>
+                                <div class="qb-total-strip qb-strip-danger">
+                                    <span class="qb-total-strip-label"><i class="fas fa-exclamation-circle"></i> Grand Total Due</span>
+                                    <span class="qb-total-strip-value">৳ ${grandTotalDue.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        `;
 
                         if (failed.length === 0) {
                             Swal.fire({
@@ -2971,9 +3579,7 @@
                                 title: 'All Bills Created Successfully!',
                                 html: `
                                     <p class="text-muted">Successfully created <strong>${successful.length}</strong> due bills.</p>
-                                    <div class="alert alert-success fw-bold text-center">
-                                        Total Billed: ৳ ${totalSumBilled.toLocaleString()}
-                                    </div>
+                                    ${totalsHtml}
                                 `,
                                 confirmButtonText: 'Done',
                                 confirmButtonColor: '#10b981'
@@ -2986,8 +3592,9 @@
                                 icon: 'warning',
                                 title: 'Bills Summary',
                                 html: `
-                                    <p>Successfully created <strong>${successful.length}</strong> out of ${results.length} bills (Total Billed: ৳ ${totalSumBilled.toLocaleString()}).</p>
-                                    <div class="text-start bg-light p-2 rounded small text-danger" style="max-height: 150px; overflow-y: auto;">
+                                    <p>Successfully created <strong>${successful.length}</strong> out of ${results.length} bills.</p>
+                                    ${totalsHtml}
+                                    <div class="text-start bg-light p-2 rounded small text-danger mt-2" style="max-height: 150px; overflow-y: auto;">
                                         <strong>Notice / Skipped:</strong>
                                         <ul class="mb-0 ps-3">${failedMsgList}</ul>
                                     </div>

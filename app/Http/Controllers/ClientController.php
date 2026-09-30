@@ -139,7 +139,7 @@ class ClientController extends AppBaseController
                         <button type="button" class="btn btn-sm border-0 px-2 d-inline-flex align-items-center gap-1" title="Comments & Notes" onclick="openCommentModal({$client->id}, '{$name}')" style="border-radius:0; background:#f0f9fff0; color:#0284c7; border:1px solid #cbd5e1 !important; border-end-0 !important;" onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='#f0f9fff0'">
                             <i class="fa fa-comment"></i> {$commentBadge}
                         </button>
-                        <button type="button" class="btn btn-sm border-0 px-2 dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px; background:#f8fafcf0; color:#64748b; border:1px solid #cbd5e1 !important;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafcf0'" title="More Options">
+                        <button type="button" class="btn btn-sm border-0 px-2 dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" data-client-id="{$client->id}" aria-expanded="false" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px; background:#f8fafcf0; color:#64748b; border:1px solid #cbd5e1 !important;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafcf0'" title="More Options">
                             <span class="visually-hidden">Toggle Options</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" style="border-radius:10px; font-size:0.85rem; min-width: 175px; z-index: 1050;">
@@ -365,6 +365,62 @@ EOT;
     }
 
     /**
+     * Previous unpaid dues + total due for a client (used by the Quick Bill modal)
+     */
+    public function getClientDueSummary($clientId)
+    {
+        try {
+            $client = Client::findOrFail($clientId);
+            $ispCode = $client->isp_code ?? config('app.isp_code', 'carnival');
+            $currency = isp_setting('currency_symbol', '৳', $ispCode);
+
+            $unpaidStatuses = ['unpaid', 'partially_paid', 'overdue'];
+            $currentPeriodLabel = now()->format('F Y');
+
+            $previousBills = DB::table('due_bills')
+                ->where('client_id', $client->id)
+                ->whereIn('status', $unpaidStatuses)
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->get([
+                    'id', 'month', 'year', 'amount', 'paid_amount', 'due_date', 'status',
+                ])
+                ->map(function ($bill) use ($currency, $currentPeriodLabel) {
+                    $remaining = round((float) $bill->amount - (float) $bill->paid_amount, 2);
+                    $period = \Carbon\Carbon::createFromDate((int) $bill->year, (int) $bill->month, 1)->format('F Y');
+
+                    return [
+                        'id'          => $bill->id,
+                        'period'      => $period,
+                        'amount'      => round((float) $bill->amount, 2),
+                        'paid_amount' => round((float) $bill->paid_amount, 2),
+                        'remaining'   => $remaining,
+                        'due_date'    => $bill->due_date,
+                        'status'      => $bill->status,
+                        'is_current_period' => $period === $currentPeriodLabel,
+                    ];
+                })
+                ->values();
+
+            // Current period bill is the one being created now, so it is not "previous" due.
+            $previousDue = round($previousBills->where('is_current_period', false)->sum('remaining'), 2);
+
+            return response()->json([
+                'success'       => true,
+                'currency'      => $currency,
+                'previous_due'  => $previousDue,
+                'bill_count'    => $previousBills->where('is_current_period', false)->count(),
+                'previous_bills' => $previousBills->values(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get bulk bill info (package rates & current month bill status) for selected clients
      */
     public function getBulkBillInfo(Request $request)
@@ -390,10 +446,27 @@ EOT;
                 ->pluck('client_id')
                 ->toArray();
 
+            // Outstanding dues from earlier periods, per client.
+            $previousDueMap = DB::table('due_bills')
+                ->whereIn('client_id', $clientIds)
+                ->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])
+                ->where(function ($q) use ($currentMonth, $currentYear) {
+                    $q->where('year', '<', $currentYear)
+                        ->orWhere(function ($q) use ($currentMonth, $currentYear) {
+                            $q->where('year', $currentYear)->where('month', '<', $currentMonth);
+                        });
+                })
+                ->groupBy('client_id')
+                ->selectRaw('client_id, SUM(amount - paid_amount) as previous_due, COUNT(*) as previous_bill_count')
+                ->get()
+                ->keyBy('client_id');
+
             $result = [];
             foreach ($clients as $client) {
                 $ispCode = $client->isp_code ?? config('app.isp_code', 'carnival');
                 $pkg = Package::findByTitleForIsp($client->package, $ispCode);
+                $previous = $previousDueMap->get($client->id);
+
                 $result[] = [
                     'id' => $client->id,
                     'name' => $client->name,
@@ -402,6 +475,9 @@ EOT;
                     'package_name' => $client->package ?? 'N/A',
                     'price' => $pkg ? (float)$pkg->price : 0,
                     'has_existing_bill' => in_array($client->id, $existingBillClientIds),
+                    'previous_due' => $previous ? round((float) $previous->previous_due, 2) : 0.0,
+                    'previous_bill_count' => $previous ? (int) $previous->previous_bill_count : 0,
+                    'currency' => isp_setting('currency_symbol', '৳', $ispCode),
                 ];
             }
 
