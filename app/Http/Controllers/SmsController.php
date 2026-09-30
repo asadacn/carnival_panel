@@ -305,7 +305,7 @@ class SmsController extends Controller
         } else {
             switch ($request->client_status) {
                 case "expiring":
-                    $clientsCollection = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->get(['id', 'username', 'contact']);
+                    $clientsCollection = (clone $baseQuery)->whereDate('expiration', Carbon::tomorrow('Asia/Dhaka')->toDateString())->get(['id', 'username', 'contact']);
                     break;
                 case "registered":
                     $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['registered'])->get(['id', 'username', 'contact']);
@@ -317,10 +317,11 @@ class SmsController extends Controller
                     $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->get(['id', 'username', 'contact']);
                     break;
                 case "expired_today":
-                    $clientsCollection = (clone $baseQuery)->where('expiration', Carbon::today('Asia/Dhaka'))->get(['id', 'username', 'contact']);
+                    $clientsCollection = (clone $baseQuery)->whereDate('expiration', Carbon::today('Asia/Dhaka')->toDateString())->get(['id', 'username', 'contact']);
                     break;
                 case "expired_this_month":
-                    $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->get(['id', 'username', 'contact']);
+                    $now = Carbon::now('Asia/Dhaka');
+                    $clientsCollection = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->whereYear('expiration', $now->format('Y'))->whereMonth('expiration', $now->format('m'))->get(['id', 'username', 'contact']);
                     break;
                 case "expired_selected_months":
                     $months = $this->requestedMonths($request);
@@ -465,7 +466,7 @@ class SmsController extends Controller
             // Existing logic for database groups
             switch ($request->client_status) {
                 case "expiring":
-                    $clients = (clone $baseQuery)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->pluck('contact');
+                    $clients = (clone $baseQuery)->whereDate('expiration', Carbon::tomorrow('Asia/Dhaka')->toDateString())->pluck('contact');
                     break;
                 case "registered":
                     $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['registered'])->pluck('contact');
@@ -477,10 +478,11 @@ class SmsController extends Controller
                     $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->pluck('contact');
                     break;
                 case "expired_today":
-                    $clients = (clone $baseQuery)->where('expiration', Carbon::today('Asia/Dhaka'))->pluck('contact');
+                    $clients = (clone $baseQuery)->whereDate('expiration', Carbon::today('Asia/Dhaka')->toDateString())->pluck('contact');
                     break;
                 case "expired_this_month":
-                    $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->whereYear('expiration', date('Y'))->whereMonth('expiration', date('m'))->pluck('contact');
+                    $nowDhaka = Carbon::now('Asia/Dhaka');
+                    $clients = (clone $baseQuery)->whereRaw('LOWER(status) = ?', ['expired'])->whereYear('expiration', $nowDhaka->format('Y'))->whereMonth('expiration', $nowDhaka->format('m'))->pluck('contact');
                     break;
                 case "expired_selected_months":
                     $months = $this->requestedMonths($request);
@@ -656,14 +658,14 @@ class SmsController extends Controller
             $count = $this->expiredSelectedMonthsQuery($query, $months, $years)->count();
         } else {
             $count = match ($status) {
-                'expiring'           => (clone $query)->where('expiration', Carbon::tomorrow('Asia/Dhaka'))->count(),
+                'expiring'           => (clone $query)->whereDate('expiration', Carbon::tomorrow('Asia/Dhaka')->toDateString())->count(),
                 'registered'         => (clone $query)->whereRaw('LOWER(status) = ?', ['registered'])->count(),
                 'active'             => (clone $query)->whereRaw('LOWER(status) = ?', ['active'])->count(),
                 'expired'            => (clone $query)->whereRaw('LOWER(status) = ?', ['expired'])->count(),
-                'expired_today'      => (clone $query)->where('expiration', Carbon::today('Asia/Dhaka'))->count(),
+                'expired_today'      => (clone $query)->whereDate('expiration', Carbon::today('Asia/Dhaka')->toDateString())->count(),
                 'expired_this_month' => (clone $query)->whereRaw('LOWER(status) = ?', ['expired'])
-                                            ->whereYear('expiration', date('Y'))
-                                            ->whereMonth('expiration', date('m'))
+                                            ->whereYear('expiration', Carbon::now('Asia/Dhaka')->format('Y'))
+                                            ->whereMonth('expiration', Carbon::now('Asia/Dhaka')->format('m'))
                                             ->count(),
                 'area_wise'          => (clone $query)->whereNotNull('contact')->where('contact', '!=', '')->count(),
                 default              => null,
@@ -693,7 +695,28 @@ class SmsController extends Controller
             'years' => $years,
             'areas' => $areas,
             'status' => $status,
+            'warning' => $this->emptyResultWarning($query, $status, (int) $count),
         ]);
+    }
+
+    /**
+     * Date based groups depend entirely on clients.expiration.
+     * When nothing matches, tell the operator how many rows in the same scope
+     * have no expiration date at all, instead of just showing "0 contacts".
+     */
+    private function emptyResultWarning($scopeQuery, string $status, int $count): ?string
+    {
+        if ($count > 0 || !in_array($status, ['expiring', 'expired_today', 'expired_selected_months'], true)) {
+            return null;
+        }
+
+        $missing = (clone $scopeQuery)->whereNull('expiration')->count();
+
+        if ($missing === 0) {
+            return null;
+        }
+
+        return $missing . ' client(s) in this selection have no expiration date, so they can never match a date based group. Re-import the ISP client sheet with a valid expiration column.';
     }
 
     public function sms_log()

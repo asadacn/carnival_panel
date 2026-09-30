@@ -878,6 +878,10 @@
                 }
 
                 var label = (res.isp || 'All ISPs') + ' — ' + (res.label || res.status || 'Selected Group');
+                var warningHtml = res.warning
+                    ? '<div class="alert alert-warning py-2 px-3 mt-2 mb-0 small">' + escapeHtml(res.warning) + '</div>'
+                    : '';
+
                 if (res.count === 0) {
                     resultBadge.html('<i class="fas fa-exclamation-circle mr-1"></i> 0 contacts matched (' + label + ')').removeClass().addClass('badge badge-warning text-dark').show();
                 } else {
@@ -924,18 +928,20 @@
                     + '<div class="preview-detail-row"><span class="preview-detail-label">ISP</span><span class="preview-detail-value">' + (res.isp || 'All ISPs') + '</span></div>'
                     + '<div class="preview-detail-row"><span class="preview-detail-label">Months</span><span class="preview-detail-value">' + escapeHtml(monthSummary) + '</span></div>'
                     + '<div class="preview-detail-row"><span class="preview-detail-label">Years</span><span class="preview-detail-value">' + escapeHtml(yearSummary) + '</span></div>'
-                    + '<div class="preview-detail-row"><span class="preview-detail-label">Addresses</span><span class="preview-detail-value">' + areaSummary + '</span></div>'
+                    + '<div class="preview-detail-row"><span class="preview-detail-label">Addresses</span><span class="preview-detail-value">' + escapeHtml(areaSummary) + '</span></div>'
                     + smsMetaRows
-                    + '</div>';
+                    + '</div>' + warningHtml;
 
                 if (showModal) {
+                    var noContacts = parseInt(res.count, 10) === 0;
+
                     if (tab === 'sms') {
                         Swal.fire({
-                            title: 'SMS Contact Preview',
+                            title: noContacts ? 'No contacts matched' : 'SMS Contact Preview',
                             html: modalHtml,
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonText: 'Confirm & Send',
+                            icon: noContacts ? 'warning' : 'info',
+                            showCancelButton: !noContacts,
+                            confirmButtonText: noContacts ? 'Close' : 'Confirm & Send',
                             cancelButtonText: 'Cancel',
                             allowOutsideClick: false,
                             width: 680,
@@ -943,17 +949,17 @@
                                 popup: 'bulk-preview-modal'
                             }
                         }).then(function(result) {
-                            if (result.isConfirmed) {
+                            if (result.isConfirmed && !noContacts) {
                                 $('#sms_form').trigger('submit');
                             }
                         });
                     } else {
                         Swal.fire({
-                            title: 'Voice Contact Preview',
+                            title: noContacts ? 'No contacts matched' : 'Voice Contact Preview',
                             html: modalHtml,
-                            icon: 'info',
-                            showCancelButton: true,
-                            confirmButtonText: 'Confirm & Start Voice',
+                            icon: noContacts ? 'warning' : 'info',
+                            showCancelButton: !noContacts,
+                            confirmButtonText: noContacts ? 'Close' : 'Confirm & Start Voice',
                             cancelButtonText: 'Cancel',
                             allowOutsideClick: false,
                             width: 680,
@@ -961,7 +967,7 @@
                                 popup: 'bulk-preview-modal'
                             }
                         }).then(function(result) {
-                            if (result.isConfirmed) {
+                            if (result.isConfirmed && !noContacts) {
                                 $('#voice_campaign_form').trigger('submit');
                             }
                         });

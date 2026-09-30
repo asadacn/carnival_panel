@@ -78,11 +78,11 @@ class HomeController extends Controller
             $clients = $clientQuery->get();
             $lastUpdated = $clientQuery->latest('updated_at')->value('updated_at');
 
-            $expiring_soon = Client::query()->where('expiration', $tomorrow);
-            $expired_today = Client::query()->where('expiration', $today);
-            $expired_this_month = Client::query()->where('status', 'Expired')
-                ->whereYear('expiration', date('Y'))
-                ->whereMonth('expiration', date('m'));
+            $expiring_soon = Client::query()->whereDate('expiration', $tomorrow->toDateString());
+            $expired_today = Client::query()->whereDate('expiration', $today->toDateString());
+            $expired_this_month = Client::query()->whereRaw('LOWER(status) = ?', ['expired'])
+                ->whereYear('expiration', $today->format('Y'))
+                ->whereMonth('expiration', $today->format('m'));
 
             if ($selectedIspCode) {
                 $expiring_soon->where('isp_code', $selectedIspCode);

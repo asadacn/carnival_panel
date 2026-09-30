@@ -97,7 +97,8 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             }
 
             // 3. Status
-            $status = $this->normalizeStatus((string)($row[$config['status_key']] ?? ''));
+            $rawStatus = (string)($row[$config['status_key']] ?? '');
+            $status = $this->normalizeStatus($rawStatus);
 
             // 4. Address
             $address = $this->resolveAddress($row, $config);
@@ -119,6 +120,17 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
                 $existing = Client::where('username', $username)->first();
 
                 if ($existing) {
+                    // A blank or unparsable cell must never destroy stored data.
+                    // Expiration/status are kept as-is when the sheet has no usable value.
+                    if (empty($expiration) && !empty($existing->expiration)) {
+                        unset($newValues['expiration']);
+                        \Log::info("[{$this->isp_code}] Kept existing expiration for {$username}: " . $existing->expiration);
+                    }
+
+                    if ($rawStatus === '' && !empty($existing->status)) {
+                        unset($newValues['status']);
+                    }
+
                     // 7. কী কী চেঞ্জ হয়েছে detect করো
                     $changes = $this->detectChanges($existing, $newValues);
 
