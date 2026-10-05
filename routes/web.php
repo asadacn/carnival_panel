@@ -89,6 +89,7 @@ Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'index'])-
 Route::resource('hotspotZones', App\Http\Controllers\HotspotZoneController::class);
 
 Route::get('cardSellers/export/', [App\Http\Controllers\CardSellerController::class, 'export'])->name('cardseller.export');
+Route::get('cardSellers/template/', [App\Http\Controllers\CardSellerController::class, 'template'])->name('cardseller.template');
 Route::post('cardSellers/import/', [App\Http\Controllers\CardSellerController::class, 'import'])->name('cardseller.import');
 Route::get('cardSellers/import/create', [App\Http\Controllers\CardSellerController::class, 'create_import'])->name('cardseller.import.create');
 

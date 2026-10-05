@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @package App\Models
  * @version September 27, 2022, 8:35 pm UTC
  *
- * @property string $seller
+ * @property string $name
  * @property string $contact
  * @property string $store_title
  * @property string $address
@@ -30,7 +30,7 @@ class CardSeller extends Model
 
 
     public $fillable = [
-        'seller',
+        'name',
         'contact',
         'store_title',
         'address'
@@ -42,7 +42,7 @@ class CardSeller extends Model
      * @var array
      */
     protected $casts = [
-        'seller' => 'string',
+        'name' => 'string',
         'contact' => 'string',
         'store_title' => 'string',
         'address' => 'string'
@@ -54,7 +54,7 @@ class CardSeller extends Model
      * @var array
      */
     public static $rules = [
-        'seller' => 'required',
+        'name' => 'required',
         'contact' => 'required',
         'store_title' => 'nullable',
         'address' => 'nullable'

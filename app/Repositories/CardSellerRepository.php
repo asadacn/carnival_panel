@@ -17,7 +17,7 @@ class CardSellerRepository extends BaseRepository
      * @var array
      */
     protected $fieldSearchable = [
-        'seller',
+        'name',
         'contact',
         'store_title',
         'address'

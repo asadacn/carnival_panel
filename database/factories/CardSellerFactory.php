@@ -22,7 +22,7 @@ class CardSellerFactory extends Factory
     public function definition()
     {
         return [
-            'seller' => $this->faker->word,
+            'name' => $this->faker->word,
         'contact' => $this->faker->word,
         'store_title' => $this->faker->word,
         'address' => $this->faker->word,

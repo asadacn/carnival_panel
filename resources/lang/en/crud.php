@@ -10,5 +10,7 @@ return[
 "edit"=>"Edit ",
 "delete"=>"Delete ",
 "are_you_sure" => "Are you sure ?",
-"erase" => "Erase "
+"erase" => "Erase ",
+"details" => "Details",
+"list" => "List"
 ];
