@@ -8,6 +8,9 @@ use App\Http\Requests\CreateCardSellerRequest;
 use App\Http\Requests\UpdateCardSellerRequest;
 use App\Imports\CardSellerImport;
 use App\Models\CardSeller;
+use App\Models\SMS_TEMPALTE;
+use App\Models\SMSLOG;
+use App\Models\SmsCampaign;
 use App\Repositories\CardSellerRepository;
 use App\Http\Controllers\AppBaseController;
 use Illuminate\Http\Request;
@@ -68,6 +71,7 @@ class CardSellerController extends AppBaseController
                     <div class="btn-group btn-group-sm" role="group">
                         <a href="{$viewUrl}" class="btn btn-sm btn-light border" title="View"><i class="fas fa-eye text-primary"></i></a>
                         <a href="{$editUrl}" class="btn btn-sm btn-light border" title="Edit"><i class="fas fa-edit text-warning"></i></a>
+                        <button type="button" class="btn btn-sm btn-light border" title="Send SMS" onclick="sendCardSellerSms({$cardSeller->id}, '{$name}')"><i class="fas fa-paper-plane text-indigo"></i></button>
                         <button type="button" class="btn btn-sm btn-light border" title="Delete" onclick="deleteCardSeller({$cardSeller->id}, '{$name}')"><i class="fas fa-trash text-danger"></i></button>
                         <button type="button" class="btn btn-sm btn-light border" title="Copy contact" onclick="copyCardSellerContact('{$contact}')"><i class="fas fa-copy text-info"></i></button>
                     </div>
@@ -200,6 +204,209 @@ class CardSellerController extends AppBaseController
     public function export()
     {
         return Excel::download(new CardSellerExport, 'card_sellers.xlsx');
+    }
+
+    /**
+     * Show the compose form for SMS announcements/offers to card sellers.
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function create_sms(Request $request)
+    {
+        $selectedInput = $request->input('selected', []);
+        if (is_string($selectedInput)) {
+            $selectedInput = explode(',', $selectedInput);
+        }
+        $selectedIds = collect($selectedInput)
+            ->filter()
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->values()
+            ->all();
+
+        $totalSellers = CardSeller::count();
+        $withContact  = CardSeller::whereNotNull('contact')->where('contact', '!=', '')->count();
+
+        $selected = collect();
+        if (!empty($selectedIds)) {
+            $selected = CardSeller::whereIn('id', $selectedIds)
+                ->whereNotNull('contact')
+                ->where('contact', '!=', '')
+                ->get(['id', 'name', 'contact']);
+        }
+
+        $templates = SMS_TEMPALTE::orderBy('title')->get(['id', 'title', 'sms_template']);
+
+        return view('card_sellers.sms', compact('totalSellers', 'withContact', 'selected', 'templates'));
+    }
+
+    /**
+     * Send an SMS announcement/offer to all or selected card sellers.
+     *
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function send_sms(Request $request)
+    {
+        $request->validate([
+            'message'     => 'required|string|max:1000',
+            'mode'        => 'required|in:all,selected',
+            'selected_ids' => 'required_if:mode,selected|array|min:1',
+            'selected_ids.*' => 'integer|exists:card_sellers,id',
+        ]);
+
+        $message = trim($request->message);
+
+        if ($request->mode === 'selected') {
+            $sellers = CardSeller::whereIn('id', (array) $request->selected_ids)
+                ->whereNotNull('contact')
+                ->where('contact', '!=', '')
+                ->get(['id', 'name', 'contact']);
+        } else {
+            $sellers = CardSeller::whereNotNull('contact')
+                ->where('contact', '!=', '')
+                ->orderBy('id')
+                ->get(['id', 'name', 'contact']);
+        }
+
+        if ($sellers->isEmpty()) {
+            Flash::warning(__('No card sellers with a contact number found.'));
+
+            return back()->withInput();
+        }
+
+        $charCount = mb_strlen($message, 'UTF-8');
+        $smsParts  = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
+
+        $campaign = SmsCampaign::create([
+            'user_id'          => auth()->id(),
+            'title'            => 'Card Seller SMS (' . $sellers->count() . ')',
+            'target_group'     => 'card_sellers',
+            'message_template' => $message,
+            'total_recipients' => $sellers->count(),
+            'status'           => 'processing',
+        ]);
+
+        $successCount = 0;
+        $failedCount  = 0;
+        $now          = now();
+
+        $sellers->chunk(100)->each(function ($chunk) use ($campaign, $message, $charCount, $smsParts, $now, &$successCount, &$failedCount) {
+            $contacts = $chunk->pluck('contact')->toArray();
+
+            $isSent = false;
+            try {
+                $isSent = sms($contacts, $message, 'unicode');
+            } catch (\Throwable $th) {
+                $isSent = false;
+            }
+
+            $logRows = [];
+            foreach ($chunk as $seller) {
+                $logRows[] = [
+                    'client_identifier' => 'card_seller:' . $seller->id,
+                    'campaign_id'       => $campaign->id,
+                    'user_id'           => auth()->id(),
+                    'contact'           => $seller->contact,
+                    'sms'               => $message,
+                    'character_count'   => $charCount,
+                    'sms_count'         => $smsParts,
+                    'message_type'      => 'card_seller',
+                    'encoding'          => 'unicode',
+                    'gateway'           => 'mram',
+                    'status'            => $isSent ? '1' : '0',
+                    'error_message'     => $isSent ? null : 'Gateway dispatch failed',
+                    'sent_at'           => $isSent ? $now : null,
+                    'created_at'        => $now,
+                    'updated_at'        => $now,
+                ];
+            }
+            SMSLOG::insert($logRows);
+
+            if ($isSent) {
+                $successCount += count($chunk);
+            } else {
+                $failedCount += count($chunk);
+            }
+        });
+
+        $campaign->update([
+            'successful_count' => $successCount,
+            'failed_count'     => $failedCount,
+            'status'           => $failedCount === 0 ? 'completed' : ($successCount > 0 ? 'partially_failed' : 'failed'),
+            'sent_at'          => now(),
+        ]);
+
+        Flash::success(
+            __('SMS processed: :success sent', ['success' => $successCount])
+            . ($failedCount > 0 ? __(', :failed failed', ['failed' => $failedCount]) : '')
+            . '.'
+        );
+
+        return redirect()->route('cardSellers.index');
+    }
+
+    /**
+     * Send a single SMS to one card seller (AJAX).
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function send_single_sms(Request $request)
+    {
+        $request->validate([
+            'card_seller_id' => 'required|integer|exists:card_sellers,id',
+            'sms'            => 'required|string|max:1000',
+        ]);
+
+        $cardSeller = CardSeller::findOrFail($request->card_seller_id);
+
+        if (empty($cardSeller->contact)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('This card seller has no contact number.'),
+            ]);
+        }
+
+        $smsText    = trim($request->sms);
+        $charCount  = mb_strlen($smsText, 'UTF-8');
+        $smsParts   = $charCount <= 70 ? 1 : (int) ceil($charCount / 67);
+
+        $isSent = false;
+        try {
+            $isSent = sms($cardSeller->contact, $smsText, 'unicode');
+        } catch (\Throwable $th) {
+            $isSent = false;
+        }
+
+        $smslog = new SMSLOG();
+        $smslog->client_identifier = 'card_seller:' . $cardSeller->id;
+        $smslog->user_id           = auth()->id();
+        $smslog->contact           = $cardSeller->contact;
+        $smslog->sms               = $smsText;
+        $smslog->character_count   = $charCount;
+        $smslog->sms_count         = $smsParts;
+        $smslog->message_type      = 'card_seller';
+        $smslog->encoding          = 'unicode';
+        $smslog->gateway           = 'mram';
+        $smslog->status            = $isSent ? '1' : '0';
+        $smslog->error_message     = $isSent ? null : 'Failed to deliver to gateway';
+        $smslog->sent_at           = $isSent ? now() : null;
+        $smslog->save();
+
+        if ($isSent) {
+            return response()->json(['success' => true, 'message' => __('SMS sent successfully.')]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => __('SMS sending failed. Please check the API or contact number.'),
+        ]);
     }
 
     /**

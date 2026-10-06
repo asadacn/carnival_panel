@@ -107,6 +107,9 @@
             <a href="{{ route('cardSellers.create') }}" class="btn cs-btn-white">
                 <i class="fas fa-plus"></i> @lang('crud.add_new')
             </a>
+            <a href="{{ route('cardseller.sms.create') }}" class="btn cs-btn-white">
+                <i class="fas fa-paper-plane"></i> Send SMS
+            </a>
             <a href="{{ route('cardseller.export') }}" class="btn cs-btn-outline">
                 <i class="fas fa-file-export"></i> @lang('crud.export')
             </a>
@@ -138,11 +141,15 @@
     <div class="cs-card">
         <div class="cs-card-header">
             <span class="cs-card-title"><i class="fas fa-table me-2" style="color:var(--cs-primary)"></i>@lang('models/cardSellers.plural')</span>
+            <button type="button" id="cs-send-selected" class="btn btn-sm btn-primary d-none">
+                <i class="fas fa-paper-plane me-1"></i>Send SMS to <span id="cs-selected-count-badge">0</span> selected
+            </button>
         </div>
         <div class="table-responsive">
             <table class="table" id="cardSellers-table">
                 <thead>
                     <tr>
+                        <th class="text-center" style="width: 3%"><input type="checkbox" id="cs-select-all"></th>
                         <th>#</th>
                         <th>@lang('models/cardSellers.fields.seller')</th>
                         <th>@lang('models/cardSellers.fields.contact')</th>
@@ -160,6 +167,7 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdn.datatables.net/select/1.3.3/js/dataTables.select.min.js"></script>
 <script>
 $(function () {
     var table = $('#cardSellers-table').DataTable({
@@ -167,7 +175,16 @@ $(function () {
         serverSide: true,
         responsive: true,
         pageLength: 20,
-        order: [[1, 'asc']],
+        order: [[2, 'asc']],
+        select: {
+            style: 'multi',
+            selector: 'td:first-child'
+        },
+        columnDefs: [
+            { orderable: false, searchable: false, className: 'select-checkbox', targets: 0 },
+            { targets: 1, orderable: false, searchable: false }
+        ],
+        rowId: 'id',
         ajax: "{{ route('cardSellers.index') }}",
         language: {
             search: '',
@@ -180,15 +197,125 @@ $(function () {
             emptyTable: 'No card sellers found. Add one to get started!'
         },
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+            { data: null, defaultContent: '', orderable: false, searchable: false }, // Checkbox
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', searchable: false, orderable: false },
             { data: 'name', name: 'name' },
             { data: 'contact', name: 'contact' },
             { data: 'store_title', name: 'store_title' },
             { data: 'address', name: 'address', orderable: false },
             { data: 'created_at', name: 'created_at' },
-            { data: 'action', name: 'action', orderable: false, searchable: false, width: '14%' }
-        ]
+            { data: 'action', name: 'action', orderable: false, searchable: false, width: '16%' }
+        ],
+        drawCallback: function () {
+            updateSelectionUI();
+        }
     });
+
+    // ---- Selection handling ----
+    table.on('select', function () { updateSelectionUI(); });
+    table.on('deselect', function () { updateSelectionUI(); });
+    function updateSelectionUI() {
+        var count = table.rows({ selected: true }).count();
+        var btn = $('#cs-send-selected');
+        $('#cs-selected-count-badge').text(count);
+        if (count > 0) {
+            btn.removeClass('d-none');
+        } else {
+            btn.addClass('d-none');
+        }
+    }
+
+    $('#cs-select-all').on('change', function () {
+        if (this.checked) {
+            table.rows({ search: 'applied' }).select();
+        } else {
+            table.rows().deselect();
+        }
+        this.checked = false; // reset; select-all state follows row selection
+    });
+
+    // ---- Send SMS to selected sellers ----
+    $('#cs-send-selected').on('click', function () {
+        var selectedData = table.rows({ selected: true }).data().toArray();
+        var ids = selectedData.map(function (row) { return row.id; });
+        if (!ids.length) {
+            Swal.fire({ icon: 'warning', title: 'No selection', text: 'Select at least one card seller first.' });
+            return;
+        }
+        var url = '{{ route('cardseller.sms.create') }}?selected=' + ids.join(',');
+        window.location.href = url;
+    });
+
+    // ---- Single seller SMS modal ----
+    window.sendCardSellerSms = function (id, name) {
+        Swal.fire({
+            title: 'SMS to ' + name,
+            html:
+                '<textarea id="swal-sms-text" class="cs-textarea" rows="4" maxlength="1000" ' +
+                'placeholder="Write announcement or offer..."></textarea>' +
+                '<div class="mt-2 text-start"><span class="cs-badge info" id="swal-sms-chars">0 characters</span> ' +
+                '<span class="cs-badge ok" id="swal-sms-parts">1 SMS</span></div>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#6777ef',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Send SMS',
+            didOpen: function () {
+                var ta = $('#swal-sms-text');
+                ta.on('input', function () {
+                    var text = ta.val();
+                    var chars = [...text].length;
+                    var isUnicode = /[^\x00-\x7F]/.test(text);
+                    var per = isUnicode ? 70 : 160;
+                    var multi = isUnicode ? 67 : 153;
+                    var parts = chars === 0 ? 0 : (chars <= per ? 1 : Math.ceil(chars / multi));
+                    $('#swal-sms-chars').text(chars + ' characters');
+                    $('#swal-sms-parts').text(parts + ' SMS');
+                });
+            },
+            preConfirm: function () {
+                var text = $('#swal-sms-text').val().trim();
+                if (!text) {
+                    Swal.showValidationMessage('Please write a message first.');
+                    return false;
+                }
+                return { text: text };
+            }
+        }).then(function (result) {
+            if (!result.isConfirmed || !result.value) return;
+
+            Swal.fire({
+                title: 'Sending SMS...',
+                text: 'Sending to ' + name + '.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: function () { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: '{{ url('cardSellers') }}/' + id + '/sms',
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    card_seller_id: id,
+                    sms: result.value.text
+                },
+                success: function (res) {
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: 'Sent!', text: res.message, timer: 1800, showConfirmButton: false });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'SMS sending failed.' });
+                    }
+                },
+                error: function (xhr) {
+                    var msg = 'SMS sending failed.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    Swal.fire({ icon: 'error', title: 'Failed', text: msg });
+                }
+            });
+        });
+    };
 
     $('.dataTables_filter input').addClass('form-control').css({'border-radius': '8px', 'padding': '0.45rem 0.75rem'});
     $('.dataTables_length select').addClass('form-select').css('border-radius', '8px');

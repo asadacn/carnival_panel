@@ -90,6 +90,9 @@ Route::resource('hotspotZones', App\Http\Controllers\HotspotZoneController::clas
 
 Route::get('cardSellers/export/', [App\Http\Controllers\CardSellerController::class, 'export'])->name('cardseller.export');
 Route::get('cardSellers/template/', [App\Http\Controllers\CardSellerController::class, 'template'])->name('cardseller.template');
+Route::get('cardSellers/sms/create', [App\Http\Controllers\CardSellerController::class, 'create_sms'])->name('cardseller.sms.create');
+Route::post('cardSellers/sms', [App\Http\Controllers\CardSellerController::class, 'send_sms'])->name('cardseller.sms');
+Route::post('cardSellers/{cardSeller}/sms', [App\Http\Controllers\CardSellerController::class, 'send_single_sms'])->name('cardseller.single_sms');
 Route::post('cardSellers/import/', [App\Http\Controllers\CardSellerController::class, 'import'])->name('cardseller.import');
 Route::get('cardSellers/import/create', [App\Http\Controllers\CardSellerController::class, 'create_import'])->name('cardseller.import.create');
 

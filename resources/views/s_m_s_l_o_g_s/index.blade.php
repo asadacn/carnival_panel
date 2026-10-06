@@ -595,12 +595,20 @@
         </div>
 
         <div class="sms-filter-card mb-4">
+            @php
+                $activeFilterCount = 0;
+                if (request()->filled('client_search')) $activeFilterCount++;
+                if (request()->filled('status')) $activeFilterCount++;
+                if (request()->filled('message_type')) $activeFilterCount++;
+                if (request()->filled('from_date')) $activeFilterCount++;
+                if (request()->filled('to_date')) $activeFilterCount++;
+            @endphp
             <div class="sms-filter-header">
                 <div>
                     <h5>@lang('models/sMSLOGS.labels.filter_title')</h5>
                     <p>@lang('models/sMSLOGS.labels.filter_description')</p>
                 </div>
-                <span class="sms-filter-count">@lang('models/sMSLOGS.labels.active_filters')</span>
+                <span class="sms-filter-count">{{ $activeFilterCount > 0 ? $activeFilterCount . ' ' : '' }}@lang('models/sMSLOGS.labels.active_filters')</span>
             </div>
             <div class="sms-filter-body">
                 <form method="GET" action="{{ route('sms_log') }}" class="row g-3 align-items-end">
