@@ -22,9 +22,9 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
 
         'carnival' => [
             'heading_row'     => 1,
-            'username_keys'   => ['carnival_id'],
-            'contact_keys'    => ['mobile'],
-            'expiration_keys' => ['expiration', 'exp_date', 'expiration_date', 'expire_date', 'validity', 'validity_date', 'expiry', 'exp_time'],
+            'username_keys'   => ['carnival_id', 'username', 'customer_id', 'customerid', 'cust_id', 'client_id', 'clientid', 'clients_id', 'clientsid', 'id'],
+            'contact_keys'    => ['mobile', 'mobile_no', 'mobile_number', 'phone', 'phone_number', 'contact'],
+            'expiration_keys' => ['expiration', 'exp_date', 'expiration_date', 'expire_date', 'expiry', 'expiry_date', 'expiry_date_time', 'validity', 'validity_date', 'valid_until', 'valid_till', 'valid_to', 'exp_time'],
             'status_key'      => 'status',
             'name_key'        => 'name',
             'email_key'       => 'email',
@@ -35,9 +35,9 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
 
         'bijoy' => [
             'heading_row'     => 2,
-            'username_keys'   => ['username', 'cust_id'],
-            'contact_keys'    => ['mobile'],
-            'expiration_keys' => ['exp_date', 'expiration', 'expiration_date', 'expire_date', 'validity', 'validity_date', 'expiry', 'exp_time'],
+            'username_keys'   => ['username', 'customer_id', 'customerid', 'cust_id', 'client_id', 'clientid', 'clients_id', 'clientsid', 'id', 'carnival_id'],
+            'contact_keys'    => ['mobile', 'mobile_no', 'mobile_number', 'phone', 'phone_number', 'contact'],
+            'expiration_keys' => ['exp_date', 'expiration', 'expiration_date', 'expire_date', 'expiry', 'expiry_date', 'expiry_date_time', 'validity', 'validity_date', 'valid_until', 'valid_till', 'valid_to', 'exp_time'],
             'status_key'      => 'status',
             'name_key'        => 'name',
             'email_key'       => 'email',
@@ -48,9 +48,9 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
 
         'icc' => [
             'heading_row'     => 2,
-            'username_keys'   => ['username', 'cust_id'],
-            'contact_keys'    => ['mobile'],
-            'expiration_keys' => ['exp_date', 'expiration', 'expiration_date', 'expire_date', 'validity', 'validity_date', 'expiry', 'exp_time'],
+            'username_keys'   => ['username', 'customer_id', 'customerid', 'cust_id', 'client_id', 'clientid', 'clients_id', 'clientsid', 'id', 'carnival_id'],
+            'contact_keys'    => ['mobile', 'mobile_no', 'mobile_number', 'phone', 'phone_number', 'contact'],
+            'expiration_keys' => ['exp_date', 'expiration', 'expiration_date', 'expire_date', 'expiry', 'expiry_date', 'expiry_date_time', 'validity', 'validity_date', 'valid_until', 'valid_till', 'valid_to', 'exp_time'],
             'status_key'      => 'status',
             'name_key'        => 'name',
             'email_key'       => 'email',
@@ -87,7 +87,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             $username = trim((string) $username);
 
             // 2. Expiration
-            $rawExpiration = $this->resolveField($row, $config['expiration_keys']);
+            $rawExpiration = $this->resolveExpiration($row, $config['expiration_keys']);
             $expiration = $this->parseExpiration($rawExpiration);
 
             // DEBUG: Log missing expiration for active clients
@@ -97,50 +97,64 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
             }
 
             // 3. Status
-            $rawStatus = (string)($row[$config['status_key']] ?? '');
+            $rawStatus = (string) $this->resolveField($row, [
+                $config['status_key'], 'client_status', 'account_status', 'connection_status',
+            ]);
             $status = $this->normalizeStatus($rawStatus);
 
             // 4. Address
             $address = $this->resolveAddress($row, $config);
 
             // 5. New values — isp_code INCLUDED so it updates on change
-            $newValues = [
+            $newValues = $this->onlyPresentValues([
                 'isp_code'   => $this->isp_code,  // ← last imported ISP জিতবে
-                'name'       => $row[$config['name_key']] ?? null,
+                'name'       => $this->resolveField($row, [$config['name_key'], 'client_name', 'customer_name', 'full_name']),
                 'contact'    => $this->resolveField($row, $config['contact_keys']),
-                'email'      => $row[$config['email_key']] ?? null,
+                'secondary_contact' => $this->resolveField($row, ['secondary_contact', 'alternate_contact', 'alternate_mobile']),
+                'email'      => $this->resolveField($row, [$config['email_key'], 'email_address']),
                 'address'    => $address,
-                'package'    => $row[$config['package_key']] ?? null,
+                'package'    => $this->resolveField($row, [$config['package_key'], 'package_name', 'service_package', 'plan']),
+                'password'   => $this->resolveField($row, ['password', 'pppoe_password']),
+                'Onu_mac'    => $this->resolveField($row, ['onu_mac', 'onu_mac_address', 'mac_address']),
+                'onu_serial' => $this->resolveField($row, ['onu_serial', 'onu_serial_number']),
+                'onu_brand'  => $this->resolveField($row, ['onu_brand']),
+                'cable'      => $this->resolveField($row, ['cable', 'cable_meter', 'cable_length']),
+                'billing_type' => $this->resolveField($row, ['billing_type']),
+                'gps_location' => $this->resolveField($row, ['gps_location', 'location']),
+                'comment'    => $this->resolveField($row, ['comment', 'remarks', 'note']),
                 'expiration' => $expiration,
-                'status'     => $status,
-            ];
+                'status'     => trim($rawStatus) === '' ? null : $status,
+            ]);
+
+            // The selected ISP and the resolved username are the record key;
+            // imports must never replace either key on an existing client.
+            unset($newValues['isp_code']);
 
             try {
                 // 6. username ONLY দিয়ে find — isp_code দিয়ে না
-                $existing = Client::where('username', $username)->first();
+                $existing = Client::where('isp_code', $this->isp_code)
+                    ->where('username', $username)
+                    ->first();
 
                 if ($existing) {
                     // A blank or unparsable cell must never destroy stored data.
                     // Expiration/status are kept as-is when the sheet has no usable value.
-                    if (empty($expiration) && !empty($existing->expiration)) {
+                    if ($rawExpiration !== null && $rawExpiration !== '' && $expiration === null) {
                         unset($newValues['expiration']);
                         \Log::info("[{$this->isp_code}] Kept existing expiration for {$username}: " . $existing->expiration);
-                    }
-
-                    if ($rawStatus === '' && !empty($existing->status)) {
-                        unset($newValues['status']);
                     }
 
                     // 7. কী কী চেঞ্জ হয়েছে detect করো
                     $changes = $this->detectChanges($existing, $newValues);
 
                     if (!empty($changes)) {
+                        $previousIspCode = $existing->isp_code;
                         $existing->update($newValues);
 
                         foreach ($changes as $field => $change) {
                             Session::push('import_changes', [
                                 'isp_code'     => $this->isp_code,
-                                'old_isp_code' => $existing->isp_code,
+                                'old_isp_code' => $previousIspCode,
                                 'username'     => $username,
                                 'field'        => $field,
                                 'old'          => $change['old'],
@@ -156,10 +170,12 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
 
                 } else {
                     // 8. নতুন client
-                    Client::create(array_merge(
-                        ['username' => $username],
-                        $newValues
-                    ));
+                    Client::create(array_merge([
+                        'isp_code' => $this->isp_code,
+                        'username' => $username,
+                        'name'     => $newValues['name'] ?? $username,
+                        'status'   => $newValues['status'] ?? 'Active',
+                    ], $newValues));
 
                     Session::push('import_new', [
                         'isp_code' => $this->isp_code,
@@ -221,10 +237,44 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
         return null;
     }
 
+    /**
+     * HeadingRow normalises "Expiry Date" to "expiry_date". The fallback
+     * also supports provider-specific labels such as "Valid Till".
+     */
+    protected function resolveExpiration($row, array $keys): mixed
+    {
+        $value = $this->resolveField($row, $keys);
+
+        if ($value !== null && $value !== '') {
+            return $value;
+        }
+
+        foreach ($row as $heading => $candidate) {
+            $heading = strtolower((string) $heading);
+
+            if (preg_match('/(?:expiration|expiry|expire|validity|valid_until|valid_till|valid_to)/', $heading)
+                && $candidate !== null && $candidate !== '') {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /** Keep blank cells from erasing saved client data during partial imports. */
+    protected function onlyPresentValues(array $values): array
+    {
+        return array_filter($values, static function ($value) {
+            return $value !== null && $value !== '';
+        });
+    }
+
     protected function resolveAddress($row, array $config): ?string
     {
         if (!empty($config['address_key'])) {
-            return $row[$config['address_key']] ?? null;
+            return $this->resolveField($row, [
+                $config['address_key'], 'full_address', 'client_address', 'customer_address',
+            ]);
         }
 
         $parts = array_filter([
@@ -248,16 +298,45 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
         }
 
         try {
+            // Depending on the spreadsheet cell format, Laravel Excel may
+            // already hydrate the date as a DateTime object.
+            if ($value instanceof \DateTimeInterface) {
+                return Carbon::instance($value);
+            }
+
             if (is_numeric($value)) {
                 // Excel numeric date format
                 return Date::excelToDateTimeObject($value);
             } elseif (is_string($value)) {
+                // Bijoy/ICC may repeat the ISO date in one cell, e.g.
+                // "2026-11-02 2026-11-02". The database stores a date, so
+                // the first ISO date is the authoritative expiration value.
+                if (in_array($this->isp_code, ['bijoy', 'icc'], true)
+                    && preg_match('/^\s*(\d{4}[-\/.]\d{1,2}[-\/.]\d{1,2})/', $value, $matches)) {
+                    $value = $matches[1];
+                }
+
                 // Normalize dots/slashes to hyphens for standard format checking
                 $normalized = str_replace(['/', '.'], '-', $value);
                 $parsed = null;
 
-                // Try common formats
-                $formats = [
+                // Carnival exports month/day/year, while Bijoy and ICC export
+                // ISO year-month-day. Parsing Carnival first avoids treating
+                // 11/12/2025 as 11 December instead of 12 November.
+                $formats = $this->isp_code === 'carnival' ? [
+                    'm/d/Y G:i',
+                    'm/d/Y H:i',
+                    'm/d/Y g:i A',
+                    'm-d-Y G:i',
+                    'm-d-Y H:i',
+                    'm-d-Y g:i A',
+                    'm/d/Y',
+                    'm-d-Y',
+                ] : [];
+
+                $formats = array_merge($formats, [
+                    'Y-m-d H:i:s',
+                    'Y-m-d H:i',
                     'Y-m-d',
                     'd-m-Y',
                     'm-d-Y',
@@ -267,7 +346,7 @@ class ClientsImport implements ToCollection, WithHeadingRow, WithProgressBar
                     'd/m/Y',
                     'm/d/Y',
                     'Y/m/d',
-                ];
+                ]);
 
                 foreach ([$value, $normalized] as $valToTest) {
                     foreach ($formats as $format) {

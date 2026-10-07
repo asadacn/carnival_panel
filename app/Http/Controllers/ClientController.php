@@ -703,6 +703,7 @@ EOT;
 
         try {
             Excel::import(new ClientsImport($isp_code), $file);
+            Cache::forget('clients_index_stats');
 
             // 3. Collect results from session (set by ClientsImport)
             $errors  = session('import_errors', []);
